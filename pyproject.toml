@@ -1,0 +1,134 @@
+[build-system]
+requires = ["setuptools >= 61.0.0"]
+build-backend = "setuptools.build_meta"
+
+##
+# Project / Setuptools definition
+##
+[project]
+name = "dwas"
+version = "0.0.0"
+description = "dwas is a command line tool to define and run your development workflows"
+readme = "README.rst"
+requires-python = ">= 3.9"
+authors = [
+    { name = "Benjamin Schubert", email = "contact@benschubert.me" }
+]
+keywords = ["workflows", "virtual", "environments", "isolated", "testing"]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Utilities",
+]
+dynamic = ["dependencies"]
+
+[project.urls]
+homepage = "https://github.com/BenjaminSchubert/dwas"
+repository = "https://github.com/BenjaminSchubert/dwas"
+tracker = "https://github.com/BenjaminSchubert/dwas/issues"
+
+[project.entry-points.console_scripts]
+dwas = "dwas.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+dwas = ["py.typed"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = "requirements/requirements.txt"}
+
+##
+# Linters / Formatters
+##
+
+##
+# Black
+[tool.black]
+line-length = 79
+
+##
+# Isort
+[tool.isort]
+profile = "black"
+line_length = 79
+skip_gitignore = true
+
+##
+# Mypy
+[tool.mypy]
+check_untyped_defs = true
+ignore_missing_imports = false
+strict = true
+warn_no_return = true
+warn_return_any = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+allow_untyped_defs = true
+allow_untyped_calls = true
+
+##
+# Pylint
+[tool.pylint.FORMAT]
+good-names = ["id", "fd"]
+
+[tool.pylint."MESSAGE CONTROL"]
+disable = [
+    "fixme",
+    # This one can never be disabled per-file.
+    "duplicate-code",
+    # Stylistic decisions
+    "too-few-public-methods",
+    "too-many-arguments",
+    # TODO: enable those, we want documentation
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "missing-module-docstring",
+]
+
+[tool.pylint.VARIABLES]
+"init-import" = true
+
+
+##
+# Testing
+##
+
+##
+# Pytest
+[tool.pytest.ini_options]
+addopts = "--verbose --verbose --cov"
+
+
+##
+# Coverage
+[tool.coverage.run]
+branch = true
+source = [
+    "dwas",
+    "tests/",
+]
+
+[tool.coverage.paths]
+source = [
+    "src/dwas",
+    "**/site-packages/dwas/",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "# pragma: nocover",
+    "^\\s*\\.\\.\\.$",
+    "^\\s*return NotImplemented$"
+]

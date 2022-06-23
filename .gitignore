@@ -1,0 +1,9 @@
+# Python files
+*.pyc
+*.egg-info
+
+# DWAS
+.dwas/*
+
+# tests
+.coverage

@@ -1,0 +1,109 @@
+name: PR Checks
+
+env:
+  DEFAULT_PYTHON: 3.9
+  PACKAGES_PATH: .dwas/cache/package/
+  TERM: "xterm-256color"
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+# Use the concurrency feature to ensure we don't run redundant workflows
+#
+concurrency:
+  group: ${{ github.repository }}-${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        session:
+          - black
+          - isort
+          - mypy
+          - pylint
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          cache: pip
+
+      # FIXME: we should take dwas from pypi once it's published
+      - name: Install dwas
+        run: python -m pip install .
+
+      - name: ${{ matrix.session }}
+        run: dwas --verbose --colors --only ${{ matrix.session }}
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          cache: pip
+
+      # FIXME: we should take dwas from pypi once it's published
+      - name: Install dwas
+        run: python -m pip install .
+
+      - name: package
+        run: dwas --verbose --colors --only package
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: ${{ env.PACKAGES_PATH }}/*.whl
+          retention-days: 7
+
+  test:
+    runs-on: ubuntu-latest
+    needs: package
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - "3.9"
+          - "3.10"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+
+      # FIXME: we should take dwas from pypi once it's published
+      - name: Install dwas
+        run: python -m pip install .
+
+      - name: Download packaged wheels
+        uses: actions/download-artifact@v3
+        with:
+          name: wheels
+          path: ${{ env.PACKAGES_PATH }}
+
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: pytest[${{ matrix.python }}]
+        run: dwas --verbose --colors --only pytest[${{ matrix.python }}]
