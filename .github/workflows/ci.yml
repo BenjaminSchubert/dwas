@@ -3,6 +3,7 @@ name: Checks
 env:
   DEFAULT_PYTHON: 3.9
   PACKAGES_PATH: .dwas/cache/package/
+  COVERAGE_FILES_PATH: .dwas/cache/pytest-*/reports/coverage
   TERM: "xterm-256color"
 
 on:
@@ -67,7 +68,7 @@ jobs:
       - name: package
         run: dwas --verbose --colors --only package
 
-      - name: Upload wheels
+      - name: Save wheels
         uses: actions/upload-artifact@v3
         with:
           name: wheels
@@ -107,3 +108,60 @@ jobs:
 
       - name: pytest[${{ matrix.python }}]
         run: dwas --verbose --colors --only pytest[${{ matrix.python }}]
+
+      - name: Save coverage files
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-files-pytest-${{ matrix.python }}
+          path: ${{ env.COVERAGE_FILES_PATH }}
+          retention-days: 7
+
+  coverage:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          cache: pip
+
+      # FIXME: we should take dwas from pypi once it's published
+      - name: Install dwas
+        run: python -m pip install .
+
+      # FIXME: We need multiple entries otherwise as wildcards are not supported
+      #        Once https://github.com/dawidd6/action-download-artifact/pull/107/files
+      #        is merged, it should be doable to have a single action there
+      - name: Download generated coverage files
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage-files-pytest-3.9
+          path: .dwas/cache
+
+      - name: Download generated coverage files
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage-files-pytest-3.10
+          path: .dwas/cache
+
+      - name: Generate coverage report
+        run: dwas --verbose --colors --only coverage
+
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./_reports/coverage/coverage.xml
+          fail_ci_if_error: true
+          verbose: true
+
+      - name: Save coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage [html]
+          path: _reports/coverage/html
+          retention-days: 7

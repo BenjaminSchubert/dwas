@@ -108,7 +108,7 @@ disable = [
 ##
 # Pytest
 [tool.pytest.ini_options]
-addopts = "--verbose --verbose --cov"
+addopts = "--verbose --verbose --cov --cov-config=pyproject.toml --cov-report="
 
 
 ##

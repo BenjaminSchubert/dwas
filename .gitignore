@@ -4,6 +4,9 @@
 
 # DWAS
 .dwas/*
+_reports/
 
 # tests
 .coverage
+.pytest_cache
+.mypy_cache

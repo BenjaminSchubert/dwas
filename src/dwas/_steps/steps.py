@@ -3,7 +3,15 @@
 
 import subprocess
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Protocol, runtime_checkable
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Protocol,
+    runtime_checkable,
+)
 
 from .._config import Config
 
@@ -20,12 +28,19 @@ class StepWithSetup(Step, Protocol):
 
 @runtime_checkable
 class StepWithDependentSetup(Step, Protocol):
-    # pylint: disable=redefined-outer-name
     def setup_dependent(
         self,
         original_step: "StepHandlerProtocol",
         current_step: "StepHandlerProtocol",
     ) -> None:
+        ...
+
+
+@runtime_checkable
+class StepWithArtifacts(Step, Protocol):
+    def gather_artifacts(
+        self, step: "StepHandlerProtocol"
+    ) -> Dict[str, List[Any]]:
         ...
 
 
@@ -42,6 +57,9 @@ class StepHandlerProtocol:
 
     @property
     def cache_path(self) -> Path:
+        ...
+
+    def get_artifacts(self, key: str) -> List[Any]:
         ...
 
     def install(self, *packages: str) -> None:

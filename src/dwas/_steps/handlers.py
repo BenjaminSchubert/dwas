@@ -1,3 +1,4 @@
+import itertools
 import logging
 import re
 import subprocess
@@ -14,6 +15,7 @@ from .._runners import VenvRunner
 from .steps import (
     Step,
     StepHandlerProtocol,
+    StepWithArtifacts,
     StepWithDependentSetup,
     StepWithSetup,
 )
@@ -40,6 +42,14 @@ class BaseStepHandler(ABC):
 
     @abstractmethod
     def _execute_dependent_setup(self, current_step: "StepHandler") -> None:
+        pass
+
+    @abstractmethod
+    def _get_artifacts(self, key: str) -> List[Any]:
+        pass
+
+    @abstractmethod
+    def _gather_artifacts(self) -> Dict[str, List[Any]]:
         pass
 
 
@@ -90,8 +100,28 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
 
     @property
     def cache_path(self) -> Path:
-        return self.config.cache_path.joinpath(
-            "cache", self.name.replace("/", "-").replace(":", "-")
+        name = self.name
+        # Those chars regularly cause trouble with unescaped glob patterns and
+        # such. As such, replace them with "-", hoping this does not cause
+        # collisions
+        for char in ["/", ":", "*", "[", "]"]:
+            name = name.replace(char, "-")
+
+        return self.config.cache_path / "cache" / name
+
+    def get_artifacts(self, key: str) -> List[Any]:
+        return list(
+            itertools.chain.from_iterable(
+                [
+                    # StepHandler is a public interface, we don't want users accessing
+                    # this method.
+                    # pylint: disable=protected-access
+                    self._pipeline.get_requirement(requirement)._get_artifacts(
+                        key
+                    )
+                    for requirement in self.requires
+                ]
+            )
         )
 
     def install(self, *packages: str) -> None:
@@ -140,6 +170,23 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
             LOGGER.debug("Injecting dependency setup from %s", self.name)
             self.func.setup_dependent(self, current_step)
 
+    def _get_artifacts(self, key: str) -> List[Any]:
+        artifacts = self._gather_artifacts().get(key, [])
+        if not artifacts:
+            LOGGER.warning(
+                "No artifact provided for key '%s' by step '%s'",
+                key,
+                self.name,
+            )
+        return artifacts
+
+    def _gather_artifacts(self) -> Dict[str, List[Any]]:
+        if not isinstance(self.func, StepWithArtifacts):
+            LOGGER.debug("Step %s does not provide any artifacts", self.name)
+            return {}
+
+        return self.func.gather_artifacts(self)
+
 
 class StepGroupHandler(BaseStepHandler):
     def _execute(self) -> None:
@@ -153,3 +200,21 @@ class StepGroupHandler(BaseStepHandler):
             self._pipeline.get_requirement(
                 requirement
             )._execute_dependent_setup(current_step)
+
+    def _get_artifacts(self, key: str) -> List[Any]:
+        return list(
+            itertools.chain.from_iterable(
+                [
+                    # StepHandler is a public interface, we don't want users accessing
+                    # this method.
+                    # pylint: disable=protected-access
+                    self._pipeline.get_requirement(requirement)._get_artifacts(
+                        key
+                    )
+                    for requirement in self.requires
+                ]
+            )
+        )
+
+    def _gather_artifacts(self) -> Dict[str, List[Any]]:
+        raise NotImplementedError("This should never get called")

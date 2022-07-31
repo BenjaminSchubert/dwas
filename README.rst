@@ -2,6 +2,9 @@
    :target: https://github.com/BenjaminSchubert/dwas/actions/workflows/ci.yml
    :alt: checks badge
 
+.. image:: https://codecov.io/gh/BenjaminSchubert/dwas/branch/main/graph/badge.svg?token=OK872YRU0H
+   :target: https://codecov.io/gh/BenjaminSchubert/dwas
+
 
 Development Workflow ASsistant
 ==============================
