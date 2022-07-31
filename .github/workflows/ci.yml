@@ -1,4 +1,4 @@
-name: PR Checks
+name: Checks
 
 env:
   DEFAULT_PYTHON: 3.9
@@ -8,6 +8,9 @@ env:
 on:
   pull_request:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 # Use the concurrency feature to ensure we don't run redundant workflows
 #
@@ -101,9 +104,6 @@ jobs:
         with:
           name: wheels
           path: ${{ env.PACKAGES_PATH }}
-
-      - name: Display structure of downloaded files
-        run: ls -R
 
       - name: pytest[${{ matrix.python }}]
         run: dwas --verbose --colors --only pytest[${{ matrix.python }}]

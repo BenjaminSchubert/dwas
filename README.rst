@@ -1,3 +1,8 @@
+.. image:: https://github.com/BenjaminSchubert/dwas/actions/workflows/ci.yml/badge.svg
+   :target: https://github.com/BenjaminSchubert/dwas/actions/workflows/ci.yml
+   :alt: checks badge
+
+
 Development Workflow ASsistant
 ==============================
 
