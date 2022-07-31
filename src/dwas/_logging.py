@@ -67,7 +67,7 @@ def _create_handler(output: WriterProtocol) -> logging.Handler:
 
 def setup_logging(level: int, colors: bool) -> None:
     if colors:
-        init()
+        init(strip=False)
         formatter: logging.Formatter = ColorFormatter(
             fmt=(
                 f"{Fore.CYAN}{Style.DIM}dwas >{Style.RESET_ALL}"
