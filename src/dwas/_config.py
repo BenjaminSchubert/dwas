@@ -83,6 +83,7 @@ class Config:
             self.environ["NO_COLOR"] = "0"
 
     def _get_color_setting(self, colors: Optional[bool]) -> bool:
+        # pylint: disable=too-many-return-statements
         if colors is not None:
             return colors
 
@@ -103,6 +104,12 @@ class Config:
 
         env_colors = os.environ.get("FORCE_COLOR", None)
         if env_colors is not None:
+            return True
+
+        # Check for CIs that were asked for, and enable colors by default
+        # when it's possible. Do this towards the end to ensure other config
+        # can override
+        if "GITHUB_ACTION" in os.environ:
             return True
 
         return sys.stdin.isatty()
