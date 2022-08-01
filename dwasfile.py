@@ -77,3 +77,22 @@ dwas.predefined.coverage(
     requires=["pytest"],
     dependencies=["coverage[toml]"],
 )
+
+##
+# Publishing
+##
+# FIXME: this is wasteful as it will install the wheel in the venv, we don't
+#        need this. We should be able to skip the seutp of dependents
+dwas.predefined.twine(name="twine:check", requires=["package"])
+dwas.predefined.twine(
+    name="twine:upload",
+    requires=["package", "twine:check"],
+    additional_arguments=[
+        "upload",
+        "--verbose",
+        "--sign",
+        "--non-interactive",
+    ],
+    passenv=["TWINE_REPOSITORY", "TWINE_USERNAME", "TWINE_PASSWORD"],
+    run_by_default=False,
+)
