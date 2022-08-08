@@ -12,13 +12,9 @@ from .._dependency_injection import call_with_parameters
 from .._exceptions import BaseDwasException
 from .._pipeline import Pipeline
 from .._runners import VenvRunner
-from .steps import (
-    Step,
-    StepHandlerProtocol,
-    StepWithArtifacts,
-    StepWithDependentSetup,
-    StepWithSetup,
-)
+from .steps import Step
+from .steps import StepHandler as StepHandlerProtocol
+from .steps import StepWithArtifacts, StepWithDependentSetup, StepWithSetup
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +28,8 @@ class BaseStepHandler(ABC):
         run_by_default: Optional[bool] = None,
     ) -> None:
         self.name = name
-        self.requires = requires if requires is not None else []
-        self.run_by_default: bool = (
+        self._requires = requires if requires is not None else []
+        self._run_by_default: bool = (
             run_by_default if run_by_default is not None else True
         )
         self._pipeline = pipeline
@@ -56,6 +52,9 @@ class BaseStepHandler(ABC):
 
 
 class StepHandler(StepHandlerProtocol, BaseStepHandler):
+    # FIXME: should we split the stephandler in two? One for the user-facing
+    #        api, one for the internal parts?
+    #
     def __init__(
         self,
         name: str,
@@ -69,8 +68,9 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
         super().__init__(name, pipeline, requires, run_by_default)
 
         self.name = name
-        self.func = func
+        self._func = func
         if python is None:
+            # FIXME: this probably doesn't handle being installed with pypy/pyston
             python = f"python{sys.version_info[0]}.{sys.version_info[1]}"
         elif re.match(
             r"\d+\.\d+", python
@@ -116,7 +116,7 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
                     self._pipeline.get_requirement(requirement)._get_artifacts(
                         key
                     )
-                    for requirement in self.requires
+                    for requirement in self._requires
                 ]
             )
         )
@@ -127,8 +127,8 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
     def run(
         self,
         command: List[str],
-        env: Optional[Dict[str, str]] = None,
         *,
+        env: Optional[Dict[str, str]] = None,
         external_command: bool = False,
         silent_on_success: bool = False,
     ) -> subprocess.CompletedProcess[None]:
@@ -145,14 +145,14 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
         else:
             self._runner.prepare()
 
-            if isinstance(self.func, StepWithSetup):
-                call_with_parameters(self.func.setup, self.parameters.copy())
+            if isinstance(self._func, StepWithSetup):
+                call_with_parameters(self._func.setup, self.parameters.copy())
 
         if self.config.skip_run:
             LOGGER.debug("Skipping run")
             return
 
-        for requirement in self.requires:
+        for requirement in self._requires:
             # StepHandler is a public interface, we don't want users accessing
             # this method.
             # pylint: disable=protected-access
@@ -160,12 +160,12 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
                 requirement
             )._execute_dependent_setup(self)
 
-        call_with_parameters(self.func, self.parameters.copy())
+        call_with_parameters(self._func, self.parameters.copy())
 
     def _execute_dependent_setup(self, current_step: "StepHandler") -> None:
-        if isinstance(self.func, StepWithDependentSetup):
+        if isinstance(self._func, StepWithDependentSetup):
             LOGGER.debug("Injecting dependency setup from %s", self.name)
-            self.func.setup_dependent(self, current_step)
+            self._func.setup_dependent(self, current_step)
 
     def _get_artifacts(self, key: str) -> List[Any]:
         artifacts = self._gather_artifacts().get(key, [])
@@ -178,11 +178,11 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
         return artifacts
 
     def _gather_artifacts(self) -> Dict[str, List[Any]]:
-        if not isinstance(self.func, StepWithArtifacts):
+        if not isinstance(self._func, StepWithArtifacts):
             LOGGER.debug("Step %s does not provide any artifacts", self.name)
             return {}
 
-        return self.func.gather_artifacts(self)
+        return self._func.gather_artifacts(self)
 
 
 class StepGroupHandler(BaseStepHandler):
@@ -190,7 +190,7 @@ class StepGroupHandler(BaseStepHandler):
         LOGGER.debug("Step %s is a meta step. Nothing to do", self.name)
 
     def _execute_dependent_setup(self, current_step: "StepHandler") -> None:
-        for requirement in self.requires:
+        for requirement in self._requires:
             # StepHandler is a public interface, we don't want users accessing
             # this method.
             # pylint: disable=protected-access
@@ -208,7 +208,7 @@ class StepGroupHandler(BaseStepHandler):
                     self._pipeline.get_requirement(requirement)._get_artifacts(
                         key
                     )
-                    for requirement in self.requires
+                    for requirement in self._requires
                 ]
             )
         )

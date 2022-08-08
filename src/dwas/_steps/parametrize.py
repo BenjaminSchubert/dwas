@@ -21,6 +21,10 @@ _PARAMETERS = "_dwas_parameters"
 
 
 class ParameterConflictException(BaseDwasException):
+    """
+    Exception raised when values were passed multiple times for the same parameter.
+    """
+
     def __init__(self, parameter: str, func: Callable[..., None]) -> None:
         super().__init__(
             f"A conflict was detected while parametrizing '{func.__name__}'."
@@ -29,9 +33,25 @@ class ParameterConflictException(BaseDwasException):
 
 
 class DefaultsAlreadySetException(BaseDwasException):
+    """
+    Exception raised when :py:func:`set_defaults` has already been called on an object.
+    """
+
     def __init__(self, func: Callable[..., None]) -> None:
         super().__init__(
             f"Defaults have already been set for '{func.__name__}'."
+        )
+
+
+class MismatchedNumberOfParametersException(BaseDwasException):
+    """
+    Exception raised when the number of parameters does not match the number of ids.
+    """
+
+    def __init__(self, n_args_values: int, n_args_ids: int) -> None:
+        super().__init__(
+            f"Error parametrizing: {n_args_values} values were passed, but"
+            f" {n_args_ids} ids were given. Those two must match"
         )
 
 
@@ -96,6 +116,90 @@ def parametrize(
     args_values: Union[Sequence[Any], Sequence[Sequence[Any]]],
     ids: Optional[Sequence[Optional[str]]] = None,
 ) -> Callable[[T], T]:
+    """
+    Parametrize the decorated :term:`step` with the provided values.
+
+    Parametrization allows running a specific step with multiple configurations.
+    For example, you might want to run a ``pytest`` step against both python3.10
+    and python3.11. With parametrization you do not need to repeat the step.
+
+    It is possible to make multiple calls to parametrize on the same step, as
+    long as the parameter names do not conflict. In which case, the *product* of
+    both parametrization steps will be generated.
+
+    .. note::
+
+        Parameters, once set for a specific argument cannot be overridden. If
+        you want to provide default values, see :py:func:`set_defaults`.
+
+    :param arg_names: The name of the argument to parametrize. Or a list of
+                      names if multiple values need to be passed.
+    :param arg_values: A list of values to be used for the given argument. When
+                       parametrizing multiple arguments at once, this becomes a
+                       list of list of argument values.
+    :param ids: A list of ids for each entry in arg_values. If not provided, an
+                id will be built based on the values of the arguments, in order.
+    :return: A decorator that can be applied to a step to apply the parametrization.
+    :raise MismatchedNumberOfParametersException: if the number of ids and the
+                                                  number of arg_values do not
+                                                  match.
+    :raise ParameterConflictException: if values have already been provided for
+                                       a specific argument (e.g. by another
+                                       parametrize call)
+
+    :Examples:
+
+    You might want to parametrize a single argument. In which case you can do:
+
+    .. code-block::
+
+        # The step needs to be applied after parametrization
+        @step()
+        # This step needs to run for both python 3.10 and python3.11
+        @parametrize("python", ["3.10", "3.11"])
+        def print_python_version(step: StepHandler) -> None:
+            step.execute([self.python, "--version"])
+
+    Or you might want to parametrize multiple arguments at once. In that case
+    you can do:
+
+    .. code-block::
+
+        # The step needs to be applied after parametrization.
+        # Note that we don't supply the usual 'dependencies' argument here, it
+        # will be handled by parametrization.
+        @managed_step()
+        # This needs to run with:
+        #   - python 3.10 against django 3.0 and 4.0
+        #   - python3.11 against django 4.0
+        @parametrize(
+            ["python", "dependencies"],
+            [
+                ["3.10", ["django==3.0"]],
+                ["3.10", ["django==4.0"]],
+                ["3.11", ["django==4.0"]],
+            ],
+        )
+        def test(step: StepHandler) -> None:
+            step.run([self.python, "manage.py", "test"])
+
+    And finally, you can also combine multiple parametrize calls:
+
+    .. code-block::
+
+        # The step needs to be applied after parametrization again.
+        # Note that we don't supply the usual 'dependencies' argument here, it
+        # will be handled by parametrization.
+        @managed_step()
+        # This needs to run with:
+        #   - python3.10 and 3.11
+        #   - both against django 3.0 and 4.0
+        @parametrize("python", ["3.10", "3.11"])
+        @parametrize("dependencies", [["django==3.0"], ["django==4.0"]])
+        def test(step: StepHandler) -> None:
+            step.run([self.python, "manage.py", "test"])
+    """
+
     def _apply(func: T) -> T:
         nonlocal arg_names, args_values, ids
 
@@ -105,9 +209,8 @@ def parametrize(
 
         if ids is not None:
             if len(args_values) != len(ids):
-                raise BaseDwasException(
-                    f"Error parametrizing: {len(args_values)} values were"
-                    f" passed, but only {len(ids)} ids were given."
+                raise MismatchedNumberOfParametersException(
+                    len(args_values), len(ids)
                 )
         else:
             ids = [None] * len(args_values)
@@ -136,6 +239,25 @@ def parametrize(
 
 
 def set_defaults(values: Dict[str, Any]) -> Callable[[T], T]:
+    """
+    Set default values for parameters on the given :term:`step`.
+
+    Those values can be overridden by using :py:func:`parametrize`.
+
+    Only a single call to :py:func:`set_defaults` can be made for a given
+    object, trying to set it multiple times will raise a
+    :py:exc:`DefaultsAlreadySetException`.
+
+    .. seealso::
+
+        :py:func:`parametrize` for an explanation of how parameters work.
+
+    :param values: A dictionary of default values to set on the step
+    :return: A decorator that can be applied to a step to apply the parametrization.
+    :raise DefaultsAlreadySetException: If :py:func:`set_defaults` was already
+                                        called on the given object.
+    """
+    # FIXME: allow merging defaults instead of failing if they do not conflict
     def _apply(func: T) -> T:
         if hasattr(func, _DEFAULTS):
             raise DefaultsAlreadySetException(func)

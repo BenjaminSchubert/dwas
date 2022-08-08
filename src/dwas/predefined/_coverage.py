@@ -18,7 +18,8 @@ from .. import (
     }
 )
 class Coverage(Step):
-    __name__ = "coverage"
+    def __init__(self) -> None:
+        self.__name__ = "coverage"
 
     def __call__(
         self,
@@ -46,6 +47,52 @@ def coverage(
     dependencies: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
 ) -> None:
+    """
+    Run `coverage.py`_ to generate coverage reports.
+
+    :param name: The name to give to the step.
+                 Defaults to :python:`"coverage"`.
+    :param reports: A list of parameters to pass to coverage to generate
+                    reports.
+                    Defaults to :python:`[["report", "--show-missing"]]`
+    :param python: The version of python to use.
+                   Defaults to the version *dwas* was installed with.
+    :param requires: A list of other steps that this step would require.
+    :param dependencies: Python dependencies needed to run this step.
+                         Defaults to :python:`["coverage"]`.
+    :param run_by_default: Whether to run this step by default or not.
+                           Defaults to :python:`True`.
+
+    This step leverages :term:`artifacts<artifact>` named ``coverage_files`` provided by
+    other steps to provide reports.
+
+    :Example:
+
+        Here is a fully fledged example that packages source code, runs pytest
+        and generates coverage out of it:
+
+        .. code-block::
+
+            # One step to generate the package
+            dwas.predefined.package()
+
+            # One step to run pytest across multiple python versions
+            dwas.predefined.pytest(
+                dependencies=["pytest", "pytest-cov"],
+                requires=["package"],
+                parametrize=dwas.parametrize("python", ["3.8", "3.9", "3.10"])
+            )
+
+            # And finally generate xml report and one on stdout.
+            # This will combine all coverage info from the previous pytest runs.
+            dwas.predefined.coverage(
+                reports=[
+                    ["xml", "-o", "reports/coverage.xml"],
+                    ["report", "--show-missing"],
+                ],
+                requires=["pytest"],
+            )
+    """
     coverage_ = Coverage()
 
     if reports is not None:

@@ -1,4 +1,10 @@
-from .parametrize import parametrize, set_defaults
+from .parametrize import (
+    DefaultsAlreadySetException,
+    MismatchedNumberOfParametersException,
+    ParameterConflictException,
+    parametrize,
+    set_defaults,
+)
 from .registration import (
     managed_step,
     register_managed_step,
@@ -6,9 +12,13 @@ from .registration import (
     register_step_group,
     step,
 )
-from .steps import Step
-from .steps import StepHandlerProtocol as StepHandler
-from .steps import StepWithDependentSetup, StepWithSetup
+from .steps import (
+    Step,
+    StepHandler,
+    StepWithArtifacts,
+    StepWithDependentSetup,
+    StepWithSetup,
+)
 
 __all__ = [
     "managed_step",
@@ -22,4 +32,8 @@ __all__ = [
     "StepHandler",
     "StepWithDependentSetup",
     "StepWithSetup",
+    "StepWithArtifacts",
+    "DefaultsAlreadySetException",
+    "MismatchedNumberOfParametersException",
+    "ParameterConflictException",
 ]

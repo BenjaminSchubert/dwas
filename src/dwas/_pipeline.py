@@ -74,7 +74,10 @@ class Pipeline:
             steps = [
                 name
                 for name, step in self._steps.items()
-                if step.run_by_default and name not in except_steps
+                # StepHandler is a public interface, we don't want users accessing
+                # this method.
+                # pylint: disable=protected-access
+                if step._run_by_default and name not in except_steps
             ]
 
         graph = {}
@@ -89,8 +92,10 @@ class Pipeline:
             except KeyError:
                 unknown_steps.append(step)
                 continue
-
-            required_steps = step_info.requires
+            # StepHandler is a public interface, we don't want users accessing
+            # this method.
+            # pylint: disable=protected-access
+            required_steps = step_info._requires
             if only_steps:
                 required_steps = [r for r in required_steps if r in only_steps]
             elif except_steps:
@@ -137,7 +142,10 @@ class Pipeline:
         graph = {
             step: [
                 r
-                for r in self._steps[step].requires
+                # StepHandler is a public interface, we don't want users accessing
+                # this method.
+                # pylint: disable=protected-access
+                for r in self._steps[step]._requires
                 if r in only_steps and r not in except_steps
             ]
             for step in steps
@@ -227,13 +235,19 @@ class Pipeline:
         LOGGER.info("Available steps (* means selected, - means skipped):")
         for step in sorted(all_steps):
             dep_info = ""
-            if show_dependencies and self._steps[step].requires:
+            # StepHandler is a public interface, we don't want users accessing
+            # this method.
+            # pylint: disable=protected-access
+            if show_dependencies and self._steps[step]._requires:
                 dep_info = " --> " + ", ".join(
                     reversed(
                         [
                             s
                             for s in all_steps
-                            if s in self._steps[step].requires
+                            # StepHandler is a public interface, we don't want users accessing
+                            # this method.
+                            # pylint: disable=protected-access
+                            if s in self._steps[step]._requires
                         ]
                     )
                 )

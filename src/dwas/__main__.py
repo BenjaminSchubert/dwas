@@ -88,7 +88,10 @@ def _parse_args(args: Optional[List[str]] = None) -> Namespace:
         "-j",
         "--jobs",
         type=int,
-        help="Number of jobs to run in parallel (default: %(default)d)",
+        help=(
+            "Number of jobs to run in parallel, 0 uses the number of cpus on"
+            " the machine (default: %(default)d)"
+        ),
         default=1,
     )
 
@@ -157,6 +160,7 @@ def _load_user_config(
 
 def _execute_pipeline(
     config: Config,
+    pipeline_config: str,
     steps: Optional[List[str]],
     only_steps: Optional[List[str]],
     except_steps: Optional[List[str]],
@@ -167,8 +171,8 @@ def _execute_pipeline(
     pipeline = _pipeline.Pipeline(config)
 
     context = Context()
-    pipeline = context.run(_load_user_config, pipeline, config.user_config)
-    LOGGER.debug("Pipeline definition found at %s", config.user_config)
+    pipeline = context.run(_load_user_config, pipeline, pipeline_config)
+    LOGGER.debug("Pipeline definition found at %s", pipeline_config)
 
     if list_only or list_dependencies:
         pipeline.list_all_steps(
@@ -188,7 +192,6 @@ def main(sys_args: Optional[List[str]] = None) -> None:
     args = _parse_args(sys_args)
     verbosity = args.verbose - args.quiet
     config = Config(
-        args.config,
         args.cache_path,
         verbosity,
         args.colors,
@@ -203,6 +206,7 @@ def main(sys_args: Optional[List[str]] = None) -> None:
     try:
         _execute_pipeline(
             config,
+            args.config,
             args.steps,
             args.only_steps,
             args.except_steps,

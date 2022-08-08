@@ -14,7 +14,8 @@ LOGGER = logging.getLogger(__name__)
 
 @set_defaults({"dependencies": ["pytest"], "args": []})
 class Pytest(Step):
-    __name__ = "pytest"
+    def __init__(self) -> None:
+        self.__name__ = "pytest"
 
     def gather_artifacts(self, step: StepHandler) -> Dict[str, List[Any]]:
         coverage_file = self._get_coverage_file(step)
@@ -37,12 +38,87 @@ def pytest(
     *,
     name: Optional[str] = None,
     args: Optional[Sequence[str]] = None,
+    parametrize: Optional[Callable[[Step], Step]] = None,
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
-    run_by_default: Optional[bool] = None,
     dependencies: Optional[Sequence[str]] = None,
-    parametrize: Optional[Callable[[T], T]] = None,
+    run_by_default: Optional[bool] = None,
 ) -> None:
+    """
+    Run `pytest`_.
+
+    :param name: The name to give to the step.
+                 Defaults to :python:`"pytest"`.
+    :param args: arguments to pass to the ``pytest`` invocation.
+                 Defaults to :python:`[]`.
+    :param parametrize: A :py:func:`dwas.parametrize` invocation to apply on
+                        the step.
+    :param python: The version of python to use.
+                   Defaults to the version *dwas* was installed with.
+    :param requires: A list of other steps that this step would require.
+    :param dependencies: Python dependencies needed to run this step.
+                         Defaults to :python:`["pytest"]`.
+    :param run_by_default: Whether to run this step by default or not.
+                           If :python:`None`, will default to :python:`True`.
+
+    .. seealso::
+
+        How to parametrize methods with :py:func:`dwas.parametrize`
+
+    .. tip::
+
+        If you use ``pytest-cov``, it will also automatically expose a
+        ``coverage_files`` :term:`artifact` that can be used by dependent steps,
+        for an example, see :py:func:`coverage`
+
+    :Examples:
+
+        For running pytest with the a specific version of python, with your
+        code in the `PYTHONPATH`:
+
+        .. code-block::
+
+            dwas.predefined.pytest(python="3.9")
+
+        Or, for a more concrete example, across multiple versions of python and
+        testing your installed application:
+
+        .. code-block::
+
+            # Setup a "package" step, to install the source code automatically
+            # for the tests
+            dwas.predefined.package()
+
+            dwas.predefined.pytest(
+                dependencies=["pytest", "pytest-cov"],
+                requires=["package"],
+                parametrize=dwas.parametrize("python", ["3.8", "3.9", "3.10"])
+            )
+
+        Leveraging :py:func:`dwas.parametrize`, this generates 4 different
+        steps: ``pytest``, which is a :term:`step group` which depends on the
+        other ``pytest[3.8]``, ``pytest[3.9]`` and ``pytest[3.10]`` which each
+        run pytest with the given version of python.
+
+        Similarly, if you wanted to test multiple multiple versions of a python
+        package, with different versions of python:
+
+        .. code-block::
+
+            dwas.predefined.pytest(
+                requires=["package"],
+                parametrize=dwas.parametrize(
+                    "python", ["3.8", "3.9", "3.10"]
+                )(dwas.parametrize(
+                    "dependencies",
+                    [
+                        ["pytest", "django==3.0"],
+                        ["pytest", "django==4.0"],
+                    ],
+                    ids=["django3", "django4"],
+                )
+            )
+    """
     pytest_ = Pytest()
 
     if args is not None:

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools >= 61.0.0"]
+requires = ["setuptools >= 61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 ##
@@ -33,6 +33,7 @@ dynamic = ["dependencies", "optional-dependencies"]
 homepage = "https://github.com/BenjaminSchubert/dwas"
 repository = "https://github.com/BenjaminSchubert/dwas"
 tracker = "https://github.com/BenjaminSchubert/dwas/issues"
+documentation = "https://dwas.readthedocs.io/en/latest/"
 
 [project.entry-points.console_scripts]
 dwas = "dwas.__main__:main"
@@ -46,6 +47,8 @@ dwas = ["py.typed"]
 [tool.setuptools.dynamic]
 dependencies.file = "requirements/requirements.txt"
 optional-dependencies.test.file = "requirements/requirements-test.txt"
+optional-dependencies.docs.file = "requirements/requirements-docs.txt"
+
 
 ##
 # Linters / Formatters

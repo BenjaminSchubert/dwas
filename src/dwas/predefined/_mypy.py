@@ -19,7 +19,8 @@ LOGGER = logging.getLogger(__name__)
     {"dependencies": ["mypy"], "additional_arguments": [], "files": ["."]}
 )
 class Mypy(Step):
-    __name__ = "mypy"
+    def __init__(self) -> None:
+        self.__name__ = "mypy"
 
     def __call__(
         self,
@@ -53,6 +54,36 @@ def mypy(
     dependencies: Optional[Sequence[str]] = None,
     run_by_default: Optional[bool] = None,
 ) -> None:
+    """
+    Run `mypy`_ against your python source code.
+
+    :param name: The name to give to the step.
+                 Defaults to :python:`"mypy"`.
+    :param files: The list of files, directories or packages to run ``mypy``
+                  against.
+                  Defaults to :python:`["."]`.
+    :param additional_arguments: Additional arguments to pass to the ``mypy``
+                                 invocation.
+                                 Defaults to :python:`[]`.
+    :param python: The version of python to use.
+                   Defaults to the version *dwas* was installed with.
+    :param requires: A list of other steps that this step would require.
+    :param dependencies: Python dependencies needed to run this step.
+                         Defaults to :python:`["mypy"]`.
+    :param run_by_default: Whether to run this step by default or not.
+                           Defaults to :python:`True`.
+
+    :Examples:
+
+        .. code-block::
+
+            dwas.predefined.mypy(
+                # Only run for sources, not tests/ or setup.py
+                files=["./src"],
+                dependencies=["mypy", "types-requests"],
+            )
+
+    """
     mypy_ = Mypy()
 
     if files is not None:

@@ -1,3 +1,7 @@
+.. image:: https://readthedocs.org/projects/dwas/badge/?version=latest
+   :target: https://dwas.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 .. image:: https://github.com/BenjaminSchubert/dwas/actions/workflows/ci.yml/badge.svg
    :target: https://github.com/BenjaminSchubert/dwas/actions/workflows/ci.yml
    :alt: checks badge

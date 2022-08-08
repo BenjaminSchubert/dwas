@@ -10,3 +10,6 @@ _artifacts/
 .coverage
 .pytest_cache
 .mypy_cache
+
+# Docs
+docs/api/

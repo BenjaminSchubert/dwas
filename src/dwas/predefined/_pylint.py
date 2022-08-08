@@ -19,7 +19,8 @@ from .. import (
     }
 )
 class Pylint(Step):
-    __name__ = "pylint"
+    def __init__(self) -> None:
+        self.__name__ = "pylint"
 
     def __call__(
         self,
@@ -48,6 +49,35 @@ def pylint(
     dependencies: Optional[Sequence[str]] = None,
     run_by_default: Optional[bool] = None,
 ) -> None:
+    """
+    Run `pylint`_ against your source code.
+
+    :param name: The name to give to the step.
+                 Defaults to :python:`"pylint"`.
+    :param files: The list of files or directories to run ``pylint`` against.
+                  Defaults to :python:`["."]`.
+    :param additional_arguments: Additional arguments to pass to the ``pylint``
+                                 invocation.
+                                 Defaults to :python:`[]`.
+    :param python: The version of python to use.
+                   Defaults to the version *dwas* was installed with.
+    :param requires: A list of other steps that this step would require.
+    :param dependencies: Python dependencies needed to run this step.
+                         Defaults to :python:`["pylint"]`.
+    :param run_by_default: Whether to run this step by default or not.
+                           Defaults to :python:`True`.
+
+    :Examples:
+
+        .. code-block::
+
+            dwas.predefined.pylint(
+                files=["./src", "./tests"],
+                # Install both test and package dependencies to make pylint
+                # find them
+                dependencies=["requests", "pytest", "pylint"],
+            )
+    """
     pylint_ = Pylint()
 
     if files is not None:
