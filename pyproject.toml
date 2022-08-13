@@ -27,7 +27,7 @@ classifiers = [
     "Topic :: Software Development :: Testing",
     "Topic :: Utilities",
 ]
-dynamic = ["dependencies"]
+dynamic = ["dependencies", "optional-dependencies"]
 
 [project.urls]
 homepage = "https://github.com/BenjaminSchubert/dwas"
@@ -44,7 +44,8 @@ where = ["src"]
 dwas = ["py.typed"]
 
 [tool.setuptools.dynamic]
-dependencies = {file = "requirements/requirements.txt"}
+dependencies.file = "requirements/requirements.txt"
+optional-dependencies.test.file = "requirements/requirements-test.txt"
 
 ##
 # Linters / Formatters
