@@ -28,12 +28,14 @@ class BaseStepHandler(ABC):
         self,
         name: str,
         pipeline: Pipeline,
-        requires: List[str],
-        run_by_default: bool = True,
+        requires: Optional[List[str]] = None,
+        run_by_default: Optional[bool] = None,
     ) -> None:
         self.name = name
-        self.requires = requires
-        self.run_by_default = run_by_default
+        self.requires = requires if requires is not None else []
+        self.run_by_default: bool = (
+            run_by_default if run_by_default is not None else True
+        )
         self._pipeline = pipeline
 
     @abstractmethod
@@ -61,15 +63,10 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
         pipeline: Pipeline,
         python: Optional[str],
         requires: Optional[List[str]] = None,
-        run_by_default: bool = True,
+        run_by_default: Optional[bool] = None,
         parameters: Optional[Dict[str, Any]] = None,
     ) -> None:
-        super().__init__(
-            name,
-            pipeline,
-            requires if requires is not None else [],
-            run_by_default,
-        )
+        super().__init__(name, pipeline, requires, run_by_default)
 
         self.name = name
         self.func = func

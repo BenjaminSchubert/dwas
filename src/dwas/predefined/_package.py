@@ -56,7 +56,7 @@ def package(
     name: Optional[str] = None,
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
-    run_by_default: bool = True,
+    run_by_default: Optional[bool] = None,
     isolate: bool = True,
     dependencies: Optional[Sequence[str]] = None,
 ) -> None:

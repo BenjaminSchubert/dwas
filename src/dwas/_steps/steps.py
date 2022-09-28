@@ -49,7 +49,7 @@ class StepHandlerProtocol:
     requires: List[str]
     func: Step
     python: str
-    run_by_default: bool = False
+    run_by_default: bool = True
 
     @property
     def config(self) -> Config:

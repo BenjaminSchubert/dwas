@@ -39,7 +39,7 @@ def pytest(
     args: Optional[Sequence[str]] = None,
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
-    run_by_default: bool = True,
+    run_by_default: Optional[bool] = None,
     dependencies: Optional[Sequence[str]] = None,
     parametrize: Optional[Callable[[T], T]] = None,
 ) -> None:

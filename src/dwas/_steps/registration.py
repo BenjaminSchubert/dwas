@@ -107,7 +107,7 @@ def register_managed_step(
 
 
 def register_step_group(
-    name: str, requires: List[str], run_by_default: bool = True
+    name: str, requires: List[str], run_by_default: Optional[bool] = None
 ) -> None:
     pipeline = get_pipeline()
     pipeline.register_step(

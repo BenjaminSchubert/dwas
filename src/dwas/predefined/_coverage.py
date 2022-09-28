@@ -44,7 +44,7 @@ def coverage(
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     dependencies: Optional[List[str]] = None,
-    run_by_default: bool = True,
+    run_by_default: Optional[bool] = None,
 ) -> None:
     coverage_ = Coverage()
 

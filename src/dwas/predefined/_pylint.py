@@ -46,7 +46,7 @@ def pylint(
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     dependencies: Optional[Sequence[str]] = None,
-    run_by_default: bool = True,
+    run_by_default: Optional[bool] = None,
 ) -> None:
     pylint_ = Pylint()
 

@@ -40,7 +40,7 @@ def isort(
     additional_arguments: Optional[List[str]] = None,
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
-    run_by_default: bool = True,
+    run_by_default: Optional[bool] = None,
     dependencies: Optional[List[str]] = None,
 ) -> None:
     isort_ = Isort()
