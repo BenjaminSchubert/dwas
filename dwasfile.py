@@ -70,9 +70,9 @@ dwas.predefined.pytest(
 ##
 dwas.predefined.coverage(
     reports=[
+        ["report", "--show-missing"],
         ["html", f"--directory={ARTIFACTS_PATH / 'coverage/html'}"],
         ["xml", f"-o{ARTIFACTS_PATH / 'coverage/coverage.xml'}"],
-        ["report", "--show-missing"],
     ],
     requires=["pytest"],
     dependencies=["coverage[toml]"],
