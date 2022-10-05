@@ -8,7 +8,7 @@ TEST_REQUIREMENTS = "-rrequirements/requirements-test.txt"
 OLDEST_SUPPORTED_PYTHON = "3.9"
 SUPPORTED_PYTHONS = ["3.9", "3.10"]
 PYTHON_FILES = ["src/", "tests/", "setup.py", "dwasfile.py"]
-REPORTS_PATH = Path(__file__).parent.joinpath("_reports")
+ARTIFACTS_PATH = Path(__file__).parent.joinpath("_artifacts")
 
 ##
 # Formatting
@@ -70,8 +70,8 @@ dwas.predefined.pytest(
 ##
 dwas.predefined.coverage(
     reports=[
-        ["html", f"--directory={REPORTS_PATH / 'coverage/html'}"],
-        ["xml", f"-o{REPORTS_PATH / 'coverage/coverage.xml'}"],
+        ["html", f"--directory={ARTIFACTS_PATH / 'coverage/html'}"],
+        ["xml", f"-o{ARTIFACTS_PATH / 'coverage/coverage.xml'}"],
         ["report", "--show-missing"],
     ],
     requires=["pytest"],

@@ -4,7 +4,7 @@
 
 # DWAS
 .dwas/*
-_reports/
+_artifacts/
 
 # tests
 .coverage
