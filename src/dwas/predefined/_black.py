@@ -5,7 +5,7 @@ from typing import List, Optional, Sequence
 from .. import (
     Step,
     StepHandler,
-    parametrize,
+    build_parameters,
     register_managed_step,
     set_defaults,
 )
@@ -47,7 +47,7 @@ def black(
     requires: Optional[List[str]] = None,
     dependencies: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
-) -> None:
+) -> Step:
     """
     Run `the Black formatter`_ against your python source code.
 
@@ -65,6 +65,7 @@ def black(
                          Defaults to :python:`["black"]`.
     :param run_by_default: Whether to run this step by default or not.
                            Defaults to :python:`True`.
+    :return: The step so that you can add additional parameters to it if needed.
 
     :Examples:
 
@@ -113,15 +114,11 @@ def black(
 
     black_ = Black()
 
-    if files is not None:
-        black_ = parametrize("files", [files])(black_)
+    black_ = build_parameters(
+        files=files, additional_arguments=additional_arguments
+    )(black_)
 
-    if additional_arguments is not None:
-        black_ = parametrize("additional_arguments", [additional_arguments])(
-            black_
-        )
-
-    register_managed_step(
+    return register_managed_step(
         black_,
         dependencies,
         name=name,

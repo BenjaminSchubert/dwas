@@ -1,10 +1,9 @@
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Callable, List, Optional, Sequence
 
 from .._exceptions import BaseDwasException
 from .._inspect import get_location
 from .._pipeline import get_pipeline
-from .handlers import StepGroupHandler, StepHandler
-from .parametrize import extract_parameters, parametrize
+from .parametrize import build_parameters, parametrize
 from .steps import Step
 from .steps import StepHandler as StepHandlerProtocol
 
@@ -16,7 +15,7 @@ def register_step(
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
-) -> None:
+) -> Step:
     """
     Register the provided :term:`step`.
 
@@ -65,6 +64,7 @@ def register_step(
 
     :param run_by_default: Whether this step should run by default or not.
                            :python:`None` is considered as :python:`True` here.
+    :return: The step that was passed as argument.
     """
     pipeline = get_pipeline()
 
@@ -76,50 +76,12 @@ def register_step(
                 " and `name` was not passed as an argument"
             )
 
-    parameters = extract_parameters(func)
-    all_run_by_default = True
-    all_created = []
+    func = build_parameters(
+        python=python, requires=requires, run_by_default=run_by_default
+    )(func)
 
-    for params_id, args in parameters:
-
-        def get_from_if_not_none(
-            key: str, original: Any, params_: Dict[str, Any]
-        ) -> Any:
-            if key in params_:
-                if original is not None:
-                    raise BaseDwasException(
-                        f"`{key}` for {getattr(func, '__name__', name)} was"
-                        " passed both in parameters and as an argument."
-                        " This is invalid. Please only pass one of them."
-                    )
-                return params_[key]
-            return original
-
-        step_name = ""
-        if len(parameters) > 1 and params_id != "":
-            step_name = f"[{params_id}]"
-
-        step_name = f"{name}{step_name}"
-        current_run_by_default = get_from_if_not_none(
-            "run_by_default", run_by_default, args
-        )
-
-        all_created.append(step_name)
-        all_run_by_default = all_run_by_default and current_run_by_default
-        pipeline.register_step(
-            StepHandler(
-                step_name,
-                func,
-                pipeline,
-                get_from_if_not_none("python", python, args),
-                get_from_if_not_none("requires", requires, args),
-                current_run_by_default,
-                args,
-            )
-        )
-
-    if len(parameters) > 1:
-        register_step_group(name, all_created, all_run_by_default)
+    pipeline.register_step(name, func)
+    return func
 
 
 def register_managed_step(
@@ -130,7 +92,7 @@ def register_managed_step(
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
-) -> None:
+) -> Step:
     """
     Register the provided :term:`step`, and handle installing its dependencies.
 
@@ -152,6 +114,7 @@ def register_managed_step(
     :param python: The python version to use for this step
     :param requires: The list of steps this step depends on
     :param run_by_default: Whether to run by default or not
+    :return: The step that was passed as argument.
     """
     if hasattr(func, "setup"):
         # FIXME: handle nicely
@@ -165,7 +128,7 @@ def register_managed_step(
     if dependencies is not None:
         func = parametrize("dependencies", [dependencies])(func)
 
-    register_step(
+    return register_step(
         func,
         name=name,
         python=python,
@@ -194,9 +157,7 @@ def register_step_group(
     :param run_by_default: Whether to run this step by default or not
     """
     pipeline = get_pipeline()
-    pipeline.register_step(
-        StepGroupHandler(name, pipeline, requires, run_by_default)
-    )
+    pipeline.register_step_group(name, requires, run_by_default)
 
 
 def step(

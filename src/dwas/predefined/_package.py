@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Sequence
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
 from .. import (
+    Step,
     StepHandler,
     StepWithDependentSetup,
     parametrize,
@@ -60,7 +61,7 @@ def package(
     requires: Optional[List[str]] = None,
     dependencies: Optional[Sequence[str]] = None,
     run_by_default: Optional[bool] = None,
-) -> None:
+) -> Step:
     """
     Build a python package that follows :pep:`517`, and install it in dependent venvs.
 
@@ -86,6 +87,7 @@ def package(
                          Defaults to :python:`["build"]`.
     :param run_by_default: Whether to run this step by default or not.
                            If :python:`None`, will default to :python:`True`.
+    :return: The step so that you can add additional parameters to it if needed.
 
     This leverages ``python -m build`` in order to build a source distribution
     and a universal wheel (assuming there are no c-extensions).
@@ -127,7 +129,7 @@ def package(
     package_ = Package()
     package_ = parametrize("isolate", [isolate])(package_)
 
-    register_managed_step(
+    return register_managed_step(
         package_,
         dependencies,
         name=name,

@@ -6,9 +6,13 @@ from concurrent import futures
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 from subprocess import CalledProcessError
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+from typing import Dict, Generator, List, Optional, Tuple
 
 from colorama import Fore, Style
+
+from dwas._steps.handlers import BaseStepHandler, StepGroupHandler, StepHandler
+from dwas._steps.parametrize import extract_parameters
+from dwas._steps.steps import Step
 
 from ._config import Config
 from ._exceptions import (
@@ -21,9 +25,6 @@ from ._exceptions import (
 from ._log_capture import PipePlexer
 from ._logging import set_context_handler
 from ._subproc import set_subprocess_default_pipes
-
-if TYPE_CHECKING:
-    from ._steps.handlers import BaseStepHandler
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,15 +51,82 @@ class ExceptionWithTimeSpentException(Exception):
 class Pipeline:
     def __init__(self, config: Config) -> None:
         self.config = config
-        self._steps: Dict[str, "BaseStepHandler"] = {}
 
-    def register_step(self, step: "BaseStepHandler") -> None:
-        if step.name in self._steps:
-            raise DuplicateStepException(step.name)
+        self._registered_steps: List[Tuple[str, Step]] = []
+        self._registered_step_groups: List[
+            Tuple[str, List[str], Optional[bool]]
+        ] = []
+        self._steps_cache: Optional[Dict[str, BaseStepHandler]] = None
 
-        self._steps[step.name] = step
+    @property
+    def _steps(self) -> Dict[str, BaseStepHandler]:
+        if self._steps_cache is None:
+            self._steps_cache = self._resolve_steps()
+        return self._steps_cache
 
-    def _resolve_steps(
+    def register_step(self, name: str, step: "Step") -> None:
+        self._registered_steps.append((name, step))
+
+    def register_step_group(
+        self,
+        name: str,
+        requires: List[str],
+        run_by_default: Optional[bool] = None,
+    ) -> None:
+        self._registered_step_groups.append((name, requires, run_by_default))
+
+    def _resolve_steps(self) -> Dict[str, BaseStepHandler]:
+        steps = {}
+
+        for name, func in self._registered_steps:
+            for step in self._resolve_parameters(name, func):
+                if step.name in steps:
+                    raise DuplicateStepException(step.name)
+
+                steps[step.name] = step
+
+        for name, requires, run_by_default in self._registered_step_groups:
+            if name in steps:
+                raise DuplicateStepException(name)
+
+            steps[name] = StepGroupHandler(
+                name, self, requires, run_by_default
+            )
+
+        return steps
+
+    def _resolve_parameters(
+        self, name: str, func: Step
+    ) -> Generator[BaseStepHandler, None, None]:
+        parameters = extract_parameters(func)
+        all_run_by_default = True
+        all_created = []
+
+        for params_id, args in parameters:
+            step_name = ""
+            if len(parameters) > 1 and params_id != "":
+                step_name = f"[{params_id}]"
+
+            step_name = f"{name}{step_name}"
+            current_run_by_default = args.get("run_by_default", None)
+
+            all_created.append(step_name)
+            all_run_by_default = all_run_by_default and current_run_by_default
+
+            yield StepHandler(
+                name=step_name,
+                func=func,
+                pipeline=self,
+                python=args.get("python", None),
+                requires=args.get("requires", None),
+                run_by_default=current_run_by_default,
+                parameters=args,
+            )
+
+        if len(parameters) > 1:
+            yield StepGroupHandler(name, self, all_created, all_run_by_default)
+
+    def _resolve_execution_order(
         self,
         steps: Optional[List[str]] = None,
         only_steps: Optional[List[str]] = None,
@@ -131,7 +199,7 @@ class Pipeline:
         # pylint: disable=too-many-branches,too-many-locals
         start_time = datetime.now()
 
-        steps = self._resolve_steps(steps, only_steps, except_steps)
+        steps = self._resolve_execution_order(steps, only_steps, except_steps)
         if only_steps is None:
             only_steps = steps
         if except_steps is None:
@@ -219,7 +287,7 @@ class Pipeline:
 
             self._log_summary(graph, results, start_time)
 
-    def get_requirement(self, requirement: str) -> "BaseStepHandler":
+    def get_requirement(self, requirement: str) -> BaseStepHandler:
         return self._steps[requirement]
 
     def list_all_steps(
@@ -229,8 +297,10 @@ class Pipeline:
         except_steps: Optional[List[str]] = None,
         show_dependencies: bool = False,
     ) -> None:
-        all_steps = self._resolve_steps(list(self._steps.keys()))
-        selected_steps = self._resolve_steps(steps, only_steps, except_steps)
+        all_steps = self._resolve_execution_order(list(self._steps.keys()))
+        selected_steps = self._resolve_execution_order(
+            steps, only_steps, except_steps
+        )
 
         LOGGER.info("Available steps (* means selected, - means skipped):")
         for step in sorted(all_steps):

@@ -2,6 +2,7 @@ from .parametrize import (
     DefaultsAlreadySetException,
     MismatchedNumberOfParametersException,
     ParameterConflictException,
+    build_parameters,
     parametrize,
     set_defaults,
 )
@@ -23,6 +24,7 @@ from .steps import (
 __all__ = [
     "managed_step",
     "parametrize",
+    "build_parameters",
     "register_managed_step",
     "register_step",
     "register_step_group",

@@ -5,16 +5,19 @@ import subprocess
 import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from .._config import Config
 from .._dependency_injection import call_with_parameters
 from .._exceptions import BaseDwasException
-from .._pipeline import Pipeline
 from .._runners import VenvRunner
 from .steps import Step
 from .steps import StepHandler as StepHandlerProtocol
 from .steps import StepWithArtifacts, StepWithDependentSetup, StepWithSetup
+
+if TYPE_CHECKING:
+    from .._pipeline import Pipeline
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +26,7 @@ class BaseStepHandler(ABC):
     def __init__(
         self,
         name: str,
-        pipeline: Pipeline,
+        pipeline: "Pipeline",
         requires: Optional[List[str]] = None,
         run_by_default: Optional[bool] = None,
     ) -> None:
@@ -59,7 +62,7 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
         self,
         name: str,
         func: Step,
-        pipeline: Pipeline,
+        pipeline: "Pipeline",
         python: Optional[str],
         requires: Optional[List[str]] = None,
         run_by_default: Optional[bool] = None,

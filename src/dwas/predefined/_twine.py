@@ -7,7 +7,7 @@ from typing import List, Optional
 from .. import (
     Step,
     StepHandler,
-    parametrize,
+    build_parameters,
     register_managed_step,
     set_defaults,
 )
@@ -59,7 +59,7 @@ def twine(
     requires: Optional[List[str]] = None,
     dependencies: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
-) -> None:
+) -> Step:
     """
     Run `twine`_ against the provided packages.
 
@@ -82,6 +82,7 @@ def twine(
                          Defaults to :python:`["twine"]`.
     :param run_by_default: Whether to run this step by default or not.
                            If :python:`True`, will default to :python:`True`
+    :return: The step so that you can add additional parameters to it if needed.
 
     :Examples:
 
@@ -119,14 +120,12 @@ def twine(
     """
     twine_ = Twine()
 
-    if additional_arguments is not None:
-        twine_ = parametrize("additional_arguments", [additional_arguments])(
-            twine_
-        )
-    if passenv is not None:
-        twine_ = parametrize("passenv", [passenv])(twine_)
+    twine_ = build_parameters(
+        additional_arguments=additional_arguments,
+        passenv=passenv,
+    )(twine_)
 
-    register_managed_step(
+    return register_managed_step(
         twine_,
         dependencies,
         name=name,

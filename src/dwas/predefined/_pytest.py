@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Sequence, TypeVar
+from typing import Any, Dict, List, Optional, Sequence
 
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
@@ -8,7 +8,6 @@ from .. import Step, StepHandler
 from .. import parametrize as apply_parameters
 from .. import register_managed_step, set_defaults
 
-T = TypeVar("T")
 LOGGER = logging.getLogger(__name__)
 
 
@@ -38,12 +37,11 @@ def pytest(
     *,
     name: Optional[str] = None,
     args: Optional[Sequence[str]] = None,
-    parametrize: Optional[Callable[[Step], Step]] = None,
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     dependencies: Optional[Sequence[str]] = None,
     run_by_default: Optional[bool] = None,
-) -> None:
+) -> Step:
     """
     Run `pytest`_.
 
@@ -51,8 +49,6 @@ def pytest(
                  Defaults to :python:`"pytest"`.
     :param args: arguments to pass to the ``pytest`` invocation.
                  Defaults to :python:`[]`.
-    :param parametrize: A :py:func:`dwas.parametrize` invocation to apply on
-                        the step.
     :param python: The version of python to use.
                    Defaults to the version *dwas* was installed with.
     :param requires: A list of other steps that this step would require.
@@ -60,10 +56,7 @@ def pytest(
                          Defaults to :python:`["pytest"]`.
     :param run_by_default: Whether to run this step by default or not.
                            If :python:`None`, will default to :python:`True`.
-
-    .. seealso::
-
-        How to parametrize methods with :py:func:`dwas.parametrize`
+    :return: The step so that you can add additional parameters to it if needed.
 
     .. tip::
 
@@ -89,10 +82,11 @@ def pytest(
             # for the tests
             dwas.predefined.package()
 
-            dwas.predefined.pytest(
-                dependencies=["pytest", "pytest-cov"],
-                requires=["package"],
-                parametrize=dwas.parametrize("python", ["3.8", "3.9", "3.10"])
+            dwas.parametrize("python", ["3.8", "3.9", "3.10"])(
+                dwas.predefined.pytest(
+                    dependencies=["pytest", "pytest-cov"],
+                    requires=["package"],
+                )
             )
 
         Leveraging :py:func:`dwas.parametrize`, this generates 4 different
@@ -105,18 +99,12 @@ def pytest(
 
         .. code-block::
 
-            dwas.predefined.pytest(
-                requires=["package"],
-                parametrize=dwas.parametrize(
-                    "python", ["3.8", "3.9", "3.10"]
-                )(dwas.parametrize(
+            dwas.parametrize("python", ["3.8", "3.9", "3.10"])(
+                dwas.parametrize(
                     "dependencies",
-                    [
-                        ["pytest", "django==3.0"],
-                        ["pytest", "django==4.0"],
-                    ],
+                    [["pytest", "django==3.0"], ["pytest", "django==4.0"]],
                     ids=["django3", "django4"],
-                )
+                )(dwas.predefined.pytest(requires=["package"])
             )
     """
     pytest_ = Pytest()
@@ -124,10 +112,7 @@ def pytest(
     if args is not None:
         pytest_ = apply_parameters("args", [args])(pytest_)
 
-    if parametrize is not None:
-        pytest_ = parametrize(pytest_)  # type: ignore
-
-    register_managed_step(
+    return register_managed_step(
         pytest_,
         dependencies,
         name=name,

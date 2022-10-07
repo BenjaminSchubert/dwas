@@ -7,7 +7,7 @@ from typing import List, Optional, Sequence
 from .. import (
     Step,
     StepHandler,
-    parametrize,
+    build_parameters,
     register_managed_step,
     set_defaults,
 )
@@ -53,7 +53,7 @@ def mypy(
     requires: Optional[List[str]] = None,
     dependencies: Optional[Sequence[str]] = None,
     run_by_default: Optional[bool] = None,
-) -> None:
+) -> Step:
     """
     Run `mypy`_ against your python source code.
 
@@ -72,6 +72,7 @@ def mypy(
                          Defaults to :python:`["mypy"]`.
     :param run_by_default: Whether to run this step by default or not.
                            Defaults to :python:`True`.
+    :return: The step so that you can add additional parameters to it if needed.
 
     :Examples:
 
@@ -86,14 +87,12 @@ def mypy(
     """
     mypy_ = Mypy()
 
-    if files is not None:
-        mypy_ = parametrize("files", [files])(mypy_)
-    if additional_arguments is not None:
-        mypy_ = parametrize("additional_arguments", [additional_arguments])(
-            mypy_
-        )
+    mypy_ = build_parameters(
+        files=files,
+        additional_arguments=additional_arguments,
+    )(mypy_)
 
-    register_managed_step(
+    return register_managed_step(
         mypy_,
         dependencies,
         name=name,

@@ -5,7 +5,7 @@ from typing import List, Optional, Sequence
 from .. import (
     Step,
     StepHandler,
-    parametrize,
+    build_parameters,
     register_managed_step,
     set_defaults,
 )
@@ -48,7 +48,7 @@ def pylint(
     requires: Optional[List[str]] = None,
     dependencies: Optional[Sequence[str]] = None,
     run_by_default: Optional[bool] = None,
-) -> None:
+) -> Step:
     """
     Run `pylint`_ against your source code.
 
@@ -66,6 +66,7 @@ def pylint(
                          Defaults to :python:`["pylint"]`.
     :param run_by_default: Whether to run this step by default or not.
                            Defaults to :python:`True`.
+    :return: The step so that you can add additional parameters to it if needed.
 
     :Examples:
 
@@ -80,14 +81,12 @@ def pylint(
     """
     pylint_ = Pylint()
 
-    if files is not None:
-        pylint_ = parametrize("files", [files])(pylint_)
-    if additional_arguments is not None:
-        pylint_ = parametrize("additional_arguments", [additional_arguments])(
-            pylint_
-        )
+    pylint_ = build_parameters(
+        files=files,
+        additional_arguments=additional_arguments,
+    )(pylint_)
 
-    register_managed_step(
+    return register_managed_step(
         pylint_,
         dependencies,
         name=name,

@@ -5,7 +5,7 @@ from typing import List, Optional, Sequence
 from .. import (
     Step,
     StepHandler,
-    parametrize,
+    build_parameters,
     register_managed_step,
     set_defaults,
 )
@@ -43,7 +43,7 @@ def isort(
     requires: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
     dependencies: Optional[List[str]] = None,
-) -> None:
+) -> Step:
     """
     Run `the isort formatter`_ against your python source code.
 
@@ -61,6 +61,7 @@ def isort(
                          Defaults to :python:`["isort[colors]"]`.
     :param run_by_default: Whether to run this step by default or not.
                            Defaults to :python:`True`.
+    :return: The step so that you can add additional parameters to it if needed.
 
     .. tip::
 
@@ -93,14 +94,12 @@ def isort(
     """
     isort_ = Isort()
 
-    if files is not None:
-        isort_ = parametrize("files", [files])(isort_)
-    if additional_arguments is not None:
-        isort_ = parametrize("additional_arguments", [additional_arguments])(
-            isort_
-        )
+    isort_ = build_parameters(
+        files=files,
+        additional_arguments=additional_arguments,
+    )(isort_)
 
-    register_managed_step(
+    return register_managed_step(
         isort_,
         dependencies,
         name=name,

@@ -46,7 +46,7 @@ def coverage(
     requires: Optional[List[str]] = None,
     dependencies: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
-) -> None:
+) -> Step:
     """
     Run `coverage.py`_ to generate coverage reports.
 
@@ -92,13 +92,15 @@ def coverage(
                 ],
                 requires=["pytest"],
             )
+
+    :return: The step so that you can add additional parameters to it if needed.
     """
     coverage_ = Coverage()
 
     if reports is not None:
         coverage_ = parametrize("reports", [reports])(coverage_)
 
-    register_managed_step(
+    return register_managed_step(
         coverage_,
         dependencies,
         name=name,

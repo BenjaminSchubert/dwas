@@ -1,9 +1,13 @@
 from pathlib import Path
-from typing import Callable, List, Optional, Union
+from typing import List, Optional, Union
 
-from .. import Step, StepHandler
-from .. import parametrize as apply_parameters
-from .. import register_managed_step, set_defaults
+from .. import (
+    Step,
+    StepHandler,
+    build_parameters,
+    register_managed_step,
+    set_defaults,
+)
 
 
 @set_defaults(
@@ -62,12 +66,11 @@ def sphinx(
     sourcedir: Optional[Union[Path, str]] = None,
     output: Optional[Union[Path, str]] = None,
     warning_as_error: Optional[bool] = None,
-    parametrize: Optional[Callable[[Step], Step]] = None,
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     dependencies: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
-) -> None:
+) -> Step:
     """
     Run `sphinx`_.
 
@@ -82,8 +85,6 @@ def sphinx(
                    Defaults to :python:`None`.
     :param warning_as_error: Turn warnings into errors
                              Defaults to :python:`False`.
-    :param parametrize: A :py:func:`dwas.parametrize` invocation to apply on the
-                        step.
     :param python: The version of python to use.
                    Defaults to the version *dwas* was installed with.
     :param requires: A list of other steps that this step would require.
@@ -91,6 +92,7 @@ def sphinx(
                          Defaults to :python:`["pytest"]`.
     :param run_by_default: Whether to run this step by default or not.
                            If :python:`None`, will default to :python:`True`.
+    :return: The step so that you can add additional parameters to it if needed.
 
     :Examples:
 
@@ -110,35 +112,27 @@ def sphinx(
 
         .. code-block::
 
-            dwas.predefined.sphinx(
-                requires=["package"],
-                parametrize=dwas.parametrize(
-                    ("builder", "output"),
-                    [
-                        ("html", "_build/docs"),
-                        # We don't care about the output of those two here.
-                        ("linkcheck", None),
-                        ("doctests", None),
-                    ],
-                    ids=["html", "linkcheck", "doctests"],
-                )
-            )
+            dwas.parametrize(
+                ("builder", "output"),
+                [
+                    ("html", "_build/docs"),
+                    # We don't care about the output of those two here.
+                    ("linkcheck", None),
+                    ("doctests", None),
+                ],
+                ids=["html", "linkcheck", "doctests"],
+            )(dwas.predefined.sphinx(requires=["package"]))
     """
     sphinx_ = Sphinx()
 
-    for parameter, value in {
-        "builder": builder,
-        "sourcedir": sourcedir,
-        "output": output,
-        "warning_as_error": warning_as_error,
-    }.items():
-        if value is not None:
-            sphinx_ = apply_parameters(parameter, [value])(sphinx_)
+    sphinx_ = build_parameters(
+        builder=builder,
+        sourcedir=sourcedir,
+        output=output,
+        warning_as_error=warning_as_error,
+    )(sphinx_)
 
-    if parametrize is not None:
-        sphinx_ = parametrize(sphinx_)  # type: ignore
-
-    register_managed_step(
+    return register_managed_step(
         sphinx_,
         dependencies,
         name=name,
