@@ -83,7 +83,7 @@ def test_parameters_are_merged_with_defaults():
         set_defaults({"one": "two", "two": "two"})(f_noop())
     )
     assert extract_parameters(func) == [
-        ("one,three", {"one": "one", "two": "two", "three": "three"})
+        ("", {"one": "one", "two": "two", "three": "three"})
     ]
 
 

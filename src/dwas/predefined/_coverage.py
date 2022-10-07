@@ -96,7 +96,7 @@ def coverage(
     coverage_ = Coverage()
 
     if reports is not None:
-        coverage_ = parametrize("reports", [reports], ids=[""])(coverage_)
+        coverage_ = parametrize("reports", [reports])(coverage_)
 
     register_managed_step(
         coverage_,

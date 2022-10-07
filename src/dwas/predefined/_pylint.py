@@ -81,11 +81,11 @@ def pylint(
     pylint_ = Pylint()
 
     if files is not None:
-        pylint_ = parametrize("files", [files], ids=[""])(pylint_)
+        pylint_ = parametrize("files", [files])(pylint_)
     if additional_arguments is not None:
-        pylint_ = parametrize(
-            "additional_arguments", [additional_arguments], ids=[""]
-        )(pylint_)
+        pylint_ = parametrize("additional_arguments", [additional_arguments])(
+            pylint_
+        )
 
     register_managed_step(
         pylint_,

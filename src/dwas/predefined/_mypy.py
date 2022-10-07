@@ -87,11 +87,11 @@ def mypy(
     mypy_ = Mypy()
 
     if files is not None:
-        mypy_ = parametrize("files", [files], ids=[""])(mypy_)
+        mypy_ = parametrize("files", [files])(mypy_)
     if additional_arguments is not None:
-        mypy_ = parametrize(
-            "additional_arguments", [additional_arguments], ids=[""]
-        )(mypy_)
+        mypy_ = parametrize("additional_arguments", [additional_arguments])(
+            mypy_
+        )
 
     register_managed_step(
         mypy_,

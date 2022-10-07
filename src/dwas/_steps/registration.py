@@ -163,7 +163,7 @@ def register_managed_step(
 
     setattr(func, "setup", install)
     if dependencies is not None:
-        func = parametrize("dependencies", [dependencies], ids=[""])(func)
+        func = parametrize("dependencies", [dependencies])(func)
 
     register_step(
         func,

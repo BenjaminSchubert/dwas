@@ -133,7 +133,7 @@ def sphinx(
         "warning_as_error": warning_as_error,
     }.items():
         if value is not None:
-            sphinx_ = apply_parameters(parameter, [value], ids=[""])(sphinx_)
+            sphinx_ = apply_parameters(parameter, [value])(sphinx_)
 
     if parametrize is not None:
         sphinx_ = parametrize(sphinx_)  # type: ignore

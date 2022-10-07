@@ -94,11 +94,11 @@ def isort(
     isort_ = Isort()
 
     if files is not None:
-        isort_ = parametrize("files", [files], ids=[""])(isort_)
+        isort_ = parametrize("files", [files])(isort_)
     if additional_arguments is not None:
-        isort_ = parametrize(
-            "additional_arguments", [additional_arguments], ids=[""]
-        )(isort_)
+        isort_ = parametrize("additional_arguments", [additional_arguments])(
+            isort_
+        )
 
     register_managed_step(
         isort_,

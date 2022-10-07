@@ -125,7 +125,7 @@ def package(
             )
     """
     package_ = Package()
-    package_ = parametrize("isolate", [isolate], ids=[""])(package_)
+    package_ = parametrize("isolate", [isolate])(package_)
 
     register_managed_step(
         package_,

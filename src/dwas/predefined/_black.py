@@ -114,12 +114,12 @@ def black(
     black_ = Black()
 
     if files is not None:
-        black_ = parametrize("files", [files], ids=[""])(black_)
+        black_ = parametrize("files", [files])(black_)
 
     if additional_arguments is not None:
-        black_ = parametrize(
-            "additional_arguments", [additional_arguments], ids=[""]
-        )(black_)
+        black_ = parametrize("additional_arguments", [additional_arguments])(
+            black_
+        )
 
     register_managed_step(
         black_,

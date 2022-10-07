@@ -122,7 +122,7 @@ def pytest(
     pytest_ = Pytest()
 
     if args is not None:
-        pytest_ = apply_parameters("args", [args], ids=[""])(pytest_)
+        pytest_ = apply_parameters("args", [args])(pytest_)
 
     if parametrize is not None:
         pytest_ = parametrize(pytest_)  # type: ignore

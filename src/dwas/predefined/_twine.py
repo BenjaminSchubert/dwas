@@ -120,11 +120,11 @@ def twine(
     twine_ = Twine()
 
     if additional_arguments is not None:
-        twine_ = parametrize(
-            "additional_arguments", [additional_arguments], ids=[""]
-        )(twine_)
+        twine_ = parametrize("additional_arguments", [additional_arguments])(
+            twine_
+        )
     if passenv is not None:
-        twine_ = parametrize("passenv", [passenv], ids=[""])(twine_)
+        twine_ = parametrize("passenv", [passenv])(twine_)
 
     register_managed_step(
         twine_,

@@ -137,8 +137,13 @@ def parametrize(
     :param arg_values: A list of values to be used for the given argument. When
                        parametrizing multiple arguments at once, this becomes a
                        list of list of argument values.
-    :param ids: A list of ids for each entry in arg_values. If not provided, an
-                id will be built based on the values of the arguments, in order.
+    :param ids: A list of ids for each entry in arg_values.
+
+        If not provided, it will be either:
+
+            - "", if only one value was passed for the parametrization
+            - built based on the string representation of the values, in order.
+
     :return: A decorator that can be applied to a step to apply the parametrization.
     :raise MismatchedNumberOfParametersException: if the number of ids and the
                                                   number of arg_values do not
@@ -212,6 +217,8 @@ def parametrize(
                 raise MismatchedNumberOfParametersException(
                     len(args_values), len(ids)
                 )
+        elif len(args_values) == 1:
+            ids = [""]
         else:
             ids = [None] * len(args_values)
 
