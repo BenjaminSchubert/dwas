@@ -4,8 +4,8 @@ build:
    os: ubuntu-22.04
    jobs:
       pre_build:
-         - python -m sphinx -b spelling docs/ _build/spelling
-         - python -m sphinx -b linkcheck docs/ _build/linkcheck
+         - python -m sphinx -W -b spelling docs/ _build/spelling
+         - python -m sphinx -W -b linkcheck docs/ _build/linkcheck
    tools:
       python: "3.10"
 
