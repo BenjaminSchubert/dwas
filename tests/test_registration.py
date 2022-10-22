@@ -158,3 +158,20 @@ def test_can_register_managed_step(pipeline, from_parameters):
     assert steps == {
         "noop": _expect_step(parameters={"dependencies": ["one"]})
     }
+
+
+@isolated_context
+def test_cannot_override_setup_with_managed_step(pipeline):
+    set_pipeline(pipeline)
+
+    class Noop:
+        def setup(self) -> None:
+            pass
+
+        def __call__(self) -> None:
+            pass
+
+    with pytest.raises(BaseDwasException) as exc_wrapper:
+        register_managed_step(Noop())
+
+    assert "already implements `setup`" in str(exc_wrapper.value)

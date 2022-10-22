@@ -117,8 +117,12 @@ def register_managed_step(
     :return: The step that was passed as argument.
     """
     if hasattr(func, "setup"):
-        # FIXME: handle nicely
-        raise Exception("NOOOO")
+        raise BaseDwasException(
+            f"the step at {get_location(func)} already implements `setup`,"
+            " cannot override it to install dependencies."
+            " You can add `step.install(*dependencies)` inside your setup"
+            " function to handle them."
+        )
 
     # pylint: disable=redefined-outer-name
     def install(step: StepHandlerProtocol, dependencies: str) -> None:
