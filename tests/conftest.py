@@ -1,5 +1,6 @@
 # pylint and pytest fixtures dependency injection are not friends
 # pylint: disable=redefined-outer-name
+import logging
 import sys
 from dataclasses import dataclass
 from typing import List, Optional
@@ -24,6 +25,10 @@ class Result:
 
 @pytest.fixture
 def cli():
+    root_logger = logging.getLogger()
+    handlers = root_logger.handlers
+    root_logger.handlers = []
+
     @isolated_context
     def _cli(args: List[str], raise_on_error: bool = True) -> Result:
         capture = MultiCapture(out=FDCapture(1), err=FDCapture(2), in_=None)
@@ -33,7 +38,7 @@ def cli():
         exit_code = 0
 
         try:
-            main(args)
+            main(args + ["--verbose"])
         except SystemExit as exc:
             if exc.code != 0:
                 exit_code = exc.code
@@ -54,7 +59,12 @@ def cli():
 
         return result
 
-    return _cli
+    yield _cli
+
+    for handler in root_logger.handlers:
+        root_logger.removeHandler(handler)
+
+    root_logger.handlers = handlers
 
 
 @pytest.fixture

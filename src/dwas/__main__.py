@@ -153,7 +153,26 @@ def _load_user_config(
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+
+    try:
+        spec.loader.exec_module(module)
+    except FileNotFoundError as exc:
+        raise BaseDwasException(
+            f"Unable to load {config_file}: no such file or directory"
+        ) from exc
+    except SyntaxError as exc:
+        offset = ""
+        if exc.offset is not None:
+            offset = f"\n\t\t{' ' * (exc.offset - 1)}^"
+
+        raise BaseDwasException(
+            f"Unable to load {config_file}: syntax error:\n"
+            f"\t{exc.filename}:{exc.lineno}\n\n\t\t{exc.text}{offset}"
+        ) from exc
+    except ImportError as exc:
+        raise BaseDwasException(
+            f"Unable to load {config_file}: {exc}"
+        ) from exc
 
     return pipeline
 
@@ -215,5 +234,7 @@ def main(sys_args: Optional[List[str]] = None) -> None:
             args.list_dependencies,
         )
     except BaseDwasException as exc:
+        if config.verbosity >= 1:
+            LOGGER.debug(exc, exc_info=exc)
         LOGGER.error("%s", exc)
         raise SystemExit(exc.exit_code) from exc
