@@ -65,6 +65,9 @@ def register_step(
     :param run_by_default: Whether this step should run by default or not.
                            :python:`None` is considered as :python:`True` here.
     :return: The step that was passed as argument.
+    :raises BaseDwasException: If no :python:`name` is passed and the :python:`func`
+                               parameter does not have a :python:`__name__`
+                               attribute.
     """
     pipeline = get_pipeline()
 
@@ -115,6 +118,8 @@ def register_managed_step(
     :param requires: The list of steps this step depends on
     :param run_by_default: Whether to run by default or not
     :return: The step that was passed as argument.
+    :raises BaseDwasException: If the :python:`func` passed already has a
+                               :python:`setup` attribute defined.
     """
     if hasattr(func, "setup"):
         raise BaseDwasException(

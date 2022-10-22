@@ -134,7 +134,7 @@ def parametrize(
 
     :param arg_names: The name of the argument to parametrize. Or a list of
                       names if multiple values need to be passed.
-    :param arg_values: A list of values to be used for the given argument. When
+    :param args_values: A list of values to be used for the given argument. When
                        parametrizing multiple arguments at once, this becomes a
                        list of list of argument values.
     :param ids: A list of ids for each entry in arg_values.

@@ -84,7 +84,10 @@ allow_untyped_calls = true
 
 ##
 # Pylint
-[tool.pylint.FORMAT]
+[tool.pylint.main]
+load-plugins = "pylint.extensions.docparams"
+
+[tool.pylint.format]
 good-names = ["id", "fd"]
 
 [tool.pylint."MESSAGE CONTROL"]
@@ -105,7 +108,7 @@ disable = [
     "missing-module-docstring",
 ]
 
-[tool.pylint.VARIABLES]
+[tool.pylint.variables]
 "init-import" = true
 
 
