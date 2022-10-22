@@ -86,7 +86,7 @@ def register_step(
 
 def register_managed_step(
     func: Step,
-    dependencies: Optional[Sequence[str]],
+    dependencies: Optional[Sequence[str]] = None,
     *,
     name: Optional[str] = None,
     python: Optional[str] = None,

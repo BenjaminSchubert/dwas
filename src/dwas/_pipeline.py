@@ -108,7 +108,7 @@ class Pipeline:
                 step_name = f"[{params_id}]"
 
             step_name = f"{name}{step_name}"
-            current_run_by_default = args.get("run_by_default", None)
+            current_run_by_default = args.pop("run_by_default", None)
 
             all_created.append(step_name)
             all_run_by_default = all_run_by_default and current_run_by_default
@@ -117,8 +117,8 @@ class Pipeline:
                 name=step_name,
                 func=func,
                 pipeline=self,
-                python=args.get("python", None),
-                requires=args.get("requires", None),
+                python=args.pop("python", None),
+                requires=args.pop("requires", None),
                 run_by_default=current_run_by_default,
                 parameters=args,
             )
@@ -287,8 +287,8 @@ class Pipeline:
 
             self._log_summary(graph, results, start_time)
 
-    def get_requirement(self, requirement: str) -> BaseStepHandler:
-        return self._steps[requirement]
+    def get_step(self, step_name: str) -> BaseStepHandler:
+        return self._steps[step_name]
 
     def list_all_steps(
         self,

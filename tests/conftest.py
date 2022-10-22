@@ -1,3 +1,5 @@
+# pylint and pytest fixtures dependency injection are not friends
+# pylint: disable=redefined-outer-name
 import sys
 from dataclasses import dataclass
 from typing import List, Optional
@@ -5,7 +7,9 @@ from typing import List, Optional
 import pytest
 from _pytest.capture import FDCapture, MultiCapture
 
+from dwas import Config
 from dwas.__main__ import main
+from dwas._pipeline import Pipeline
 
 from ._utils import isolated_context
 
@@ -51,3 +55,22 @@ def cli():
         return result
 
     return _cli
+
+
+@pytest.fixture
+def sample_config(tmp_path):
+    return Config(
+        cache_path=tmp_path / "cache",
+        verbosity=2,
+        colors=False,
+        n_jobs=1,
+        skip_missing_interpreters=False,
+        skip_setup=False,
+        skip_run=False,
+        fail_fast=False,
+    )
+
+
+@pytest.fixture
+def pipeline(sample_config):
+    return Pipeline(sample_config)

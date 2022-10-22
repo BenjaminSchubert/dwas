@@ -116,9 +116,7 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
                     # StepHandler is a public interface, we don't want users accessing
                     # this method.
                     # pylint: disable=protected-access
-                    self._pipeline.get_requirement(requirement)._get_artifacts(
-                        key
-                    )
+                    self._pipeline.get_step(requirement)._get_artifacts(key)
                     for requirement in self._requires
                 ]
             )
@@ -159,9 +157,7 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
             # StepHandler is a public interface, we don't want users accessing
             # this method.
             # pylint: disable=protected-access
-            self._pipeline.get_requirement(
-                requirement
-            )._execute_dependent_setup(self)
+            self._pipeline.get_step(requirement)._execute_dependent_setup(self)
 
         call_with_parameters(self._func, self.parameters.copy())
 
@@ -197,9 +193,9 @@ class StepGroupHandler(BaseStepHandler):
             # StepHandler is a public interface, we don't want users accessing
             # this method.
             # pylint: disable=protected-access
-            self._pipeline.get_requirement(
-                requirement
-            )._execute_dependent_setup(current_step)
+            self._pipeline.get_step(requirement)._execute_dependent_setup(
+                current_step
+            )
 
     def _get_artifacts(self, key: str) -> List[Any]:
         return list(
@@ -208,9 +204,7 @@ class StepGroupHandler(BaseStepHandler):
                     # StepHandler is a public interface, we don't want users accessing
                     # this method.
                     # pylint: disable=protected-access
-                    self._pipeline.get_requirement(requirement)._get_artifacts(
-                        key
-                    )
+                    self._pipeline.get_step(requirement)._get_artifacts(key)
                     for requirement in self._requires
                 ]
             )
