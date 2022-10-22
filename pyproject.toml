@@ -95,6 +95,10 @@ disable = [
     # Stylistic decisions
     "too-few-public-methods",
     "too-many-arguments",
+    # XXX: Mypy and pylint sometimes conflict here, but mypy will check too
+    # Mainly around callback protocols
+    # See https://github.com/python/mypy/issues/5876
+    "arguments-differ",
     # TODO: enable those, we want documentation
     "missing-class-docstring",
     "missing-function-docstring",

@@ -60,23 +60,31 @@ class Step(Protocol):
         We will strive to provide both types in examples.
     """
 
-    __call__: Callable[..., None]
-    """
-    The method to run when the :term:`step` is invoked.
+    # XXX: pylint will complain about the *args/**kwargs with 'arguments-differ'
+    #      However, this is the canonical way mypy does for callback protocols
+    #      that can accept any kind of parameters.
+    #      To avoid the issue, you can also not inherit from 'Step', all the
+    #      type checking should still work.
+    #
+    #      See https://github.com/python/mypy/issues/5876.
+    #
+    def __call__(self, *args: Any, **kwargs: Any) -> None:
+        """
+        The method to run when the :term:`step` is invoked.
 
-    :Parameters:
+        :Parameters:
 
-        It can take any amount of parameters, that can be passed by keyword, so
-        positional only arguments are not supported.
+            It can take any amount of parameters, that can be passed by keyword, so
+            positional only arguments are not supported.
 
-        Parameters will then be passed using parametrization, with a few specific
-        parameters being reserved by the system. Namely:
+            Parameters will then be passed using parametrization, with a few specific
+            parameters being reserved by the system. Namely:
 
-        - ``step``, which is used to pass the :py:class:`StepHandler`.
+            - ``step``, which is used to pass the :py:class:`StepHandler`.
 
-        For passing other arguments, see :py:func:`dwas.parametrize` and
-        :py:func:`dwas.set_defaults`.
-    """
+            For passing other arguments, see :py:func:`dwas.parametrize` and
+            :py:func:`dwas.set_defaults`.
+        """
 
 
 @runtime_checkable
