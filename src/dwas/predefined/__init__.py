@@ -16,6 +16,7 @@ duplication.
 
 from ._black import black
 from ._coverage import coverage
+from ._docformatter import docformatter
 from ._isort import isort
 from ._mypy import mypy
 from ._package import package
@@ -27,6 +28,7 @@ from ._twine import twine
 __all__ = [
     "black",
     "coverage",
+    "docformatter",
     "isort",
     "mypy",
     "package",

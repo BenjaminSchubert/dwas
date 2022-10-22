@@ -20,6 +20,7 @@ ARTIFACTS_PATH = ROOT_PATH / "_artifacts"
 # Formatting
 ##
 dwas.predefined.isort(files=PYTHON_FILES)
+dwas.predefined.docformatter(files=PYTHON_FILES)
 dwas.predefined.black()
 
 # With auto fix
@@ -29,14 +30,23 @@ dwas.predefined.isort(
     run_by_default=False,
     files=PYTHON_FILES,
 )
+dwas.predefined.docformatter(
+    name="docformatter:fix",
+    additional_arguments=["--recursive", "--in-place"],
+    files=PYTHON_FILES,
+    run_by_default=False,
+    requires=["isort:fix"],
+)
 dwas.predefined.black(
     name="black:fix",
     additional_arguments=[],
-    requires=["isort:fix"],
+    requires=["isort:fix", "docformatter:fix"],
     run_by_default=False,
 )
 dwas.register_step_group(
-    name="fix", requires=["isort:fix", "black:fix"], run_by_default=False
+    name="fix",
+    requires=["isort:fix", "docformatter:fix", "black:fix"],
+    run_by_default=False,
 )
 
 

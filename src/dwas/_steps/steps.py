@@ -147,7 +147,6 @@ class StepWithSetup(Step, Protocol):
 
                 This is what :py:func:`register_managed_step` does to install your
                 python dependencies.
-
     """
 
     setup: Callable[..., None]
@@ -267,7 +266,7 @@ class StepWithDependentSetup(Step, Protocol):
 @runtime_checkable
 class StepWithArtifacts(Step, Protocol):
     """
-    Defines a :term:`step` that produces artifacts that can be consumed by subsequent steps.
+    Defines a :term:`step` creating artifacts that can be consumed by dependent steps.
 
     Sometimes, you want to share artifacts between jobs. For example, you might
     have some ``pytest`` runs that generate coverage reports, and then you
@@ -358,7 +357,7 @@ class StepWithArtifacts(Step, Protocol):
 
 class StepHandler:
     """
-    Defines the manager for a :term:`step`, and provides utilities for the step to execute.
+    Defines the manager for a :term:`step`, and provides utilities for the step to run.
 
     This is passed as an argument to every step that executes as ``step``.
 
@@ -379,18 +378,18 @@ class StepHandler:
     @property
     def config(self) -> Config:
         """
-        The global configuration for the current run
+        The global configuration for the current run.
 
-        At this point, you should not be modifying it. However, you can use it
-        to act differently on what you are doing. For example, you might want
-        to use the :py:attr:`Config.verbosity` to configure the output of some
-        commands you run.
+        At this point, you should not be modifying it. However, you can
+        use it to act differently on what you are doing. For example,
+        you might want to use the :py:attr:`Config.verbosity` to
+        configure the output of some commands you run.
         """
 
     @property
     def cache_path(self) -> Path:
         """
-        The path to the cache for the current step
+        The path to the cache for the current step.
 
         This can be used to store temporary files or any other artifacts.
 

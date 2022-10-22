@@ -83,7 +83,6 @@ def mypy(
                 files=["./src"],
                 dependencies=["mypy", "types-requests"],
             )
-
     """
     mypy_ = Mypy()
 

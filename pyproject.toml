@@ -60,6 +60,15 @@ optional-dependencies.docs.file = "requirements/requirements-docs.txt"
 line-length = 79
 
 ##
+# Docformatter
+[tool.docformatter]
+black = true
+recursive = true
+make-summary-multi-line = true
+pre-summary-newline = true
+wrap-summaries = 89
+
+##
 # Isort
 [tool.isort]
 profile = "black"

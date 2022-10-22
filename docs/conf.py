@@ -85,6 +85,7 @@ rst_epilog = """
 .. _the Black formatter: https://black.readthedocs.io/en/stable/
 .. _the isort formatter: https://pycqa.github.io/isort/
 .. _coverage.py: https://coverage.readthedocs.io/en/stable/
+.. _docformatter: https://github.com/PyCQA/docformatter/
 .. _mypy: https://mypy.readthedocs.io/en/stable/
 .. _pylint: https://pylint.pycqa.org/en/latest/
 .. _pytest: https://docs.pytest.org/en/stable/

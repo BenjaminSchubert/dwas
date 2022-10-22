@@ -28,6 +28,7 @@ jobs:
       matrix:
         session:
           - black
+          - docformatter
           - isort
           - mypy
           - pylint

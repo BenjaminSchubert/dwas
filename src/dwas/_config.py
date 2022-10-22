@@ -17,8 +17,9 @@ class Config:
     """
     Holds the global configuration for ``dwas``.
 
-    This contains a lot of the configuration that can be set from the command
-    line and can be access in each step to configure their behavior.
+    This contains a lot of the configuration that can be set from the
+    command line and can be access in each step to configure their
+    behavior.
     """
 
     cache_path: Path
