@@ -1,13 +1,11 @@
 import importlib.util
 import logging
-import shutil
 from argparse import (
     ArgumentParser,
     BooleanOptionalAction,
     Namespace,
     _AppendAction,
 )
-from contextlib import suppress
 from contextvars import Context
 from importlib.metadata import version
 from typing import Any, List, Optional
@@ -199,12 +197,7 @@ def _execute_pipeline(
         )
         return
 
-    if clean:
-        LOGGER.debug("Cleaning workspace")
-        with suppress(FileNotFoundError):
-            shutil.rmtree(config.cache_path)
-
-    pipeline.execute(steps, only_steps, except_steps)
+    pipeline.execute(steps, only_steps, except_steps, clean=clean)
 
 
 def main(sys_args: Optional[List[str]] = None) -> None:

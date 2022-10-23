@@ -1,9 +1,11 @@
 import itertools
 import logging
 import re
+import shutil
 import subprocess
 import sys
 from abc import ABC, abstractmethod
+from contextlib import suppress
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from .._config import Config
@@ -14,6 +16,7 @@ from .steps import (
     Step,
     StepRunner,
     StepWithArtifacts,
+    StepWithCleanup,
     StepWithDependentSetup,
     StepWithSetup,
 )
@@ -39,6 +42,10 @@ class BaseStepHandler(ABC):
             run_by_default if run_by_default is not None else True
         )
         self._pipeline = pipeline
+
+    @abstractmethod
+    def clean(self) -> None:
+        pass
 
     @abstractmethod
     def execute(self) -> None:
@@ -152,6 +159,15 @@ class StepHandler(BaseStepHandler):
 
         call_with_parameters(self._func, self.parameters.copy())
 
+    def clean(self) -> None:
+        if isinstance(self._func, StepWithCleanup):
+            call_with_parameters(self._func.clean, self.parameters.copy())
+
+        self._venv_runner.clean()
+
+        with suppress(FileNotFoundError):
+            shutil.rmtree(self._step_runner.cache_path)
+
     def _execute_dependent_setup(
         self, current_step: "BaseStepHandler"
     ) -> None:
@@ -185,6 +201,9 @@ class StepHandler(BaseStepHandler):
 
 
 class StepGroupHandler(BaseStepHandler):
+    def clean(self) -> None:
+        pass
+
     def execute(self) -> None:
         LOGGER.debug("Step %s is a meta step. Nothing to do", self.name)
 

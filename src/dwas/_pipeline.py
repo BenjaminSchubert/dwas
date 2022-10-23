@@ -189,6 +189,7 @@ class Pipeline:
         steps: Optional[List[str]],
         only_steps: Optional[List[str]],
         except_steps: Optional[List[str]],
+        clean: bool,
     ) -> None:
         # we should refactor at some point
         # pylint: disable=too-many-branches,too-many-locals
@@ -199,6 +200,11 @@ class Pipeline:
             only_steps = steps
         if except_steps is None:
             except_steps = []
+
+        if clean:
+            LOGGER.debug("Cleaning up workspace")
+            for step in steps:
+                self._steps[step].clean()
 
         LOGGER.info("Running steps: %s", ", ".join(steps))
 

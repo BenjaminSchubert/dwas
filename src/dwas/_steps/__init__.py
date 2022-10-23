@@ -17,6 +17,7 @@ from .steps import (
     Step,
     StepRunner,
     StepWithArtifacts,
+    StepWithCleanup,
     StepWithDependentSetup,
     StepWithSetup,
 )
@@ -35,6 +36,7 @@ __all__ = [
     "StepWithDependentSetup",
     "StepWithSetup",
     "StepWithArtifacts",
+    "StepWithCleanup",
     "DefaultsAlreadySetException",
     "MismatchedNumberOfParametersException",
     "ParameterConflictException",

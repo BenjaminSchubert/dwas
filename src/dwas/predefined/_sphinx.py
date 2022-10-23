@@ -1,3 +1,5 @@
+import shutil
+from contextlib import suppress
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -22,6 +24,11 @@ from .. import (
 class Sphinx(Step):
     def __init__(self) -> None:
         self.__name__ = "sphinx"
+
+    def clean(self, output: Optional[Union[Path, str]]) -> None:
+        if output is not None:
+            with suppress(FileNotFoundError):
+                shutil.rmtree(output)
 
     def __call__(
         self,

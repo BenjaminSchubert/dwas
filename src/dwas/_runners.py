@@ -1,6 +1,7 @@
 import logging
 import shutil
 import subprocess
+from contextlib import suppress
 from typing import Dict, List, Optional
 
 from ._config import Config
@@ -22,6 +23,10 @@ class VenvRunner:
         ).resolve()
         self._python = str(self._path / "bin/python")
         self._config = config
+
+    def clean(self) -> None:
+        with suppress(FileNotFoundError):
+            shutil.rmtree(self._path)
 
     def prepare(self) -> None:
         if shutil.which(self._original_python) is None:

@@ -18,6 +18,8 @@ from .. import (
     }
 )
 class Coverage(Step):
+    # TODO: this can create files outside the cache but does not offer a
+    #       convenient way for hooking into `--clean`.
     def __init__(self) -> None:
         self.__name__ = "coverage"
 

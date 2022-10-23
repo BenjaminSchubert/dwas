@@ -359,6 +359,60 @@ class StepWithArtifacts(Step, Protocol):
         """
 
 
+@runtime_checkable
+class StepWithCleanup(Step, Protocol):
+    """
+    Defines a :term:`step` that needs to do custom cleanup.
+
+    Sometimes, a step might write outside of the dwas-managed cache, in which
+    case it might be desirable for it to be able to clean that directory.
+
+    This allows a step to hook on the ``dwas --clean`` invocation to cleanup
+    such files.
+
+    :Examples:
+
+        If you wanted to generated documentation, and wanted to have it easily
+        accessible, you could do:
+
+        .. tip::
+
+            This is a simplified example of what
+            :py:func:`dwas.predefined.sphinx` does
+
+        .. tab:: using functions
+
+            .. code-block::
+
+                @managed_step(dependencies=["sphinx"], output="./build/docs")
+                def sphinx(step: StepRunner, output: str) -> None:
+                    step.run(["sphinx-build", "-b=html", "docs/", output])
+
+                def clean(output: str) -> None:
+                    with suppress(FileNotFoundError):
+                        shutil.rmtree(output)
+
+                sphinx.clean = clean
+
+        .. tab:: using classes
+
+            .. code-block::
+
+                class Sphinx(Step):
+                    def __init__(self) -> None:
+                        self.__name__ = "sphinx"
+
+                    def __call__(self, step: StepRunner, output: str) -> None:
+                        step.run(["sphinx-build", "-b=html", "docs/", output])
+
+                    def clean(output: str) -> None:
+                        with suppress(FileNotFoundError):
+                            shutil.rmtree(output)
+    """
+
+    clean: Callable[..., None]
+
+
 class StepRunner:
     """
     Defines the runner for a :term:`step`, and provides utilities for the step to run.
