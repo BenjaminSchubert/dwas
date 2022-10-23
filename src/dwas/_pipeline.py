@@ -379,6 +379,8 @@ class Pipeline:
                     ", ".join(blocking_dependencies),
                 )
 
+        self._display_slowest_dependency_chain(graph, results)
+
         LOGGER.info("All steps ran in %s", datetime.now() - start_time)
         if failed_jobs:
             raise FailedPipelineException(
@@ -417,3 +419,74 @@ class Pipeline:
 
         LOGGER.info("%sStep %s finished successfully", Fore.GREEN, name)
         return total_time()
+
+    def _display_slowest_dependency_chain(
+        self,
+        graph: Dict[str, List[str]],
+        results: Dict[str, Tuple[Optional[Exception], timedelta]],
+    ) -> None:
+        if len(graph) <= 1:
+            # If there's a single entry in the whole graph, no need to show
+            return
+
+        total_time_per_step = self._compute_slowest_chains(graph, results)
+
+        LOGGER.debug("Dependency chains summaries:")
+        LOGGER.debug("\ttime taken\tslowest dependency chain")
+
+        total_slowest_step = ""
+        total_slowest_time = timedelta()
+
+        # Use the graph here, to display them in topological order
+        for step in graph.keys():
+            if step not in total_time_per_step:
+                continue
+
+            slowest_chain, time_taken = total_time_per_step[step]
+            if time_taken > total_slowest_time:
+                total_slowest_step = step
+                total_slowest_time = time_taken
+
+            LOGGER.debug("\t%s\t%s", time_taken, " -> ".join(slowest_chain))
+
+        LOGGER.info(
+            "\tSlowest dependency chain takes %s: %s",
+            total_slowest_time,
+            " -> ".join(total_time_per_step[total_slowest_step][0]),
+        )
+
+    def _compute_slowest_chains(
+        self,
+        graph: Dict[str, List[str]],
+        results: Dict[str, Tuple[Optional[Exception], timedelta]],
+    ) -> Dict[str, Tuple[List[str], timedelta]]:
+        total_time_per_step: Dict[str, Tuple[List[str], timedelta]] = {}
+
+        def compute_chain(step: str) -> Tuple[List[str], timedelta]:
+            precomputed_result = total_time_per_step.get(step, None)
+            if precomputed_result is not None:
+                return precomputed_result
+
+            time_for_current_step = results[step][1]
+
+            if not graph[step]:
+                # No dependenices, we are a root (or leaf)
+                total_time_per_step[step] = [step], time_for_current_step
+            else:
+                slowest_dependency_chain, slowest_dependency_time = max(
+                    (compute_chain(dependency) for dependency in graph[step]),
+                    key=lambda dep: dep[1],
+                )
+
+                time_for_current_step += slowest_dependency_time
+                total_time_per_step[step] = (
+                    [step, *slowest_dependency_chain],
+                    time_for_current_step,
+                )
+
+            return total_time_per_step[step]
+
+        for step in results.keys():
+            compute_chain(step)
+
+        return total_time_per_step
