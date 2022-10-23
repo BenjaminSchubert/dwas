@@ -14,7 +14,7 @@ from typing import Any, List, Optional
 
 from . import _pipeline
 from ._config import Config
-from ._exceptions import BaseDwasException
+from ._exceptions import BaseDwasException, FailedPipelineException
 from ._logging import setup_logging
 
 LOGGER = logging.getLogger(__name__)
@@ -234,7 +234,9 @@ def main(sys_args: Optional[List[str]] = None) -> None:
             args.list_dependencies,
         )
     except BaseDwasException as exc:
-        if config.verbosity >= 1:
+        if config.verbosity >= 1 and not isinstance(
+            exc, FailedPipelineException
+        ):
             LOGGER.debug(exc, exc_info=exc)
         LOGGER.error("%s", exc)
         raise SystemExit(exc.exit_code) from exc
