@@ -14,7 +14,11 @@ from .. import (
 @set_defaults(
     {
         "dependencies": ["docformatter"],
-        "additional_arguments": ["--recursive"],
+        # FIXME: --check does not show the diff on stdout which means it will
+        #        just fail without information.
+        #        https://github.com/PyCQA/docformatter/issues/125
+        #
+        "additional_arguments": ["--recursive", "--check"],
         "files": ["."],
     }
 )
