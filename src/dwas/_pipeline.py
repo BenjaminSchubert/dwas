@@ -1,10 +1,11 @@
 import graphlib
 import logging
 import sys
+import time
 from collections import deque
 from concurrent import futures
 from contextvars import ContextVar
-from datetime import datetime, timedelta
+from datetime import timedelta
 from subprocess import CalledProcessError
 from typing import Dict, Generator, List, Optional, Tuple
 
@@ -25,6 +26,7 @@ from ._exceptions import (
 from ._log_capture import PipePlexer
 from ._logging import set_context_handler
 from ._subproc import set_subprocess_default_pipes
+from ._timing import get_timedelta_since
 
 LOGGER = logging.getLogger(__name__)
 
@@ -193,7 +195,7 @@ class Pipeline:
     ) -> None:
         # we should refactor at some point
         # pylint: disable=too-many-branches,too-many-locals
-        start_time = datetime.now()
+        start_time = time.monotonic()
 
         steps = self._resolve_execution_order(steps, only_steps, except_steps)
         if only_steps is None:
@@ -322,7 +324,7 @@ class Pipeline:
         self,
         graph: Dict[str, List[str]],
         results: Dict[str, Tuple[Optional[Exception], timedelta]],
-        start_time: datetime,
+        start_time: float,
     ) -> None:
         LOGGER.info("%s*** Steps summary ***", Style.BRIGHT)
         sorter = graphlib.TopologicalSorter(graph)
@@ -387,7 +389,7 @@ class Pipeline:
 
         self._display_slowest_dependency_chain(graph, results)
 
-        LOGGER.info("All steps ran in %s", datetime.now() - start_time)
+        LOGGER.info("All steps ran in %s", get_timedelta_since(start_time))
         if failed_jobs:
             raise FailedPipelineException(
                 len(failed_jobs), len(blocked_jobs), len(cancelled_jobs)
@@ -407,24 +409,25 @@ class Pipeline:
         LOGGER.info(
             "%s--- Step: %s ---%s", Style.BRIGHT, name, Style.RESET_ALL
         )
-        start_time = datetime.now()
-
-        def total_time() -> timedelta:
-            return datetime.now() - start_time
+        start_time = time.monotonic()
 
         try:
             self._steps[name].execute()
         except UnavailableInterpreterException as exc:
             LOGGER.warning("Step %s failed: %s", name, exc)
-            raise ExceptionWithTimeSpentException(exc, total_time()) from exc
+            raise ExceptionWithTimeSpentException(
+                exc, get_timedelta_since(start_time)
+            ) from exc
         except Exception as exc:
             # FIXME: allow another exception that can be thrown programatically
             exc_info = exc if not isinstance(exc, CalledProcessError) else None
             LOGGER.error("Step %s failed: %s", name, exc, exc_info=exc_info)
-            raise ExceptionWithTimeSpentException(exc, total_time()) from exc
+            raise ExceptionWithTimeSpentException(
+                exc, get_timedelta_since(start_time)
+            ) from exc
 
         LOGGER.info("%sStep %s finished successfully", Fore.GREEN, name)
-        return total_time()
+        return get_timedelta_since(start_time)
 
     def _display_slowest_dependency_chain(
         self,
