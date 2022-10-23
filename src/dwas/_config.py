@@ -27,7 +27,7 @@ class Config:
     The path to the root of the cache directory used by dwas.
 
     Note that in most cases, you can use the step-specific cache at
-    :py:attr:`StepHandler.cache_path` and expose data via
+    :py:attr:`StepRunner.cache_path` and expose data via
     :py:func:`StepWithArtifacts.gather_artifacts`.
     """
 

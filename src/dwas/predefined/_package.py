@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Sequence
 #      users might need it
 from .. import (
     Step,
-    StepHandler,
+    StepRunner,
     StepWithDependentSetup,
     parametrize,
     register_managed_step,
@@ -19,7 +19,7 @@ class Package(StepWithDependentSetup):
     def __init__(self) -> None:
         self.__name__ = "package"
 
-    def gather_artifacts(self, step: StepHandler) -> Dict[str, List[Any]]:
+    def gather_artifacts(self, step: StepRunner) -> Dict[str, List[Any]]:
         artifacts = {}
         sdists = [str(p) for p in step.cache_path.glob("*.tar.gz")]
         if sdists:
@@ -32,7 +32,7 @@ class Package(StepWithDependentSetup):
         return artifacts
 
     def setup_dependent(
-        self, original_step: StepHandler, current_step: StepHandler
+        self, original_step: StepRunner, current_step: StepRunner
     ) -> None:
         wheels = list(original_step.cache_path.glob("*.whl"))
         assert len(wheels) == 1
@@ -42,7 +42,7 @@ class Package(StepWithDependentSetup):
             silent_on_success=current_step.config.verbosity < 2,
         )
 
-    def __call__(self, step: StepHandler, isolate: bool) -> None:
+    def __call__(self, step: StepRunner, isolate: bool) -> None:
         with suppress(FileNotFoundError):
             shutil.rmtree(step.cache_path)
 

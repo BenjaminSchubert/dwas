@@ -4,7 +4,7 @@ from typing import List, Optional
 #      users might need it
 from .. import (
     Step,
-    StepHandler,
+    StepRunner,
     parametrize,
     register_managed_step,
     set_defaults,
@@ -23,7 +23,7 @@ class Coverage(Step):
 
     def __call__(
         self,
-        step: StepHandler,
+        step: StepRunner,
         reports: List[List[str]],
     ) -> None:
         env = {"COVERAGE_FILE": str(step.cache_path / "coverage")}

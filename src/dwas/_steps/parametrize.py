@@ -162,7 +162,7 @@ def parametrize(
         @step()
         # This step needs to run for both python 3.10 and python3.11
         @parametrize("python", ["3.10", "3.11"])
-        def print_python_version(step: StepHandler) -> None:
+        def print_python_version(step: StepRunner) -> None:
             step.execute([self.python, "--version"])
 
     Or you might want to parametrize multiple arguments at once. In that case
@@ -185,7 +185,7 @@ def parametrize(
                 ["3.11", ["django==4.0"]],
             ],
         )
-        def test(step: StepHandler) -> None:
+        def test(step: StepRunner) -> None:
             step.run([self.python, "manage.py", "test"])
 
     And finally, you can also combine multiple parametrize calls:
@@ -201,7 +201,7 @@ def parametrize(
         #   - both against django 3.0 and 4.0
         @parametrize("python", ["3.10", "3.11"])
         @parametrize("dependencies", [["django==3.0"], ["django==4.0"]])
-        def test(step: StepHandler) -> None:
+        def test(step: StepRunner) -> None:
             step.run([self.python, "manage.py", "test"])
     """
 

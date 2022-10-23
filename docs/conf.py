@@ -36,6 +36,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_inline_tabs",
     "sphinxcontrib.spelling",
+    "cleanup_signatures",
 ]
 
 # Where to store our custom templates
@@ -47,6 +48,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 nitpicky = True
 nitpick_ignore = [
     ("py:class", "dwas._steps.parametrize.T"),
+    ("py:class", "dwas._steps.handlers.StepHandler"),
 ]
 
 # Theme options

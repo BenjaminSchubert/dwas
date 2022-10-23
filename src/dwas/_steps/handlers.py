@@ -4,16 +4,19 @@ import re
 import subprocess
 import sys
 from abc import ABC, abstractmethod
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from .._config import Config
 from .._dependency_injection import call_with_parameters
 from .._exceptions import BaseDwasException
 from .._runners import VenvRunner
-from .steps import Step
-from .steps import StepHandler as StepHandlerProtocol
-from .steps import StepWithArtifacts, StepWithDependentSetup, StepWithSetup
+from .steps import (
+    Step,
+    StepRunner,
+    StepWithArtifacts,
+    StepWithDependentSetup,
+    StepWithSetup,
+)
 
 if TYPE_CHECKING:
     from .._pipeline import Pipeline
@@ -31,18 +34,20 @@ class BaseStepHandler(ABC):
         run_by_default: Optional[bool] = None,
     ) -> None:
         self.name = name
-        self._requires = requires if requires is not None else []
-        self._run_by_default: bool = (
+        self.requires = requires if requires is not None else []
+        self.run_by_default = (
             run_by_default if run_by_default is not None else True
         )
         self._pipeline = pipeline
 
     @abstractmethod
-    def _execute(self) -> None:
+    def execute(self) -> None:
         pass
 
     @abstractmethod
-    def _execute_dependent_setup(self, current_step: "StepHandler") -> None:
+    def _execute_dependent_setup(
+        self, current_step: "BaseStepHandler"
+    ) -> None:
         pass
 
     @abstractmethod
@@ -54,10 +59,7 @@ class BaseStepHandler(ABC):
         pass
 
 
-class StepHandler(StepHandlerProtocol, BaseStepHandler):
-    # FIXME: should we split the stephandler in two? One for the user-facing
-    #        api, one for the internal parts?
-    #
+class StepHandler(BaseStepHandler):
     def __init__(
         self,
         name: str,
@@ -71,7 +73,6 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
         super().__init__(name, pipeline, requires, run_by_default)
 
         self.name = name
-        self._func = func
         if python is None:
             # FIXME: this probably doesn't handle being installed with pypy/pyston
             python = f"python{sys.version_info[0]}.{sys.version_info[1]}"
@@ -81,8 +82,13 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
             python = f"python{python}"
 
         self.python = python
+
+        self._func = func
+        self._venv_runner = VenvRunner(self.name, self.python, self.config)
+        self._step_runner = StepRunner(self)
+
         if parameters is None:
-            self.parameters = {"step": self}
+            self.parameters = {"step": self._step_runner}
         else:
             if "step" in parameters:
                 raise BaseDwasException(
@@ -90,40 +96,26 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
                 )
 
             self.parameters = parameters
-            self.parameters["step"] = self
-
-        self._runner = VenvRunner(self.name, self.python, self.config)
+            self.parameters["step"] = self._step_runner
 
     @property
     def config(self) -> Config:
         return self._pipeline.config
 
-    @property
-    def cache_path(self) -> Path:
-        name = self.name
-        # Those chars regularly cause trouble with unescaped glob patterns and
-        # such. As such, replace them with "-", hoping this does not cause
-        # collisions
-        for char in ["/", ":", "*", "[", "]"]:
-            name = name.replace(char, "-")
-
-        return self.config.cache_path / "cache" / name
-
     def get_artifacts(self, key: str) -> List[Any]:
         return list(
             itertools.chain.from_iterable(
                 [
-                    # StepHandler is a public interface, we don't want users accessing
-                    # this method.
+                    # Pylint check here is wrong, it's still an instance of our class
                     # pylint: disable=protected-access
                     self._pipeline.get_step(requirement)._get_artifacts(key)
-                    for requirement in self._requires
+                    for requirement in self.requires
                 ]
             )
         )
 
     def install(self, *packages: str) -> None:
-        self._runner.install(*packages)
+        self._venv_runner.install(*packages)
 
     def run(
         self,
@@ -133,18 +125,18 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
         external_command: bool = False,
         silent_on_success: bool = False,
     ) -> subprocess.CompletedProcess[None]:
-        return self._runner.run(
+        return self._venv_runner.run(
             command,
             env=env,
             external_command=external_command,
             silent_on_success=silent_on_success,
         )
 
-    def _execute(self) -> None:
+    def execute(self) -> None:
         if self.config.skip_setup:
             LOGGER.debug("Skipping setup phase")
         else:
-            self._runner.prepare()
+            self._venv_runner.prepare()
 
             if isinstance(self._func, StepWithSetup):
                 call_with_parameters(self._func.setup, self.parameters.copy())
@@ -153,18 +145,26 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
             LOGGER.debug("Skipping run")
             return
 
-        for requirement in self._requires:
-            # StepHandler is a public interface, we don't want users accessing
-            # this method.
+        for requirement in self.requires:
+            # Pylint check here is wrong, it's still an instance of our class
             # pylint: disable=protected-access
             self._pipeline.get_step(requirement)._execute_dependent_setup(self)
 
         call_with_parameters(self._func, self.parameters.copy())
 
-    def _execute_dependent_setup(self, current_step: "StepHandler") -> None:
+    def _execute_dependent_setup(
+        self, current_step: "BaseStepHandler"
+    ) -> None:
+        assert isinstance(current_step, StepHandler)
+
         if isinstance(self._func, StepWithDependentSetup):
             LOGGER.debug("Injecting dependency setup from %s", self.name)
-            self._func.setup_dependent(self, current_step)
+            self._func.setup_dependent(
+                self._step_runner,
+                # Pylint check here is wrong, it's still an instance of our class
+                # pylint: disable=protected-access
+                current_step._step_runner,
+            )
 
     def _get_artifacts(self, key: str) -> List[Any]:
         artifacts = self._gather_artifacts().get(key, [])
@@ -181,17 +181,18 @@ class StepHandler(StepHandlerProtocol, BaseStepHandler):
             LOGGER.debug("Step %s does not provide any artifacts", self.name)
             return {}
 
-        return self._func.gather_artifacts(self)
+        return self._func.gather_artifacts(self._step_runner)
 
 
 class StepGroupHandler(BaseStepHandler):
-    def _execute(self) -> None:
+    def execute(self) -> None:
         LOGGER.debug("Step %s is a meta step. Nothing to do", self.name)
 
-    def _execute_dependent_setup(self, current_step: "StepHandler") -> None:
-        for requirement in self._requires:
-            # StepHandler is a public interface, we don't want users accessing
-            # this method.
+    def _execute_dependent_setup(
+        self, current_step: "BaseStepHandler"
+    ) -> None:
+        for requirement in self.requires:
+            # Pylint check here is wrong, it's still an instance of our class
             # pylint: disable=protected-access
             self._pipeline.get_step(requirement)._execute_dependent_setup(
                 current_step
@@ -201,11 +202,10 @@ class StepGroupHandler(BaseStepHandler):
         return list(
             itertools.chain.from_iterable(
                 [
-                    # StepHandler is a public interface, we don't want users accessing
-                    # this method.
+                    # Pylint check here is wrong, it's still an instance of our class
                     # pylint: disable=protected-access
                     self._pipeline.get_step(requirement)._get_artifacts(key)
-                    for requirement in self._requires
+                    for requirement in self.requires
                 ]
             )
         )

@@ -6,7 +6,7 @@ from typing import List, Optional
 #      users might need it
 from .. import (
     Step,
-    StepHandler,
+    StepRunner,
     build_parameters,
     register_managed_step,
     set_defaults,
@@ -28,7 +28,7 @@ class Twine(Step):
 
     def __call__(
         self,
-        step: StepHandler,
+        step: StepRunner,
         additional_arguments: List[str],
         passenv: List[str],
     ) -> None:

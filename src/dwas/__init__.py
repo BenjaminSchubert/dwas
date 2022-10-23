@@ -16,7 +16,7 @@ from ._steps import (
     MismatchedNumberOfParametersException,
     ParameterConflictException,
     Step,
-    StepHandler,
+    StepRunner,
     StepWithArtifacts,
     StepWithDependentSetup,
     StepWithSetup,
@@ -33,7 +33,7 @@ from ._steps import (
 # XXX: The order here is important, it declares the order in which the entries
 #      are documented in the public docs.
 __all__ = [
-    "StepHandler",
+    "StepRunner",
     "Step",
     "StepWithSetup",
     "StepWithDependentSetup",

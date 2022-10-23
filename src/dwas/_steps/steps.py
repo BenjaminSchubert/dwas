@@ -4,6 +4,7 @@
 import subprocess
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -14,6 +15,9 @@ from typing import (
 )
 
 from .._config import Config
+
+if TYPE_CHECKING:
+    from .handlers import StepHandler
 
 
 @runtime_checkable
@@ -37,7 +41,7 @@ class Step(Protocol):
         .. code-block::
 
             @step()
-            def my_step(step: StepHandler) -> None:
+            def my_step(step: StepRunner) -> None:
                 step.run(["echo", "hello!"])
 
         Or a class:
@@ -46,7 +50,7 @@ class Step(Protocol):
 
             # NOTE: you don't need to explicitely inherit from `Step`
             class MyStep:
-                def __call__(self, step: StepHandler) -> None:
+                def __call__(self, step: StepRunner) -> None:
                     step.run(["echo", "hello!"])
 
             register_step(MyStep(), name="my_step")
@@ -80,7 +84,7 @@ class Step(Protocol):
             Parameters will then be passed using parametrization, with a few specific
             parameters being reserved by the system. Namely:
 
-            - ``step``, which is used to pass the :py:class:`StepHandler`.
+            - ``step``, which is used to pass the :py:class:`StepRunner`.
 
             For passing other arguments, see :py:func:`dwas.parametrize` and
             :py:func:`dwas.set_defaults`.
@@ -122,10 +126,10 @@ class StepWithSetup(Step, Protocol):
             .. code-block::
 
                 @step()
-                def pytest(step: StepHandler) -> None:
+                def pytest(step: StepRunner) -> None:
                     step.run(["pytest"])
 
-                def install_dependencies(step: StepHandler) -> None:
+                def install_dependencies(step: StepRunner) -> None:
                     step.run(["pip", "install", "pytest"])
 
                 pytest.setup = install_dependencies
@@ -135,10 +139,10 @@ class StepWithSetup(Step, Protocol):
             .. code-block::
 
                 class Pytest:
-                    def setup(self, step: StepHandler) -> None:
+                    def setup(self, step: StepRunner) -> None:
                         step.run(["pip", "install", "pytest"])
 
-                    def __call__(self, step: StepHandler) -> None:
+                    def __call__(self, step: StepRunner) -> None:
                         step.run(["pytest"])
 
                 register_step(Pytest(), name="pytest")
@@ -198,10 +202,10 @@ class StepWithDependentSetup(Step, Protocol):
             .. code-block::
 
                 @managed_step(dependencies=["build"])
-                def package(step: StepHandler) -> None:
+                def package(step: StepRunner) -> None:
                     step.run([step.python, "-m", "build", f"--outdir={step.cache_path}"])
 
-                def install(self, original_step: StepHandler, current_step: StepHandler) -> None:
+                def install(self, original_step: StepRunner, current_step: StepRunner) -> None:
                     wheels = list(original_step.cache_path.glob("*.whl"))
                     # Assuming this is a universal wheel
                     assert len(wheels) == 1
@@ -215,7 +219,7 @@ class StepWithDependentSetup(Step, Protocol):
 
                 # This can now be used as a dependency
                 @step(requires=["package"])
-                def my_step(step: StepHandler) -> None:
+                def my_step(step: StepRunner) -> None:
                     step.run(["myproject", "--help"])
 
         .. tab:: Using a class
@@ -223,13 +227,13 @@ class StepWithDependentSetup(Step, Protocol):
             .. code-block::
 
                 class Package:
-                    def __call__(step: StepHandler) -> None:
+                    def __call__(step: StepRunner) -> None:
                         step.run([step.python, "-m", "build", f"--outdir={step.cache_path}"])
 
                     def setup_dependent(
                         self,
-                        original_step: StepHandler,
-                        current_step: StepHandler,
+                        original_step: StepRunner,
+                        current_step: StepRunner,
                     ) -> None:
                         wheels = list(original_step.cache_path.glob("*.whl"))
                         # Assuming this is a universal wheel
@@ -244,14 +248,14 @@ class StepWithDependentSetup(Step, Protocol):
 
                 # This can now be used as a dependency
                 @step(requires=["package"])
-                def my_step(step: StepHandler) -> None:
+                def my_step(step: StepRunner) -> None:
                     step.run(["myproject", "--help"])
     """
 
     def setup_dependent(
         self,
-        original_step: "StepHandler",
-        current_step: "StepHandler",
+        original_step: "StepRunner",
+        current_step: "StepRunner",
     ) -> None:
         """
         Run some logic into a dependent step.
@@ -273,7 +277,7 @@ class StepWithArtifacts(Step, Protocol):
     want to aggregate them together.
 
     This allows a programmatic interface between steps to access artifacts.
-    See :py:func:`StepHandler.get_artifacts` for how to retrieve those artifacts
+    See :py:func:`StepRunner.get_artifacts` for how to retrieve those artifacts
     from another step.
 
     :Examples:
@@ -292,7 +296,7 @@ class StepWithArtifacts(Step, Protocol):
 
                 @step()
                 @parametrize(python=["3.9", "3.10"])
-                def pytest(step: StepHandler) -> None:
+                def pytest(step: StepRunner) -> None:
                     step.run(
                         ["pytest"],
                         env={
@@ -302,7 +306,7 @@ class StepWithArtifacts(Step, Protocol):
                         },
                     )
 
-                def gather_artifacts(step: "StepHandler") -> Dict[str, List[Any]]:
+                def gather_artifacts(step: "StepRunner") -> Dict[str, List[Any]]:
                     return step.cache_path.joinpath(step.python, "coverage")
 
                 pytest.gather_artifacts = gather_artifacts
@@ -312,13 +316,13 @@ class StepWithArtifacts(Step, Protocol):
             .. code-block::
 
                 class Pytest:
-                    def _get_coverage_file(self, step: StepHandler) -> str:
+                    def _get_coverage_file(self, step: StepRunner) -> str:
                         return str(step.cache_path / "reports" / "coverage")
 
-                    def gather_artifacts(self, step: StepHandler) -> Dict[str, List[Any]]:
+                    def gather_artifacts(self, step: StepRunner) -> Dict[str, List[Any]]:
                         return {"coverage_files": [self._get_coverage_file(step)]}
 
-                    def __call__(self, step: StepHandler) -> None:
+                    def __call__(self, step: StepRunner) -> None:
                         step.run(
                             ["pytest", *args],
                             env={"COVERAGE_FILE": self._get_coverage_file(step)},
@@ -331,7 +335,7 @@ class StepWithArtifacts(Step, Protocol):
         .. code-block::
 
             @managed_step(dependencies=["coverage"], requires=["pytest"])
-            def coverage(self, step: StepHandler) -> None:
+            def coverage(self, step: StepRunner) -> None:
                 env = {"COVERAGE_FILE": str(step.cache_path / "coverage")}
 
                 coverage_files = step.get_artifacts("coverage_files")
@@ -344,7 +348,7 @@ class StepWithArtifacts(Step, Protocol):
         .. tip:: The :py:func:`dwas.predefined.coverage` step does roughly this.
     """
 
-    def gather_artifacts(self, step: "StepHandler") -> Dict[str, List[Any]]:
+    def gather_artifacts(self, step: "StepRunner") -> Dict[str, List[Any]]:
         """
         Gather all artifacts exposed by this step.
 
@@ -355,9 +359,9 @@ class StepWithArtifacts(Step, Protocol):
         """
 
 
-class StepHandler:
+class StepRunner:
     """
-    Defines the manager for a :term:`step`, and provides utilities for the step to run.
+    Defines the runner for a :term:`step`, and provides utilities for the step to run.
 
     This is passed as an argument to every step that executes as ``step``.
 
@@ -365,15 +369,24 @@ class StepHandler:
     standardized environment.
     """
 
-    name: str
-    """The name of the current step"""
+    def __init__(self, handler: "StepHandler") -> None:
+        self._handler = handler
 
-    python: str
-    """
-    The name of the current python interpreter
+    @property
+    def name(self) -> str:
+        """
+        The name of the current step.
+        """
+        return self._handler.name
 
-    .. note:: This is not the absolute path to it, just its name.
-    """
+    @property
+    def python(self) -> str:
+        """
+        The name of the current python interpreter.
+
+        .. note:: This is not the absolute path to it, just its name.
+        """
+        return self._handler.python
 
     @property
     def config(self) -> Config:
@@ -385,6 +398,7 @@ class StepHandler:
         you might want to use the :py:attr:`Config.verbosity` to
         configure the output of some commands you run.
         """
+        return self._handler.config
 
     @property
     def cache_path(self) -> Path:
@@ -395,6 +409,14 @@ class StepHandler:
 
         This will be cleaned up and emptied before the step runs.
         """
+        name = self.name
+        # Those chars regularly cause trouble with unescaped glob patterns and
+        # such. As such, replace them with "-", hoping this does not cause
+        # collisions
+        for char in ["/", ":", "*", "[", "]"]:
+            name = name.replace(char, "-")
+
+        return self.config.cache_path / "cache" / name
 
     def get_artifacts(self, key: str) -> List[Any]:
         """
@@ -414,6 +436,7 @@ class StepHandler:
         :return: A list of artifacts, one per step providing artifacts for the
                  given key.
         """
+        return self._handler.get_artifacts(key)
 
     def install(self, *packages: str) -> None:
         """
@@ -426,6 +449,7 @@ class StepHandler:
 
         :param packages: which packages to install
         """
+        return self._handler.install(*packages)
 
     def run(
         self,
@@ -461,3 +485,9 @@ class StepHandler:
         :return: a :py:class:`subprocess.CompletedProcess` with `stderr` and
                  `stdout` set to ``None``.
         """
+        return self._handler.run(
+            command,
+            env=env,
+            external_command=external_command,
+            silent_on_success=silent_on_success,
+        )

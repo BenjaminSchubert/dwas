@@ -15,7 +15,7 @@ from .registration import (
 )
 from .steps import (
     Step,
-    StepHandler,
+    StepRunner,
     StepWithArtifacts,
     StepWithDependentSetup,
     StepWithSetup,
@@ -31,7 +31,7 @@ __all__ = [
     "set_defaults",
     "step",
     "Step",
-    "StepHandler",
+    "StepRunner",
     "StepWithDependentSetup",
     "StepWithSetup",
     "StepWithArtifacts",

@@ -142,10 +142,7 @@ class Pipeline:
             steps = [
                 name
                 for name, step in self._steps.items()
-                # StepHandler is a public interface, we don't want users accessing
-                # this method.
-                # pylint: disable=protected-access
-                if step._run_by_default and name not in except_steps
+                if step.run_by_default and name not in except_steps
             ]
 
         graph = {}
@@ -160,10 +157,8 @@ class Pipeline:
             except KeyError:
                 unknown_steps.append(step)
                 continue
-            # StepHandler is a public interface, we don't want users accessing
-            # this method.
-            # pylint: disable=protected-access
-            required_steps = step_info._requires
+
+            required_steps = step_info.requires
             if only_steps:
                 required_steps = [r for r in required_steps if r in only_steps]
             elif except_steps:
@@ -210,10 +205,7 @@ class Pipeline:
         graph = {
             step: [
                 r
-                # StepHandler is a public interface, we don't want users accessing
-                # this method.
-                # pylint: disable=protected-access
-                for r in self._steps[step]._requires
+                for r in self._steps[step].requires
                 if r in only_steps and r not in except_steps
             ]
             for step in steps
@@ -305,19 +297,13 @@ class Pipeline:
         LOGGER.info("Available steps (* means selected, - means skipped):")
         for step in sorted(all_steps):
             dep_info = ""
-            # StepHandler is a public interface, we don't want users accessing
-            # this method.
-            # pylint: disable=protected-access
-            if show_dependencies and self._steps[step]._requires:
+            if show_dependencies and self._steps[step].requires:
                 dep_info = " --> " + ", ".join(
                     reversed(
                         [
                             s
                             for s in all_steps
-                            # StepHandler is a public interface, we don't want users accessing
-                            # this method.
-                            # pylint: disable=protected-access
-                            if s in self._steps[step]._requires
+                            if s in self._steps[step].requires
                         ]
                     )
                 )
@@ -418,11 +404,8 @@ class Pipeline:
         def total_time() -> timedelta:
             return datetime.now() - start_time
 
-        # StepHandler is a public interface, we don't want users accessing
-        # this method.
-        # pylint: disable=protected-access
         try:
-            self._steps[name]._execute()
+            self._steps[name].execute()
         except UnavailableInterpreterException as exc:
             LOGGER.warning("Step %s failed: %s", name, exc)
             raise ExceptionWithTimeSpentException(exc, total_time()) from exc

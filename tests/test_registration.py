@@ -13,14 +13,12 @@ from ._utils import isolated_context
 
 
 def _get_all_steps_from_pipeline(pipeline: Pipeline) -> Dict[str, Any]:
-    # We are testing some internals here
-    # pylint: disable=protected-access
     def _format_step(step: BaseStepHandler) -> Dict[str, Any]:
         if isinstance(step, StepGroupHandler):
             return {
                 "type": "group",
-                "requires": step._requires,
-                "run_by_default": step._run_by_default,
+                "requires": step.requires,
+                "run_by_default": step.run_by_default,
             }
 
         assert isinstance(step, StepHandler)
@@ -32,11 +30,13 @@ def _get_all_steps_from_pipeline(pipeline: Pipeline) -> Dict[str, Any]:
 
         return {
             "python": step.python,
-            "run_by_default": step._run_by_default,
-            "requires": step._requires,
+            "run_by_default": step.run_by_default,
+            "requires": step.requires,
             "parameters": parameters,
         }
 
+    # We are testing some internals here
+    # pylint: disable=protected-access
     pipeline._resolve_steps()
     return {key: _format_step(step) for key, step in pipeline._steps.items()}
 

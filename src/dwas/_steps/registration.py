@@ -4,8 +4,7 @@ from .._exceptions import BaseDwasException
 from .._inspect import get_location
 from .._pipeline import get_pipeline
 from .parametrize import build_parameters, parametrize
-from .steps import Step
-from .steps import StepHandler as StepHandlerProtocol
+from .steps import Step, StepRunner
 
 
 def register_step(
@@ -39,7 +38,7 @@ def register_step(
 
             .. code-block::
 
-                def my_step(step: StepHandler): ...
+                def my_step(step: StepRunner): ...
 
                 register_step(my_step)
 
@@ -130,7 +129,7 @@ def register_managed_step(
         )
 
     # pylint: disable=redefined-outer-name
-    def install(step: StepHandlerProtocol, dependencies: str) -> None:
+    def install(step: StepRunner, dependencies: str) -> None:
         step.install(*dependencies)
 
     setattr(func, "setup", install)

@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
-from .. import Step, StepHandler
+from .. import Step, StepRunner
 from .. import parametrize as apply_parameters
 from .. import register_managed_step, set_defaults
 
@@ -16,20 +16,20 @@ class Pytest(Step):
     def __init__(self) -> None:
         self.__name__ = "pytest"
 
-    def gather_artifacts(self, step: StepHandler) -> Dict[str, List[Any]]:
+    def gather_artifacts(self, step: StepRunner) -> Dict[str, List[Any]]:
         coverage_file = self._get_coverage_file(step)
         if coverage_file is None or not coverage_file.exists():
             return {}
 
         return {"coverage_files": [str(coverage_file)]}
 
-    def __call__(self, step: StepHandler, args: Sequence[str]) -> None:
+    def __call__(self, step: StepRunner, args: Sequence[str]) -> None:
         step.run(
             ["pytest", *args],
             env={"COVERAGE_FILE": str(self._get_coverage_file(step))},
         )
 
-    def _get_coverage_file(self, step: StepHandler) -> Path:
+    def _get_coverage_file(self, step: StepRunner) -> Path:
         return step.cache_path / "reports" / "coverage"
 
 

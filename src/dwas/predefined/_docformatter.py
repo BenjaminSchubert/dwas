@@ -4,7 +4,7 @@ from typing import List, Optional, Sequence
 #      users might need it
 from .. import (
     Step,
-    StepHandler,
+    StepRunner,
     build_parameters,
     register_managed_step,
     set_defaults,
@@ -28,7 +28,7 @@ class DocFormatter(Step):
 
     def __call__(
         self,
-        step: StepHandler,
+        step: StepRunner,
         files: Sequence[str],
         additional_arguments: List[str],
     ) -> None:

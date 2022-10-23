@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 
 from .. import (
     Step,
-    StepHandler,
+    StepRunner,
     build_parameters,
     register_managed_step,
     set_defaults,
@@ -25,7 +25,7 @@ class Sphinx(Step):
 
     def __call__(
         self,
-        step: StepHandler,
+        step: StepRunner,
         builder: str,
         sourcedir: Union[Path, str],
         output: Optional[Union[Path, str]],
