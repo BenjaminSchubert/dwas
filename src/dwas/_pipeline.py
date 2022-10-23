@@ -364,7 +364,7 @@ class Pipeline:
                         Fore.RED,
                         time_spent,
                         name,
-                        result,
+                        self._format_exception(result),
                     )
                     failed_jobs.append(name)
             elif cancelled_jobs:
@@ -421,13 +421,23 @@ class Pipeline:
         except Exception as exc:
             # FIXME: allow another exception that can be thrown programatically
             exc_info = exc if not isinstance(exc, CalledProcessError) else None
-            LOGGER.error("Step %s failed: %s", name, exc, exc_info=exc_info)
+            LOGGER.error(
+                "Step %s failed: %s",
+                name,
+                self._format_exception(exc),
+                exc_info=exc_info,
+            )
             raise ExceptionWithTimeSpentException(
                 exc, get_timedelta_since(start_time)
             ) from exc
 
         LOGGER.info("%sStep %s finished successfully", Fore.GREEN, name)
         return get_timedelta_since(start_time)
+
+    def _format_exception(self, exc: Exception) -> str:
+        if isinstance(exc, CalledProcessError):
+            return f"Command '{' '.join(exc.cmd)}' returned exit status {exc.returncode}"
+        return str(exc)
 
     def _display_slowest_dependency_chain(
         self,
