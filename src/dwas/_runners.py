@@ -18,9 +18,7 @@ LOGGER = logging.getLogger(__name__)
 class VenvRunner:
     def __init__(self, name: str, python: str, config: Config) -> None:
         self._original_python = python
-        self._path = (
-            config.venvs_path / f"{name}-{python}".replace(":", "-")
-        ).resolve()
+        self._path = (config.venvs_path / name.replace(":", "-")).resolve()
         self._python = str(self._path / "bin/python")
         self._config = config
 

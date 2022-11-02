@@ -6,6 +6,7 @@ conda
 cpus
 cpython
 doctests
+dwas
 isort
 linkchecks
 nox
