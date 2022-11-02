@@ -1,3 +1,4 @@
+import re
 from typing import List, Optional, Sequence
 
 # XXX: All imports here should be done from the top level. If we need it,
@@ -35,6 +36,10 @@ class Black(Step):
             color_arg = f"--{'' if step.config.colors else 'no-'}color"
             additional_arguments.append(color_arg)
 
+        additional_arguments.append(
+            f"--extend-exclude={re.escape(step.config.cache_path.name)}"
+        )
+
         step.run(["black", *additional_arguments, *files])
 
 
@@ -50,6 +55,11 @@ def black(
 ) -> Step:
     """
     Run `the Black formatter`_ against your python source code.
+
+    .. note::
+
+        this will always ignore the basename of the dwas cache to avoid running
+        against the temporary files.
 
     :param name: The name to give to the step.
                  Defaults to :python:`"black"`.

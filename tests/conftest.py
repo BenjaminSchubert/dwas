@@ -38,7 +38,7 @@ def cli():
         exit_code = 0
 
         try:
-            main(args + ["--verbose"])
+            main(args + ["--verbose", "--color"])
         except SystemExit as exc:
             if exc.code != 0:
                 exit_code = exc.code
@@ -65,6 +65,12 @@ def cli():
         root_logger.removeHandler(handler)
 
     root_logger.handlers = handlers
+
+
+@pytest.fixture
+def tmp_path(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    return tmp_path
 
 
 @pytest.fixture
