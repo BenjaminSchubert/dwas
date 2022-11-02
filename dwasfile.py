@@ -8,7 +8,7 @@ DOCS_REQUIREMENTS = "-rrequirements/requirements-docs.txt"
 TEST_REQUIREMENTS = "-rrequirements/requirements-test.txt"
 TYPES_REQUIREMENTS = "-rrequirements/requirements-types.txt"
 OLDEST_SUPPORTED_PYTHON = "3.9"
-SUPPORTED_PYTHONS = ["3.9", "3.10"]
+SUPPORTED_PYTHONS = ["3.9", "3.10", "3.11"]
 PYTHON_FILES = ["docs", "src/", "tests/", "setup.py", "dwasfile.py"]
 
 ROOT_PATH = Path(__file__).parent

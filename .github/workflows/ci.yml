@@ -86,6 +86,7 @@ jobs:
         python:
           - "3.9"
           - "3.10"
+          - "3.11"
 
     steps:
       - name: Check out repository
@@ -138,16 +139,22 @@ jobs:
       # FIXME: We need multiple entries otherwise as wildcards are not supported
       #        Once https://github.com/dawidd6/action-download-artifact/pull/107/files
       #        is merged, it should be doable to have a single action there
-      - name: Download generated coverage files
+      - name: Download generated coverage files [3.9]
         uses: actions/download-artifact@v3
         with:
           name: coverage-files-pytest-3.9
           path: .dwas/cache
 
-      - name: Download generated coverage files
+      - name: Download generated coverage files [3.10]
         uses: actions/download-artifact@v3
         with:
           name: coverage-files-pytest-3.10
+          path: .dwas/cache
+
+      - name: Download generated coverage files [3.11]
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage-files-pytest-3.11
           path: .dwas/cache
 
       - name: Generate coverage report
