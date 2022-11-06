@@ -12,7 +12,7 @@ from dwas import Config
 from dwas.__main__ import main
 from dwas._pipeline import Pipeline
 
-from ._utils import isolated_context
+from ._utils import isolated_context, isolated_logging
 
 
 @dataclass(frozen=True)
@@ -30,6 +30,7 @@ def cli():
     root_logger.handlers = []
 
     @isolated_context
+    @isolated_logging
     def _cli(args: List[str], raise_on_error: bool = True) -> Result:
         capture = MultiCapture(out=FDCapture(1), err=FDCapture(2), in_=None)
         capture.start_capturing()
