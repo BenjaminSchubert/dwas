@@ -24,6 +24,7 @@ from ._pylint import pylint
 from ._pytest import pytest
 from ._sphinx import sphinx
 from ._twine import twine
+from ._unimport import unimport
 
 __all__ = [
     "black",
@@ -36,4 +37,5 @@ __all__ = [
     "pytest",
     "sphinx",
     "twine",
+    "unimport",
 ]

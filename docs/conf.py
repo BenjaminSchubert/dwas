@@ -93,6 +93,7 @@ rst_epilog = """
 .. _pytest: https://docs.pytest.org/en/stable/
 .. _sphinx:  https://www.sphinx-doc.org/
 .. _twine: https://twine.readthedocs.io/en/stable/
+.. _the Unimport formatter: https://unimport.hakancelik.dev/
 .. _the manylinux project: https://github.com/pypa/manylinux
 .. _github actions: https://github.com/features/actions
 """
