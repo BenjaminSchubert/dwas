@@ -376,7 +376,9 @@ class Pipeline:
                 cancelled_jobs.append(name)
             else:
                 blocking_dependencies = [
-                    dep for dep in graph[name] if dep in failed_jobs
+                    dep
+                    for dep in graph[name]
+                    if dep in failed_jobs or dep in blocked_jobs
                 ]
                 assert blocking_dependencies is not None
                 blocked_jobs.append(name)
