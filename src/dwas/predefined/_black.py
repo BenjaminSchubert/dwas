@@ -1,4 +1,3 @@
-import re
 from typing import List, Optional, Sequence
 
 # XXX: All imports here should be done from the top level. If we need it,
@@ -35,10 +34,6 @@ class Black(Step):
         ):
             color_arg = f"--{'' if step.config.colors else 'no-'}color"
             additional_arguments.append(color_arg)
-
-        additional_arguments.append(
-            f"--extend-exclude={re.escape(step.config.cache_path.name)}"
-        )
 
         step.run(["black", *additional_arguments, *files])
 

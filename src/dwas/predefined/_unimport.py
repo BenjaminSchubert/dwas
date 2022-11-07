@@ -1,5 +1,3 @@
-import re
-from pathlib import Path
 from typing import List, Optional, Sequence
 
 # XXX: All imports here should be done from the top level. If we need it,
@@ -35,15 +33,6 @@ class Unimport(Step):
                 f"--color={'always' if step.config.colors else 'never'}"
             )
             additional_arguments.append(color_arg)
-
-        try:
-            subpath = step.config.cache_path.relative_to(Path.cwd())
-        except ValueError:
-            pass
-        else:
-            additional_arguments.append(
-                f"--exclude=^{re.escape(str(subpath))}"
-            )
 
         step.run(["unimport", *additional_arguments, *files])
 

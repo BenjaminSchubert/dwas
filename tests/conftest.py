@@ -25,10 +25,11 @@ class Result:
 
 
 @pytest.fixture
-def cli():
+def cli(tmp_path_factory):
     root_logger = logging.getLogger()
     handlers = root_logger.handlers
     root_logger.handlers = []
+    cache_path = tmp_path_factory.mktemp("cache")
 
     @isolated_context
     @isolated_logging
@@ -42,7 +43,7 @@ def cli():
         exit_code: Union[str, int, None] = 0
 
         try:
-            main(args + ["--verbose", "--color"])
+            main(args + ["--verbose", "--color", f"--cache-path={cache_path}"])
         except SystemExit as exc:
             if exc.code != 0:
                 exit_code = exc.code
