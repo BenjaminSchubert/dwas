@@ -22,6 +22,8 @@ class Isort(Step):
         files: Sequence[str],
         additional_arguments: List[str],
     ) -> None:
+        additional_arguments = additional_arguments.copy()
+
         if step.config.colors:
             additional_arguments.append("--color")
 

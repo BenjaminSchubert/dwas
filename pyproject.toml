@@ -129,8 +129,10 @@ disable = [
 ##
 # Pytest
 [tool.pytest.ini_options]
-addopts = "--verbose --verbose --cov --cov-config=pyproject.toml --cov-report="
+addopts = "--ignore tests/predefined/examples --verbose --verbose --cov --cov-config=pyproject.toml --cov-report="
 log_level = "DEBUG"
+xfail_strict = true
+markers = "project: the project in which to run tests"
 
 ##
 # Coverage
