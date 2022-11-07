@@ -2,9 +2,11 @@
 # pylint: disable=redefined-outer-name
 import copy
 import logging
+import shutil
 import sys
 from dataclasses import dataclass
-from typing import List, Optional, Union
+from pathlib import Path
+from typing import Callable, List, Optional, Union
 
 import pytest
 from _pytest.capture import FDCapture, MultiCapture
@@ -15,6 +17,8 @@ from dwas._pipeline import Pipeline, set_pipeline
 from dwas._subproc import set_subprocess_default_pipes
 
 from ._utils import isolated_context, isolated_logging
+
+pytest.register_assert_rewrite("tests.predefined.mixins")
 
 
 @dataclass(frozen=True)
@@ -43,8 +47,12 @@ def cli(tmp_path_factory):
         # See https://github.com/python/typeshed/issues/8513#issue-1333671093
         exit_code: Union[str, int, None] = 0
 
+        args.extend(["--verbose", f"--cache-path={cache_path}"])
+        if "--no-colors" not in args and "--colors" not in args:
+            args.append("--color")
+
         try:
-            main(args + ["--verbose", "--color", f"--cache-path={cache_path}"])
+            main(args)
         except SystemExit as exc:
             if exc.code != 0:
                 exit_code = exc.code
@@ -146,3 +154,23 @@ def ensure_defaults_are_untouched(tmp_path_factory):
     assert (
         extract_defaults() == original_values
     ), "BUG: Defaults arguments were mutated during the tests."
+
+
+@pytest.fixture
+def project(request, tmp_path, monkeypatch):
+    markers = list(request.node.iter_markers("project"))
+    assert (
+        len(markers) == 1
+    ), f"Didn't get the expected number of markers for 'project': {markers}"
+
+    project = markers[0].args[0]
+
+    for path in project.iterdir():
+        if path.is_dir():
+            copy_func: Callable[[Path, Path], None] = shutil.copytree
+        else:
+            copy_func = shutil.copy
+
+        copy_func(path, tmp_path / path.name)
+
+    monkeypatch.chdir(tmp_path)

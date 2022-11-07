@@ -3,6 +3,10 @@ import logging
 from contextvars import Context
 from typing import Any, Callable, TypeVar
 
+import pytest
+
+from tests import TESTS_PATH
+
 _T = TypeVar("_T")
 
 
@@ -35,5 +39,14 @@ def isolated_logging(func: Callable[..., _T]) -> Callable[..., _T]:
                 handler.release()
 
             logger.handlers = old_handlers
+
+    return wrapper
+
+
+def using_project(project: str) -> Callable[[_T], _T]:
+    def wrapper(func):
+        func = pytest.mark.project(TESTS_PATH / project)(func)
+        func = pytest.mark.usefixtures("project")(func)
+        return func
 
     return wrapper

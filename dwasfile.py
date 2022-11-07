@@ -100,6 +100,7 @@ dwas.register_managed_step(
 dwas.register_managed_step(
     dwas.parametrize("python", SUPPORTED_PYTHONS)(dwas.predefined.pytest()),
     dependencies=[TEST_REQUIREMENTS],
+    passenv=["TERM"],
     requires=["package"],
 )
 

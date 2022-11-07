@@ -24,7 +24,13 @@ class Twine(Step):
         sdists = step.get_artifacts("sdists")
         wheels = step.get_artifacts("wheels")
         if not sdists and not wheels:
-            raise Exception("No sdists or wheels provided")
+            raise Exception(
+                "No sdists or wheels provided: this step expects at least one"
+                " of them to be provided by a previous step"
+            )
+
+        if not step.config.colors and "--no-color" not in additional_arguments:
+            additional_arguments = ["--no-color", *additional_arguments]
 
         step.run(["twine", *additional_arguments, *sdists, *wheels])
 
