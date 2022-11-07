@@ -1,3 +1,4 @@
+---
 name: Checks
 
 env:
@@ -137,26 +138,15 @@ jobs:
       - name: Install dwas
         run: python -m pip install .
 
-      # FIXME: We need multiple entries otherwise as wildcards are not supported
-      #        Once https://github.com/dawidd6/action-download-artifact/pull/107/files
-      #        is merged, it should be doable to have a single action there
-      - name: Download generated coverage files [3.9]
+      # This will download add artifacts that were generated before, which is not ideal
+      # as we only need some of them, but it's simpler than having to repeat them one by one
+      - name: Download generated coverage files
         uses: actions/download-artifact@v3
         with:
-          name: coverage-files-pytest-3.9
-          path: .dwas/cache
+          path: _cache
 
-      - name: Download generated coverage files [3.10]
-        uses: actions/download-artifact@v3
-        with:
-          name: coverage-files-pytest-3.10
-          path: .dwas/cache
-
-      - name: Download generated coverage files [3.11]
-        uses: actions/download-artifact@v3
-        with:
-          name: coverage-files-pytest-3.11
-          path: .dwas/cache
+      - name: Move artifacts to the right place
+        run: mkdir -p .dwas/cache && mv _cache/*/pytest-* .dwas/cache && rm -rf _cache && ls -lR .dwas/cache
 
       - name: Generate coverage report
         run: dwas --verbose --only coverage
