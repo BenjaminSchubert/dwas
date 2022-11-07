@@ -22,6 +22,8 @@ class Black(Step):
         files: Sequence[str],
         additional_arguments: List[str],
     ) -> None:
+        additional_arguments = additional_arguments.copy()
+
         if (
             "--color" not in additional_arguments
             and "--no-color" not in additional_arguments
