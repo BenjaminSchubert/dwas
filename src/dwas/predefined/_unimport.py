@@ -22,6 +22,8 @@ class Unimport(Step):
         files: Sequence[str],
         additional_arguments: List[str],
     ) -> None:
+        additional_arguments = additional_arguments.copy()
+
         if not any(arg.startswith("--color") for arg in additional_arguments):
             color_arg = (
                 f"--color={'always' if step.config.colors else 'never'}"
