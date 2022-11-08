@@ -6,7 +6,7 @@ from argparse import (
     Namespace,
     _AppendAction,
 )
-from contextvars import Context
+from contextvars import copy_context
 from importlib.metadata import version
 from typing import Any, List, Optional
 
@@ -187,7 +187,7 @@ def _execute_pipeline(
 ) -> None:
     pipeline = _pipeline.Pipeline(config)
 
-    context = Context()
+    context = copy_context()
     pipeline = context.run(_load_user_config, pipeline, pipeline_config)
     LOGGER.debug("Pipeline definition found at %s", pipeline_config)
 

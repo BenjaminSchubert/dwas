@@ -3,7 +3,7 @@
 import logging
 import sys
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import pytest
 from _pytest.capture import FDCapture, MultiCapture
@@ -11,13 +11,14 @@ from _pytest.capture import FDCapture, MultiCapture
 from dwas import Config
 from dwas.__main__ import main
 from dwas._pipeline import Pipeline
+from dwas._subproc import set_subprocess_default_pipes
 
 from ._utils import isolated_context, isolated_logging
 
 
 @dataclass(frozen=True)
 class Result:
-    exit_code: int
+    exit_code: Union[str, int, None]
     exc: Optional[SystemExit]
     stdout: str
     stderr: str
@@ -34,9 +35,11 @@ def cli():
     def _cli(args: List[str], raise_on_error: bool = True) -> Result:
         capture = MultiCapture(out=FDCapture(1), err=FDCapture(2), in_=None)
         capture.start_capturing()
+        set_subprocess_default_pipes(sys.stdout, sys.stderr)
 
         exception = None
-        exit_code = 0
+        # See https://github.com/python/typeshed/issues/8513#issue-1333671093
+        exit_code: Union[str, int, None] = 0
 
         try:
             main(args + ["--verbose", "--color"])
@@ -44,16 +47,16 @@ def cli():
             if exc.code != 0:
                 exit_code = exc.code
                 exception = exc
-
-        out, err = capture.readouterr()
-        capture.stop_capturing()
+        finally:
+            out, err = capture.readouterr()
+            capture.stop_capturing()
+            set_subprocess_default_pipes(sys.stdout, sys.stderr)
+            print(out)
+            print(err, file=sys.stderr)
 
         result = Result(
             exit_code=exit_code, exc=exception, stdout=out, stderr=err
         )
-
-        print(out)
-        print(err, file=sys.stderr)
 
         if raise_on_error and exception is not None:
             raise Exception(result)

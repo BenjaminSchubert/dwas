@@ -4,7 +4,7 @@ import sys
 import time
 from collections import deque
 from concurrent import futures
-from contextvars import ContextVar
+from contextvars import Context, ContextVar, copy_context
 from datetime import timedelta
 from subprocess import CalledProcessError
 from typing import Dict, Generator, List, Optional, Tuple
@@ -194,7 +194,7 @@ class Pipeline:
         clean: bool,
     ) -> None:
         # we should refactor at some point
-        # pylint: disable=too-many-branches,too-many-locals
+        # pylint: disable=too-many-branches,too-many-locals,too-many-statements
         start_time = time.monotonic()
 
         steps = self._resolve_execution_order(steps, only_steps, except_steps)
@@ -282,7 +282,18 @@ class Pipeline:
                     pipe_plexer = (
                         PipePlexer() if self.config.n_jobs != 1 else None
                     )
-                    future = executor.submit(self._run_step, name, pipe_plexer)
+
+                    # XXX: Save the context to be able to rerun in it with each
+                    # executor. This needs to be done every time as it's not
+                    # possible to re-enter a context.
+                    pipeline_context = copy_context()
+
+                    future = executor.submit(
+                        self._run_step_in_context,
+                        pipeline_context,
+                        name,
+                        pipe_plexer,
+                    )
                     running_futures[future] = name, pipe_plexer
 
             self._log_summary(graph, results, start_time)
@@ -396,6 +407,24 @@ class Pipeline:
             raise FailedPipelineException(
                 len(failed_jobs), len(blocked_jobs), len(cancelled_jobs)
             )
+
+    def _run_step_in_context(
+        self,
+        pipeline_context: Context,
+        name: str,
+        pipe_plexer: Optional[PipePlexer],
+    ) -> timedelta:
+        # We need to make sure that we run in a sub-context of the pipeline.
+        # Running via `futures.ThreadPoolExecutor` however does not forward the
+        # context. As such, we need first to re-enter the pipeline context,
+        # copy it, to avoid modifications, and run inside this new context.
+        def execute() -> timedelta:
+            # Ensure we run in a clean sub-context
+            context = copy_context()
+            return context.run(self._run_step, name, pipe_plexer)
+
+        # Forcefully run in the pipeline context
+        return pipeline_context.run(execute)
 
     def _run_step(
         self,
