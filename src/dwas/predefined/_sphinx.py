@@ -1,15 +1,9 @@
 import shutil
 from contextlib import suppress
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 
-from .. import (
-    Step,
-    StepRunner,
-    build_parameters,
-    register_managed_step,
-    set_defaults,
-)
+from .. import Step, StepRunner, build_parameters, set_defaults
 
 
 @set_defaults(
@@ -68,21 +62,17 @@ class Sphinx(Step):
 
 def sphinx(
     *,
-    name: Optional[str] = None,
     builder: Optional[str] = None,
     sourcedir: Optional[Union[Path, str]] = None,
     output: Optional[Union[Path, str]] = None,
     warning_as_error: Optional[bool] = None,
-    python: Optional[str] = None,
-    requires: Optional[List[str]] = None,
-    dependencies: Optional[List[str]] = None,
-    run_by_default: Optional[bool] = None,
 ) -> Step:
     """
     Run `sphinx`_.
 
-    :param name: The name to give to the step.
-                 Defaults to :python:`"sphinx"`.
+    By default, it will depend on :python:`["sphinx"]`, when registered with
+    :py:func:`dwas.register_managed_step`.
+
     :param builder: The sphinx builder to use.
                     Defaults to :python:`"html"`.
     :param sourcedir: The directory in which the ``conf.py`` resides.
@@ -92,13 +82,6 @@ def sphinx(
                    Defaults to :python:`None`.
     :param warning_as_error: Turn warnings into errors
                              Defaults to :python:`False`.
-    :param python: The version of python to use.
-                   Defaults to the version *dwas* was installed with.
-    :param requires: A list of other steps that this step would require.
-    :param dependencies: Python dependencies needed to run this step.
-                         Defaults to :python:`["pytest"]`.
-    :param run_by_default: Whether to run this step by default or not.
-                           If :python:`None`, will default to :python:`True`.
     :return: The step so that you can add additional parameters to it if needed.
 
     :Examples:
@@ -109,8 +92,9 @@ def sphinx(
 
         .. code-block::
 
-            dwas.predefined.sphinx(
-                sourcedir="docs", output="_build/docs", python="3.8"
+            dwas.register_managed_step(
+                dwas.predefined.sphinx(sourcedir="docs", output="_build/docs"),
+                python="3.8"
             )
 
         Or, to run doctests, linkchecks and build the output to ``_build/docs``,
@@ -119,31 +103,23 @@ def sphinx(
 
         .. code-block::
 
-            dwas.parametrize(
-                ("builder", "output"),
-                [
-                    ("html", "_build/docs"),
-                    # We don't care about the output of those two here.
-                    ("linkcheck", None),
-                    ("doctests", None),
-                ],
-                ids=["html", "linkcheck", "doctests"],
-            )(dwas.predefined.sphinx(requires=["package"]))
+            register_managed_step(
+                dwas.parametrize(
+                    ("builder", "output"),
+                    [
+                        ("html", "_build/docs"),
+                        # We don't care about the output of those two here.
+                        ("linkcheck", None),
+                        ("doctests", None),
+                    ],
+                    ids=["html", "linkcheck", "doctests"],
+                )(dwas.predefined.sphinx()),
+                requires=["package"],
+            )
     """
-    sphinx_ = Sphinx()
-
-    sphinx_ = build_parameters(
+    return build_parameters(
         builder=builder,
         sourcedir=sourcedir,
         output=output,
         warning_as_error=warning_as_error,
-    )(sphinx_)
-
-    return register_managed_step(
-        sphinx_,
-        dependencies,
-        name=name,
-        python=python,
-        requires=requires,
-        run_by_default=run_by_default,
-    )
+    )(Sphinx())

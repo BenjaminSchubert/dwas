@@ -1,7 +1,7 @@
 import logging
 import shutil
 from contextlib import suppress
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List
 
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
@@ -10,7 +10,6 @@ from .. import (
     StepRunner,
     StepWithDependentSetup,
     parametrize,
-    register_managed_step,
     set_defaults,
 )
 
@@ -73,15 +72,7 @@ class Package(StepWithDependentSetup):
         step.run(command, silent_on_success=step.config.verbosity < 1)
 
 
-def package(
-    *,
-    name: Optional[str] = None,
-    isolate: bool = True,
-    python: Optional[str] = None,
-    requires: Optional[List[str]] = None,
-    dependencies: Optional[Sequence[str]] = None,
-    run_by_default: Optional[bool] = None,
-) -> Step:
+def package(*, isolate: bool = True) -> Step:
     """
     Build a python package that follows :pep:`517`, and install it in dependent venvs.
 
@@ -91,22 +82,14 @@ def package(
         have such requirements, please see `the manylinux project`_, or other
         similar initiatives.
 
-    :param name: The name to give to the step.
-                 Defaults to :python:`"package"`.
+    By default, it will depend on :python:`["build"]`, when registered with
+    :py:func:`dwas.register_managed_step`.
+
     :param isolate: Whether to create a new virtual environment for building the
                     package, or run it in the one created for the step.
                     Setting this to :python:`False` does bring a measurable
                     speedup, but might lead to under-declared build dependencies.
                     Defaults to :python:`True`.
-    :param python: The version of python to use.
-                   Defaults to the version *dwas* was installed with.
-    :param requires: A list of other steps that this step would require.
-    :param dependencies: Python dependencies needed to run this step.
-                         Note that if you override this, 'build' should be
-                         provided too.
-                         Defaults to :python:`["build"]`.
-    :param run_by_default: Whether to run this step by default or not.
-                           If :python:`None`, will default to :python:`True`.
     :return: The step so that you can add additional parameters to it if needed.
 
     This leverages ``python -m build`` in order to build a source distribution
@@ -132,28 +115,18 @@ def package(
 
         .. code-block::
 
-            dwas.predefined.package()
+            dwas.register_managed_step(dwas.predefined.package())
 
         Or, if you want your step to run faster:
 
         .. code-block::
 
-            dwas.predefined.package(
-                isolate=False,
+            dwas.register_managed_step(
+                dwas.predefined.package(isolate=False),
                 # We could read those from pyproject.toml directly, but we'd need
                 # to install a toml reading library, so let's live with duplication
                 # for now.
                 dependencies=["build", "setuptools>=61.0.0", "wheel"],
             )
     """
-    package_ = Package()
-    package_ = parametrize("isolate", [isolate])(package_)
-
-    return register_managed_step(
-        package_,
-        dependencies,
-        name=name,
-        python=python,
-        requires=requires,
-        run_by_default=run_by_default,
-    )
+    return parametrize("isolate", [isolate])(Package())

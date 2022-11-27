@@ -2,13 +2,7 @@ from typing import List, Optional, Sequence
 
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
-from .. import (
-    Step,
-    StepRunner,
-    build_parameters,
-    register_managed_step,
-    set_defaults,
-)
+from .. import Step, StepRunner, build_parameters, set_defaults
 
 
 @set_defaults(
@@ -40,36 +34,20 @@ class Black(Step):
 
 def black(
     *,
-    name: Optional[str] = None,
     files: Optional[Sequence[str]] = None,
     additional_arguments: Optional[List[str]] = None,
-    python: Optional[str] = None,
-    requires: Optional[List[str]] = None,
-    dependencies: Optional[List[str]] = None,
-    run_by_default: Optional[bool] = None,
 ) -> Step:
     """
     Run `the Black formatter`_ against your python source code.
 
-    .. note::
+    By default, it will depend on :python:`["black"]`, when registered with
+    :py:func:`dwas.register_managed_step`.
 
-        this will always ignore the basename of the dwas cache to avoid running
-        against the temporary files.
-
-    :param name: The name to give to the step.
-                 Defaults to :python:`"black"`.
     :param files: The list of files or directories to run ``black`` against.
                   Defaults to :python:`["."]`.
     :param additional_arguments: Additional arguments to pass to the ``black``
                                  invocation.
                                  Defaults to :python:`["--check", "--diff", "-W1"]`.
-    :param python: The version of python to use.
-                   Defaults to the version *dwas* was installed with.
-    :param requires: A list of other steps that this step would require.
-    :param dependencies: Python dependencies needed to run this step.
-                         Defaults to :python:`["black"]`.
-    :param run_by_default: Whether to run this step by default or not.
-                           Defaults to :python:`True`.
     :return: The step so that you can add additional parameters to it if needed.
 
     :Examples:
@@ -79,19 +57,19 @@ def black(
 
         .. code-block::
 
-            dwas.predefined.black()
+            register_managed_step(dwas.predefined.black())
 
         Or, in order to automatically fix your code, but only if requested:
 
         .. code-block::
 
-            dwas.predefined.black(
-                # Note: this name is arbitrary, you could omit it, or specify
+            register_managed_step(
+                dwas.predefined.black(additional_arguments=[]),
+                # NOTE: this name is arbitrary, you could omit it, or specify
                 #       something else. We suffix in our documentation all
                 #       operations that will have destructive effect on the source
                 #       code by ``:fix``
                 name="black:fix",
-                additional_arguments=[],
                 run_by_default=False,
             )
 
@@ -101,33 +79,20 @@ def black(
 
         .. code-block::
 
-            dwas.predefined.isort(
+            register_managed_step(
+                dwas.predefined.isort(additional_arguments=["--atomic"]),
                 name="isort:fix",
-                additional_arguments=["--atomic"],
                 run_by_default=False,
             )
-            dwas.predefined.black(
+            register_managed_step(
+                dwas.predefined.black(additional_arguments=[]),
                 name="black:fix",
-                requires=["isort:fix"],
-                additional_arguments=[],
                 run_by_default=False,
             )
 
         This will ensure that both steps don't step on each other and make black run
         second.
     """
-
-    black_ = Black()
-
-    black_ = build_parameters(
+    return build_parameters(
         files=files, additional_arguments=additional_arguments
-    )(black_)
-
-    return register_managed_step(
-        black_,
-        dependencies,
-        name=name,
-        python=python,
-        requires=requires,
-        run_by_default=run_by_default,
-    )
+    )(Black())

@@ -2,13 +2,7 @@ from typing import List, Optional, Sequence
 
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
-from .. import (
-    Step,
-    StepRunner,
-    build_parameters,
-    register_managed_step,
-    set_defaults,
-)
+from .. import Step, StepRunner, build_parameters, set_defaults
 
 
 @set_defaults(
@@ -41,56 +35,34 @@ class Pylint(Step):
 
 def pylint(
     *,
-    name: str = "pylint",
     files: Optional[Sequence[str]] = None,
     additional_arguments: Optional[Sequence[str]] = None,
-    python: Optional[str] = None,
-    requires: Optional[List[str]] = None,
-    dependencies: Optional[Sequence[str]] = None,
-    run_by_default: Optional[bool] = None,
 ) -> Step:
     """
     Run `pylint`_ against your source code.
 
-    :param name: The name to give to the step.
-                 Defaults to :python:`"pylint"`.
+    By default, it will depend on :python:`["pylint"]`, when registered with
+    :py:func:`dwas.register_managed_step`.
+
     :param files: The list of files or directories to run ``pylint`` against.
                   Defaults to :python:`["."]`.
     :param additional_arguments: Additional arguments to pass to the ``pylint``
                                  invocation.
                                  Defaults to :python:`[]`.
-    :param python: The version of python to use.
-                   Defaults to the version *dwas* was installed with.
-    :param requires: A list of other steps that this step would require.
-    :param dependencies: Python dependencies needed to run this step.
-                         Defaults to :python:`["pylint"]`.
-    :param run_by_default: Whether to run this step by default or not.
-                           Defaults to :python:`True`.
     :return: The step so that you can add additional parameters to it if needed.
 
     :Examples:
 
         .. code-block::
 
-            dwas.predefined.pylint(
-                files=["./src", "./tests"],
+            dwas.register_managed_step(
+                dwas.predefined.pylint(files=["./src", "./tests"]),
                 # Install both test and package dependencies to make pylint
                 # find them
                 dependencies=["requests", "pytest", "pylint"],
             )
     """
-    pylint_ = Pylint()
-
-    pylint_ = build_parameters(
+    return build_parameters(
         files=files,
         additional_arguments=additional_arguments,
-    )(pylint_)
-
-    return register_managed_step(
-        pylint_,
-        dependencies,
-        name=name,
-        python=python,
-        requires=requires,
-        run_by_default=run_by_default,
-    )
+    )(Pylint())

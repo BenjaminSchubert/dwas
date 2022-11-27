@@ -2,13 +2,7 @@ from typing import List, Optional
 
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
-from .. import (
-    Step,
-    StepRunner,
-    parametrize,
-    register_managed_step,
-    set_defaults,
-)
+from .. import Step, StepRunner, parametrize, set_defaults
 
 
 @set_defaults(
@@ -40,30 +34,16 @@ class Coverage(Step):
             step.run(["coverage", *report], env=env)
 
 
-def coverage(
-    *,
-    name: Optional[str] = None,
-    reports: Optional[List[List[str]]] = None,
-    python: Optional[str] = None,
-    requires: Optional[List[str]] = None,
-    dependencies: Optional[List[str]] = None,
-    run_by_default: Optional[bool] = None,
-) -> Step:
+def coverage(*, reports: Optional[List[List[str]]] = None) -> Step:
     """
     Run `coverage.py`_ to generate coverage reports.
 
-    :param name: The name to give to the step.
-                 Defaults to :python:`"coverage"`.
+    By default, it will depend on :python:`["coverage"]`, when registered with
+    :py:func:`dwas.register_managed_step`.
+
     :param reports: A list of parameters to pass to coverage to generate
                     reports.
                     Defaults to :python:`[["report", "--show-missing"]]`
-    :param python: The version of python to use.
-                   Defaults to the version *dwas* was installed with.
-    :param requires: A list of other steps that this step would require.
-    :param dependencies: Python dependencies needed to run this step.
-                         Defaults to :python:`["coverage"]`.
-    :param run_by_default: Whether to run this step by default or not.
-                           Defaults to :python:`True`.
 
     This step leverages :term:`artifacts<artifact>` named ``coverage_files`` provided by
     other steps to provide reports.
@@ -76,22 +56,26 @@ def coverage(
         .. code-block::
 
             # One step to generate the package
-            dwas.predefined.package()
+            dwas.register_managed_step(dwas.predefined.package())
 
             # One step to run pytest across multiple python versions
-            dwas.predefined.pytest(
-                dependencies=["pytest", "pytest-cov"],
-                requires=["package"],
-                parametrize=dwas.parametrize("python", ["3.8", "3.9", "3.10"])
+            dwas.register_managed_step(
+                dwas.parametrize("python", ["3.8", "3.9", "3.10"])(
+                    dwas.predefined.pytest()
+                ),
+                dependencies=["pytest', "pytest-cov"],
+                requires=["package"]
             )
 
             # And finally generate xml report and one on stdout.
             # This will combine all coverage info from the previous pytest runs.
-            dwas.predefined.coverage(
-                reports=[
-                    ["xml", "-o", "reports/coverage.xml"],
-                    ["report", "--show-missing"],
-                ],
+            dwas.register_managed_step(
+                dwas.predefined.coverage(
+                    reports=[
+                        ["xml", "-o", "reports/coverage.xml"],
+                        ["report", "--show-missing"],
+                    ],
+                ),
                 requires=["pytest"],
             )
 
@@ -102,11 +86,4 @@ def coverage(
     if reports is not None:
         coverage_ = parametrize("reports", [reports])(coverage_)
 
-    return register_managed_step(
-        coverage_,
-        dependencies,
-        name=name,
-        python=python,
-        requires=requires,
-        run_by_default=run_by_default,
-    )
+    return coverage_

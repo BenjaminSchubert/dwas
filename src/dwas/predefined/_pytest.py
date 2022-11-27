@@ -4,9 +4,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
-from .. import Step, StepRunner
-from .. import parametrize as apply_parameters
-from .. import register_managed_step, set_defaults
+from .. import Step, StepRunner, parametrize, set_defaults
 
 LOGGER = logging.getLogger(__name__)
 
@@ -33,29 +31,15 @@ class Pytest(Step):
         return step.cache_path / "reports" / "coverage"
 
 
-def pytest(
-    *,
-    name: Optional[str] = None,
-    args: Optional[Sequence[str]] = None,
-    python: Optional[str] = None,
-    requires: Optional[List[str]] = None,
-    dependencies: Optional[Sequence[str]] = None,
-    run_by_default: Optional[bool] = None,
-) -> Step:
+def pytest(*, args: Optional[Sequence[str]] = None) -> Step:
     """
     Run `pytest`_.
 
-    :param name: The name to give to the step.
-                 Defaults to :python:`"pytest"`.
+    By default, it will depend on :python:`["pytest"]`, when registered with
+    :py:func:`dwas.register_managed_step`.
+
     :param args: arguments to pass to the ``pytest`` invocation.
                  Defaults to :python:`[]`.
-    :param python: The version of python to use.
-                   Defaults to the version *dwas* was installed with.
-    :param requires: A list of other steps that this step would require.
-    :param dependencies: Python dependencies needed to run this step.
-                         Defaults to :python:`["pytest"]`.
-    :param run_by_default: Whether to run this step by default or not.
-                           If :python:`None`, will default to :python:`True`.
     :return: The step so that you can add additional parameters to it if needed.
 
     .. tip::
@@ -71,7 +55,7 @@ def pytest(
 
         .. code-block::
 
-            dwas.predefined.pytest(python="3.9")
+            dwas.register_managed_step(dwas.predefined.pytest(), python="3.9")
 
         Or, for a more concrete example, across multiple versions of python and
         testing your installed application:
@@ -80,13 +64,14 @@ def pytest(
 
             # Setup a "package" step, to install the source code automatically
             # for the tests
-            dwas.predefined.package()
+            dwas.register_managed_step(dwas.predefined.package())
 
-            dwas.parametrize("python", ["3.8", "3.9", "3.10"])(
-                dwas.predefined.pytest(
-                    dependencies=["pytest", "pytest-cov"],
-                    requires=["package"],
-                )
+            dwas.register_managed_step(
+                dwas.parametrize("python", ["3.8", "3.9", "3.10"])(
+                    dwas.predefined.pytest()
+                ),
+                dependencies=["pytest", "pytest-cov"],
+                requires=["package"],
             )
 
         Leveraging :py:func:`dwas.parametrize`, this generates 4 different
@@ -99,24 +84,19 @@ def pytest(
 
         .. code-block::
 
-            dwas.parametrize("python", ["3.8", "3.9", "3.10"])(
-                dwas.parametrize(
-                    "dependencies",
-                    [["pytest", "django==3.0"], ["pytest", "django==4.0"]],
-                    ids=["django3", "django4"],
-                )(dwas.predefined.pytest(requires=["package"])
+            dwas.register_managed_step(
+                dwas.parametrize("python", ["3.8", "3.9", "3.10"])(
+                    dwas.parametrize(
+                        "dependencies",
+                        [["pytest", "django==3.0"], ["pytest", "django==4.0"]],
+                        ids=["django3", "django4"],
+                    )(dwas.predefined.pytest()),
+                requires=["package"],
             )
     """
     pytest_ = Pytest()
 
     if args is not None:
-        pytest_ = apply_parameters("args", [args])(pytest_)
+        pytest_ = parametrize("args", [args])(pytest_)
 
-    return register_managed_step(
-        pytest_,
-        dependencies,
-        name=name,
-        python=python,
-        requires=requires,
-        run_by_default=run_by_default,
-    )
+    return pytest_
