@@ -1,3 +1,4 @@
+import logging
 import shutil
 from contextlib import suppress
 from typing import Any, Dict, List, Optional, Sequence
@@ -12,6 +13,8 @@ from .. import (
     register_managed_step,
     set_defaults,
 )
+
+LOGGER = logging.getLogger(__name__)
 
 
 @set_defaults({"dependencies": ["build"], "isolate": True})
@@ -37,8 +40,25 @@ class Package(StepWithDependentSetup):
         wheels = list(original_step.cache_path.glob("*.whl"))
         assert len(wheels) == 1
 
+        LOGGER.debug("Installing wheel with its dependencies")
         current_step.run(
             [current_step.python, "-m", "pip", "install", str(wheels[0])],
+            silent_on_success=current_step.config.verbosity < 2,
+        )
+
+        LOGGER.debug(
+            "Forcing reinstallation of the wheel in case it had code changes"
+        )
+        current_step.run(
+            [
+                current_step.python,
+                "-m",
+                "pip",
+                "install",
+                "--force-reinstall",
+                "--no-deps",
+                str(wheels[0]),
+            ],
             silent_on_success=current_step.config.verbosity < 2,
         )
 
