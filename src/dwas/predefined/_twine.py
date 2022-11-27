@@ -1,5 +1,4 @@
 import logging
-import os
 from typing import List, Optional
 
 # XXX: All imports here should be done from the top level. If we need it,
@@ -13,7 +12,6 @@ LOGGER = logging.getLogger(__name__)
     {
         "dependencies": ["twine"],
         "additional_arguments": ["check", "--strict"],
-        "passenv": [],
     }
 )
 class Twine(Step):
@@ -21,34 +19,17 @@ class Twine(Step):
         self.__name__ = "twine"
 
     def __call__(
-        self,
-        step: StepRunner,
-        additional_arguments: List[str],
-        passenv: List[str],
+        self, step: StepRunner, additional_arguments: List[str]
     ) -> None:
         sdists = step.get_artifacts("sdists")
         wheels = step.get_artifacts("wheels")
         if not sdists and not wheels:
             raise Exception("No sdists or wheels provided")
 
-        env = {}
-        for env_name in passenv:
-            if env_name not in os.environ:
-                LOGGER.warning(
-                    "Asked to pass %s as environment variable, but variable is not present",
-                    env_name,
-                )
-            else:
-                env[env_name] = os.environ[env_name]
-
-        step.run(["twine", *additional_arguments, *sdists, *wheels], env=env)
+        step.run(["twine", *additional_arguments, *sdists, *wheels])
 
 
-def twine(
-    *,
-    additional_arguments: Optional[List[str]] = None,
-    passenv: Optional[List[str]] = None,
-) -> Step:
+def twine(*, additional_arguments: Optional[List[str]] = None) -> Step:
     """
     Run `twine`_ against the provided packages.
 
@@ -61,10 +42,6 @@ def twine(
     :param additional_arguments: Additional arguments to pass to the ``twine``
                                  invocation.
                                  Defaults to :python:`["check", "--strict"]`.
-    :param passenv: List of environment variables to pass to the ``twine``
-                    invocation. Use this if, for example, you want to pass
-                    ``TWINE_PASSWORD`` and ``TWINE_USERNAME``.
-                    Defaults to :python:`[]`.
     :return: The step so that you can add additional parameters to it if needed.
 
     :Examples:
@@ -100,14 +77,11 @@ def twine(
                         "--sign",
                         "--non-interactive",
                     ],
-                    passenv=["TWINE_REPOSITORY", "TWINE_USERNAME", "TWINE_PASSWORD"],
                 ),
                 name="twine:upload",
+                passenv=["TWINE_REPOSITORY", "TWINE_USERNAME", "TWINE_PASSWORD"],
                 requires=["package", "twine:check"],
                 run_by_default=False,
             )
     """
-    return build_parameters(
-        additional_arguments=additional_arguments,
-        passenv=passenv,
-    )(Twine())
+    return build_parameters(additional_arguments=additional_arguments)(Twine())

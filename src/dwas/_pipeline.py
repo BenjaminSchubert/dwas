@@ -123,6 +123,8 @@ class Pipeline:
                 requires=args.pop("requires", None),
                 run_by_default=current_run_by_default,
                 parameters=args,
+                passenv=args.pop("passenv", None),
+                setenv=args.pop("setenv", None),
             )
 
         if len(parameters) > 1:

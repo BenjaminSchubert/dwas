@@ -1,5 +1,6 @@
 import itertools
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -76,6 +77,8 @@ class StepHandler(BaseStepHandler):
         requires: Optional[List[str]] = None,
         run_by_default: Optional[bool] = None,
         parameters: Optional[Dict[str, Any]] = None,
+        passenv: Optional[List[str]] = None,
+        setenv: Optional[Dict[str, str]] = None,
     ) -> None:
         super().__init__(name, pipeline, requires, run_by_default)
 
@@ -91,7 +94,10 @@ class StepHandler(BaseStepHandler):
         self.python = python
 
         self._func = func
-        self._venv_runner = VenvRunner(self.name, self.python, self.config)
+        step_environment = self._resolve_environ(passenv, setenv)
+        self._venv_runner = VenvRunner(
+            self.name, self.python, self.config, step_environment
+        )
         self._step_runner = StepRunner(self)
 
         if parameters is None:
@@ -198,6 +204,37 @@ class StepHandler(BaseStepHandler):
             return {}
 
         return self._func.gather_artifacts(self._step_runner)
+
+    def _resolve_environ(
+        self, passenv: Optional[List[str]], setenv: Optional[Dict[str, str]]
+    ) -> Dict[str, str]:
+        base_env = {}
+        if setenv:
+            base_env.update(setenv)
+        if passenv:
+            for key in passenv:
+                if key in base_env:
+                    LOGGER.warning(
+                        "Step %s has %s both passed as `passenv` and `setenv`."
+                        " `setenv` takes precedence.",
+                        self.name,
+                        key,
+                    )
+                    continue
+
+                val = os.getenv(key)
+                if val is None:
+                    LOGGER.debug(
+                        "Step %s requested a passthrough of environment"
+                        " variable %s, but it is not in the environment",
+                        self.name,
+                        key,
+                    )
+                    continue
+
+                base_env[key] = val
+
+        return base_env
 
 
 class StepGroupHandler(BaseStepHandler):

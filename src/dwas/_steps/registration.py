@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional, Sequence
+from typing import Callable, Dict, List, Optional, Sequence
 
 from .._exceptions import BaseDwasException
 from .._inspect import get_location
@@ -14,6 +14,8 @@ def register_step(
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
+    passenv: Optional[List[str]] = None,
+    setenv: Optional[Dict[str, str]] = None,
 ) -> Step:
     """
     Register the provided :term:`step`.
@@ -63,6 +65,9 @@ def register_step(
 
     :param run_by_default: Whether this step should run by default or not.
                            :python:`None` is considered as :python:`True` here.
+    :param passenv: A list of environment variables to pass through to the step.
+    :param setenv: A list of environment variables to set in the context of the
+                   step.
     :return: The step that was passed as argument.
     :raises BaseDwasException: If no :python:`name` is passed and the :python:`func`
                                parameter does not have a :python:`__name__`
@@ -79,7 +84,11 @@ def register_step(
             )
 
     func = build_parameters(
-        python=python, requires=requires, run_by_default=run_by_default
+        python=python,
+        requires=requires,
+        run_by_default=run_by_default,
+        passenv=passenv,
+        setenv=setenv,
     )(func)
 
     pipeline.register_step(name, func)
@@ -94,6 +103,8 @@ def register_managed_step(
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
+    passenv: Optional[List[str]] = None,
+    setenv: Optional[Dict[str, str]] = None,
 ) -> Step:
     """
     Register the provided :term:`step`, and handle installing its dependencies.
@@ -116,6 +127,9 @@ def register_managed_step(
     :param python: The python version to use for this step
     :param requires: The list of steps this step depends on
     :param run_by_default: Whether to run by default or not
+    :param passenv: A list of environment variables to pass through to the step.
+    :param setenv: A list of environment variables to set in the context of the
+                   step.
     :return: The step that was passed as argument.
     :raises BaseDwasException: If the :python:`func` passed already has a
                                :python:`setup` attribute defined.
@@ -142,6 +156,8 @@ def register_managed_step(
         python=python,
         requires=requires,
         run_by_default=run_by_default,
+        passenv=passenv,
+        setenv=setenv,
     )
 
 
@@ -174,6 +190,8 @@ def step(
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
+    passenv: Optional[List[str]] = None,
+    setenv: Optional[Dict[str, str]] = None,
 ) -> Callable[[Step], Step]:
     """
     Register the decorated :term:`step` and make it available to the pipeline.
@@ -185,6 +203,9 @@ def step(
     :param python: The python version to use in this step
     :param requires: The list of steps that this step depends on
     :param run_by_default: Whether this step should run by default or not
+    :param passenv: A list of environment variables to pass through to the step.
+    :param setenv: A list of environment variables to set in the context of the
+                   step.
     """
 
     def wrapper(func: Step) -> Step:
@@ -194,6 +215,8 @@ def step(
             python=python,
             requires=requires,
             run_by_default=run_by_default,
+            passenv=passenv,
+            setenv=setenv,
         )
         return func
 
@@ -207,6 +230,8 @@ def managed_step(
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
+    passenv: Optional[List[str]] = None,
+    setenv: Optional[Dict[str, str]] = None,
 ) -> Callable[[Step], Step]:
     """
     Register the decorated :term:`step`, and handle installing its dependencies.
@@ -219,6 +244,9 @@ def managed_step(
     :param python: The python version to use in this step
     :param requires: The list of steps that this step depends on
     :param run_by_default: Whether this step should run by default or not
+    :param passenv: A list of environment variables to pass through to the step.
+    :param setenv: A list of environment variables to set in the context of the
+                   step.
     """
 
     def wrapper(func: Step) -> Step:
@@ -229,6 +257,8 @@ def managed_step(
             python=python,
             requires=requires,
             run_by_default=run_by_default,
+            passenv=passenv,
+            setenv=setenv,
         )
         return func
 

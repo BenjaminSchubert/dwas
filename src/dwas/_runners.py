@@ -16,11 +16,14 @@ LOGGER = logging.getLogger(__name__)
 
 
 class VenvRunner:
-    def __init__(self, name: str, python: str, config: Config) -> None:
+    def __init__(
+        self, name: str, python: str, config: Config, environ: Dict[str, str]
+    ) -> None:
         self._original_python = python
         self._path = (config.venvs_path / name.replace(":", "-")).resolve()
         self._python = str(self._path / "bin/python")
         self._config = config
+        self._environ = environ
 
     def clean(self) -> None:
         with suppress(FileNotFoundError):
@@ -66,6 +69,7 @@ class VenvRunner:
         self, config: Config, additional_env: Optional[Dict[str, str]] = None
     ) -> Dict[str, str]:
         env = config.environ.copy()
+        env.update(self._environ)
         env.update(
             {
                 "VIRTUAL_ENV": str(self._path),

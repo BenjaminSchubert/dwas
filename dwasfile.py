@@ -160,9 +160,9 @@ dwas.register_managed_step(
             "--sign",
             "--non-interactive",
         ],
-        passenv=["TWINE_REPOSITORY", "TWINE_USERNAME", "TWINE_PASSWORD"],
     ),
     name="twine:upload",
+    passenv=["TWINE_REPOSITORY", "TWINE_USERNAME", "TWINE_PASSWORD"],
     requires=["package", "twine:check"],
     run_by_default=False,
 )
