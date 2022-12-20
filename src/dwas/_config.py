@@ -33,7 +33,7 @@ class Config:
 
     colors: bool
     """
-    Whether to use colored output or not for the output
+    Whether to use colored output or not for the output.
 
     Determining whether color output is available is not trivial and many
     programs do it differently.
@@ -71,35 +71,44 @@ class Config:
     """
 
     fail_fast: bool
-    """Whether to stop enqueuing more jobs after the first failure or not"""
+    """
+    Whether to stop enqueuing more jobs after the first failure or not.
+    """
 
     n_jobs: int
     """
-    The number of jobs to run in parallel
+    The number of jobs to run in parallel.
 
     0 will use the number of cpus on the machine as given by
     :py:func:`multiprocessing.cpu_count`.
     """
 
     skip_missing_interpreters: bool
-    """Whether to skip when an interpreter is not found, or fail"""
+    """
+    Whether to skip when an interpreter is not found, or fail.
+    """
 
     skip_run: bool
     """
-    Whether to skip the run part of each step
+    Whether to skip the run part of each step.
 
-    This is the reverse of :py:attr:`skip_setup`, and only runs the setup part.
+    This is the reverse of :py:attr:`skip_setup`, and only runs the
+    setup part.
     """
 
     skip_setup: bool
-    """Whether to skip the setup phase of each step"""
+    """
+    Whether to skip the setup phase of each step.
+    """
 
     venvs_path: Path
-    """The path to where the virtual environments are stored"""
+    """
+    The path to where the virtual environments are stored.
+    """
 
     verbosity: int
     """
-    The verbosity level to use
+    The verbosity level to use.
 
     0 means an equal number of verbose and quiet flags have been passed
     positive means more verbose, and thus, negative less.

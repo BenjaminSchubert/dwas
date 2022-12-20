@@ -8,11 +8,7 @@ from .. import Step, StepRunner, build_parameters, set_defaults
 @set_defaults(
     {
         "dependencies": ["docformatter"],
-        # FIXME: --check does not show the diff on stdout which means it will
-        #        just fail without information.
-        #        https://github.com/PyCQA/docformatter/issues/125
-        #
-        "additional_arguments": ["--recursive", "--check"],
+        "additional_arguments": ["--recursive", "--check", "--diff"],
         "files": ["."],
     }
 )
