@@ -12,7 +12,7 @@ def test_cli_help(cli):
         pytest.param("hello!", "syntax error:", id="syntax-error"),
         pytest.param(
             "import nonexistent",
-            "No module named \\'nonexistent\\'",
+            "No module named 'nonexistent'",
             id="import-error",
         ),
     ),
@@ -24,7 +24,5 @@ def test_handles_invalid_dwasfile_nicely(
     if content is not None:
         tmp_path.joinpath("dwasfile.py").write_text(content)
 
-    with pytest.raises(Exception) as exc_wrapper:
-        cli([])
-
-    assert expected_error in str(exc_wrapper.value)
+    result = cli([], expected_status=2)
+    assert expected_error in result.stderr

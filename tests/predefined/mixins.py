@@ -71,12 +71,7 @@ class BaseLinterTest(ABC):
     )
     def test_simple_behavior(self, cli, tmp_path, valid):
         self._make_project(tmp_path, valid=valid)
-
-        if valid:
-            cli([])
-        else:
-            result = cli([], raise_on_error=False)
-            assert result.exit_code == 1
+        cli([], expected_status=0 if valid else 1)
 
     @pytest.mark.parametrize(
         "enable_colors", [True, False], ids=["colors", "no-colors"]
@@ -89,9 +84,8 @@ class BaseLinterTest(ABC):
         else:
             args = ["--no-colors"]
 
-        result = cli(args, raise_on_error=False)
+        result = cli(args, expected_status=1)
 
-        assert result.exit_code == 1
         if enable_colors:
             assert COLOR_ESCAPE_CODE.search(result.stdout)
         else:
@@ -115,9 +109,7 @@ class BaseFormatterTest(BaseLinterTest):
         token_file.parent.mkdir()
         token_file.write_text(self.invalid_file)
 
-        result = cli([], raise_on_error=False)
-        assert result.exit_code == 1
-
+        cli([], expected_status=1)
         assert token_file.read_text() == self.invalid_file
 
     def test_can_apply_fixes(self, cli, tmp_path):
