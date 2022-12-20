@@ -23,7 +23,6 @@ pytest.register_assert_rewrite("tests.predefined.mixins")
 
 @dataclass(frozen=True)
 class Result:
-    exit_code: Union[str, int, None]
     exc: Optional[SystemExit]
     stdout: str
     stderr: str
@@ -38,7 +37,7 @@ def cli(tmp_path_factory):
 
     @isolated_context
     @isolated_logging
-    def _cli(args: List[str], raise_on_error: bool = True) -> Result:
+    def _cli(args: List[str], expected_status: int = 0) -> Result:
         capture = MultiCapture(out=FDCapture(1), err=FDCapture(2), in_=None)
         capture.start_capturing()
         set_subprocess_default_pipes(sys.stdout, sys.stderr)
@@ -64,14 +63,9 @@ def cli(tmp_path_factory):
             print(out)
             print(err, file=sys.stderr)
 
-        result = Result(
-            exit_code=exit_code, exc=exception, stdout=out, stderr=err
-        )
+        assert exit_code == expected_status
 
-        if raise_on_error and exception is not None:
-            raise Exception(result)
-
-        return result
+        return Result(exc=exception, stdout=out, stderr=err)
 
     yield _cli
 
