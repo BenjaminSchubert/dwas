@@ -4,26 +4,27 @@ from pathlib import Path
 
 import pytest
 
+from .._utils import cli
+
 COLOR_ESCAPE_CODE = re.compile(r"\x1b\[\d+m")
 
 
 class BaseStepTest(ABC):
+    @pytest.fixture(scope="module")
+    def cache_path(self, tmp_path_factory):
+        return tmp_path_factory.mktemp("cache")
+
     @pytest.mark.usefixtures("project")
-    def test_runs_successfully(self, cli, expected_output):
-        result = cli([])
+    def test_runs_successfully(self, cache_path, expected_output):
+        result = cli(cache_path=cache_path)
         assert expected_output in result.stdout
 
     @pytest.mark.parametrize(
         "enable_colors", [True, False], ids=["colors", "no-colors"]
     )
     @pytest.mark.usefixtures("project")
-    def test_respects_color_settings(self, cli, enable_colors):
-        if enable_colors:
-            args = ["--colors"]
-        else:
-            args = ["--no-colors"]
-
-        result = cli(args)
+    def test_respects_color_settings(self, cache_path, enable_colors):
+        result = cli(cache_path=cache_path, colors=enable_colors)
 
         if enable_colors:
             assert COLOR_ESCAPE_CODE.search(result.stdout)
@@ -56,6 +57,10 @@ class BaseLinterTest(ABC):
         The content of a file that should pass the linter tests.
         """
 
+    @pytest.fixture(scope="module")
+    def cache_path(self, tmp_path_factory):
+        return tmp_path_factory.mktemp("cache")
+
     def _make_project(self, path: Path, valid: bool = True) -> None:
         path.joinpath("dwasfile.py").write_text(self.dwasfile)
 
@@ -69,22 +74,21 @@ class BaseLinterTest(ABC):
     @pytest.mark.parametrize(
         "valid", [True, False], ids=["valid-project", "invalid-project"]
     )
-    def test_simple_behavior(self, cli, tmp_path, valid):
+    def test_simple_behavior(self, cache_path, tmp_path, valid):
         self._make_project(tmp_path, valid=valid)
-        cli([], expected_status=0 if valid else 1)
+        cli(cache_path=cache_path, expected_status=0 if valid else 1)
 
     @pytest.mark.parametrize(
         "enable_colors", [True, False], ids=["colors", "no-colors"]
     )
-    def test_respects_color_settings(self, cli, tmp_path, enable_colors):
+    def test_respects_color_settings(
+        self, cache_path, tmp_path, enable_colors
+    ):
         self._make_project(tmp_path, valid=False)
 
-        if enable_colors:
-            args = ["--colors"]
-        else:
-            args = ["--no-colors"]
-
-        result = cli(args, expected_status=1)
+        result = cli(
+            cache_path=cache_path, colors=enable_colors, expected_status=1
+        )
 
         if enable_colors:
             assert COLOR_ESCAPE_CODE.search(result.stdout)
@@ -102,25 +106,25 @@ class BaseFormatterTest(BaseLinterTest):
         It should run against all files in the project when executed.
         """
 
-    def test_does_not_modify_by_default(self, cli, tmp_path):
+    def test_does_not_modify_by_default(self, cache_path, tmp_path):
         tmp_path.joinpath("dwasfile.py").write_text(self.dwasfile)
 
         token_file = tmp_path.joinpath("src/token.py")
         token_file.parent.mkdir()
         token_file.write_text(self.invalid_file)
 
-        cli([], expected_status=1)
+        cli(cache_path=cache_path, expected_status=1)
         assert token_file.read_text() == self.invalid_file
 
-    def test_can_apply_fixes(self, cli, tmp_path):
+    def test_can_apply_fixes(self, cache_path, tmp_path):
         tmp_path.joinpath("dwasfile.py").write_text(self.dwasfile)
 
         token_file = tmp_path.joinpath("src/token.py")
         token_file.parent.mkdir()
         token_file.write_text(self.invalid_file)
 
-        cli(["--step", self.autofix_step])
+        cli(cache_path=cache_path, step=self.autofix_step)
         assert token_file.read_text() != self.invalid_file
 
         # And run the default step one last time to ensure it did fix everything
-        cli([])
+        cli(cache_path=cache_path)
