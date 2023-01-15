@@ -1,7 +1,6 @@
 # pylint and pytest fixtures dependency injection are not friends
 # pylint: disable=redefined-outer-name
 import copy
-import logging
 import shutil
 import sys
 from dataclasses import dataclass
@@ -30,9 +29,6 @@ class Result:
 
 @pytest.fixture
 def cli(tmp_path_factory):
-    root_logger = logging.getLogger()
-    handlers = root_logger.handlers
-    root_logger.handlers = []
     cache_path = tmp_path_factory.mktemp("cache")
 
     @isolated_context
@@ -67,12 +63,7 @@ def cli(tmp_path_factory):
 
         return Result(exc=exception, stdout=out, stderr=err)
 
-    yield _cli
-
-    for handler in root_logger.handlers:
-        root_logger.removeHandler(handler)
-
-    root_logger.handlers = handlers
+    return _cli
 
 
 @pytest.fixture
