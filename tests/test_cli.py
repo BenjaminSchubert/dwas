@@ -1,8 +1,10 @@
 import pytest
 
+from ._utils import cli, execute
 
-def test_cli_help(cli):
-    cli(["--help"])
+
+def test_cli_help():
+    execute(["--help"])
 
 
 @pytest.mark.parametrize(
@@ -18,11 +20,11 @@ def test_cli_help(cli):
     ),
 )
 def test_handles_invalid_dwasfile_nicely(
-    cli, monkeypatch, tmp_path, content, expected_error
+    monkeypatch, tmp_path, content, expected_error
 ):
     monkeypatch.chdir(tmp_path)
     if content is not None:
         tmp_path.joinpath("dwasfile.py").write_text(content)
 
-    result = cli([], expected_status=2)
+    result = cli(cache_path=tmp_path, expected_status=2)
     assert expected_error in result.stderr

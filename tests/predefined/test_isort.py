@@ -38,5 +38,9 @@ from pathlib import Path
         ],
         ids=["colors", "no-colors"],
     )
-    def test_respects_color_settings(self, cli, tmp_path, enable_colors):
-        super().test_respects_color_settings(cli, tmp_path, enable_colors)
+    def test_respects_color_settings(
+        self, cache_path, tmp_path, enable_colors
+    ):
+        super().test_respects_color_settings(
+            cache_path, tmp_path, enable_colors
+        )

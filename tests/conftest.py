@@ -2,68 +2,17 @@
 # pylint: disable=redefined-outer-name
 import copy
 import shutil
-import sys
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, List, Optional, Union
+from typing import Callable
 
 import pytest
-from _pytest.capture import FDCapture, MultiCapture
 
 from dwas import Config, predefined
-from dwas.__main__ import main
 from dwas._pipeline import Pipeline, set_pipeline
-from dwas._subproc import set_subprocess_default_pipes
 
-from ._utils import isolated_context, isolated_logging
+from ._utils import isolated_context
 
 pytest.register_assert_rewrite("tests.predefined.mixins")
-
-
-@dataclass(frozen=True)
-class Result:
-    exc: Optional[SystemExit]
-    stdout: str
-    stderr: str
-
-
-@pytest.fixture
-def cli(tmp_path_factory):
-    cache_path = tmp_path_factory.mktemp("cache")
-
-    @isolated_context
-    @isolated_logging
-    def _cli(args: List[str], expected_status: int = 0) -> Result:
-        capture = MultiCapture(out=FDCapture(1), err=FDCapture(2), in_=None)
-        capture.start_capturing()
-        set_subprocess_default_pipes(sys.stdout, sys.stderr)
-
-        exception = None
-        # See https://github.com/python/typeshed/issues/8513#issue-1333671093
-        exit_code: Union[str, int, None] = 0
-
-        args.extend(["--verbose", f"--cache-path={cache_path}"])
-        if "--no-colors" not in args and "--colors" not in args:
-            args.append("--color")
-
-        try:
-            main(args)
-        except SystemExit as exc:
-            if exc.code != 0:
-                exit_code = exc.code
-                exception = exc
-        finally:
-            out, err = capture.readouterr()
-            capture.stop_capturing()
-            set_subprocess_default_pipes(sys.stdout, sys.stderr)
-            print(out)
-            print(err, file=sys.stderr)
-
-        assert exit_code == expected_status
-
-        return Result(exc=exception, stdout=out, stderr=err)
-
-    return _cli
 
 
 @pytest.fixture
