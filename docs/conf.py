@@ -96,6 +96,12 @@ rst_epilog = """
 .. _the Unimport formatter: https://unimport.hakancelik.dev/
 .. _the manylinux project: https://github.com/pypa/manylinux
 .. _github actions: https://github.com/features/actions
+.. _pipx: https://pypa.github.io/pipx/
+.. _pypi: https://pypi.org/
+.. _tox: https://tox.wiki/
+.. _nox: https://nox.thea.codes/
+.. _Invoke: https://www.pyinvoke.org/
+.. _own dwasfile.py: https://github.com/BenjaminSchubert/dwas/blob/main/dwasfile.py
 """
 
 # Spelling config

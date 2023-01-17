@@ -5,16 +5,20 @@ cli
 conda
 cpus
 cpython
+discoverable
 doctests
 dwas
 enqueuing
+formatters
 isort
 linkchecks
+linters
 nox
 parametrize
 parametrized
 parametrization
 parametrizing
+pipx
 pypi
 pytest
 reusability
@@ -22,3 +26,5 @@ sdist
 tox
 unimport
 venvs
+workflow
+workflows
