@@ -10,6 +10,41 @@ dwas - easier developer workflow
 ``dwas`` aims to reduce the complexity in working on foreign projects while
 being powerful enough for developers working day in day out on the same project.
 
+.. image:: https://img.shields.io/pypi/v/dwas?style=flat-square
+  :target: https://pypi.org/project/dwas/#history
+  :alt: Latest version on PyPI
+
+.. image:: https://img.shields.io/pypi/pyversions/dwas?style=flat-square
+  :alt: PyPI - Python Version
+
+.. image:: https://img.shields.io/pypi/dm/dwas?style=flat-square
+  :target: https://pypistats.org/packages/dwas
+  :alt: PyPI - Downloads
+
+.. image:: https://img.shields.io/pypi/l/dwas?style=flat-square
+  :target: https://opensource.org/licenses/MIT
+  :alt: PyPI - License
+
+.. image:: https://img.shields.io/github/stars/BenjaminSchubert/dwas?style=flat-square
+  :target: https://pypistats.org/packages/dwas
+  :alt: Package popularity
+
+.. image:: https://github.com/BenjaminSchubert/dwas/actions/workflows/ci.yml/badge.svg
+   :target: https://github.com/BenjaminSchubert/dwas/actions/workflows/ci.yml
+   :alt: checks badge
+
+.. image:: https://codecov.io/gh/BenjaminSchubert/dwas/branch/main/graph/badge.svg?token=OK872YRU0H
+   :target: https://codecov.io/gh/BenjaminSchubert/dwas
+
+.. image:: https://img.shields.io/github/issues/BenjaminSchubert/dwas?style=flat-square
+  :target: https://github.com/BenjaminSchubert/dwas/issues
+  :alt: Open issues
+
+.. image:: https://img.shields.io/github/issues-pr/BenjaminSchubert/dwas?style=flat-square
+  :target: https://github.com/BenjaminSchubert/dwas/pulls
+  :alt: Open pull requests
+
+
 Working on any project should be friction-less, it should be easy to run tests,
 formatters, linters, build documentation, etc, from a single CLI that is
 discoverable and easy to use, while being powerful enough for power users.
