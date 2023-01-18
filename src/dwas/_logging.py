@@ -5,7 +5,7 @@ from contextvars import ContextVar
 from types import TracebackType
 from typing import Any, Optional, Tuple, Type, Union, cast
 
-from colorama import Fore, Style, init
+from colorama import Back, Fore, Style, init
 
 from ._log_capture import WriterProtocol
 
@@ -18,6 +18,7 @@ class ColorFormatter(logging.Formatter):
         logging.INFO: Fore.WHITE,
         logging.WARN: Fore.YELLOW,
         logging.ERROR: Fore.RED + Style.BRIGHT,
+        logging.FATAL: Back.RED + Fore.WHITE + Style.BRIGHT,
     }
 
     def formatMessage(self, record: logging.LogRecord) -> str:

@@ -502,6 +502,8 @@ class StepRunner:
         if you wanted to move to conda.).
 
         :param packages: which packages to install
+        :raise KeyboardInterrupt: If the user has tried aborting the program and
+                                  is waiting for it to finish.
         """
         return self._handler.install(*packages)
 
@@ -517,7 +519,8 @@ class StepRunner:
         Run the provided command in the current environment.
 
         This method makes it's best to ensure the process' environment is
-        as isolated as possible.
+        as isolated as possible. It should be used whenever possible, instead
+        of calling :py:mod:`subprocess` directly.
 
         It will enforce that the first argument of the command is part of the
         python virtual environment that is specially created for the current
@@ -538,6 +541,8 @@ class StepRunner:
                                   succeeds, or show it every time.
         :return: a :py:class:`subprocess.CompletedProcess` with `stderr` and
                  `stdout` set to ``None``.
+        :raise KeyboardInterrupt: If the user has tried aborting the program and
+                                  is waiting for it to finish.
         """
         return self._handler.run(
             command,

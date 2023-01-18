@@ -10,20 +10,26 @@ from ._exceptions import (
     CommandNotInEnvironment,
     UnavailableInterpreterException,
 )
-from ._subproc import run
+from ._subproc import ProcessManager
 
 LOGGER = logging.getLogger(__name__)
 
 
 class VenvRunner:
     def __init__(
-        self, name: str, python: str, config: Config, environ: Dict[str, str]
+        self,
+        name: str,
+        python: str,
+        config: Config,
+        environ: Dict[str, str],
+        proc_manager: ProcessManager,
     ) -> None:
         self._original_python = python
         self._path = (config.venvs_path / name.replace(":", "-")).resolve()
         self._python = str(self._path / "bin/python")
         self._config = config
         self._environ = environ
+        self._proc_manager = proc_manager
 
     def clean(self) -> None:
         with suppress(FileNotFoundError):
@@ -37,7 +43,7 @@ class VenvRunner:
             LOGGER.debug("venv already exists. Reusing")
             return
 
-        run(
+        self._proc_manager.run(
             [self._original_python, "-m", "venv", str(self._path)],
             env=self._config.environ,
             silent_on_success=self._config.verbosity < 2,
@@ -59,7 +65,7 @@ class VenvRunner:
         env = self._merge_env(self._config, env)
         self._validate_command(command[0], external_command, env)
 
-        return run(
+        return self._proc_manager.run(
             command,
             env=env,
             silent_on_success=silent_on_success,
