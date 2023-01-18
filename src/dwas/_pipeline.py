@@ -1,5 +1,6 @@
 import graphlib
 import logging
+import signal
 import sys
 import time
 from collections import deque
@@ -7,7 +8,8 @@ from concurrent import futures
 from contextvars import Context, ContextVar, copy_context
 from datetime import timedelta
 from subprocess import CalledProcessError
-from typing import Dict, Generator, List, Optional, Tuple
+from types import FrameType
+from typing import Callable, Dict, Generator, List, Optional, Tuple
 
 from colorama import Fore, Style
 
@@ -25,7 +27,7 @@ from ._exceptions import (
 )
 from ._log_capture import PipePlexer
 from ._logging import set_context_handler
-from ._subproc import set_subprocess_default_pipes
+from ._subproc import ProcessManager, set_subprocess_default_pipes
 from ._timing import get_timedelta_since
 
 LOGGER = logging.getLogger(__name__)
@@ -53,6 +55,7 @@ class ExceptionWithTimeSpentException(Exception):
 class Pipeline:
     def __init__(self, config: Config) -> None:
         self.config = config
+        self.proc_manager = ProcessManager()
 
         self._registered_steps: List[Tuple[str, Step]] = []
         self._registered_step_groups: List[
@@ -224,81 +227,40 @@ class Pipeline:
         sorter = graphlib.TopologicalSorter(graph)
         sorter.prepare()
 
-        results: Dict[str, Tuple[Optional[Exception], timedelta]] = {}
         should_stop = False
+        running_futures: Dict[
+            futures.Future[timedelta], Tuple[str, Optional[PipePlexer]]
+        ] = {}
 
-        with futures.ThreadPoolExecutor(self.config.n_jobs) as executor:
-            running_futures: Dict[
-                futures.Future[timedelta], Tuple[str, Optional[PipePlexer]]
-            ] = {}
+        def stop() -> None:
+            nonlocal should_stop
+            should_stop = True
+            for future, (name, _) in running_futures.items():
+                LOGGER.debug("Cancelling step %s", name)
+                future.cancel()
 
-            while sorter.is_active():
-                ready = sorter.get_ready()
-                if not ready:
-                    if not running_futures:
-                        # No more tasks ready to run, and all tasks has finished
-                        # we can't move forward
-                        break
+        def request_stop(_signum: int, _frame: Optional[FrameType]) -> None:
+            if not should_stop:
+                LOGGER.warning(
+                    "%sStopping requested. This will finish current jobs."
+                    " To abort, hit ^C a second time.",
+                    Style.BRIGHT,
+                )
+                stop()
+            else:
+                LOGGER.critical("Aborting")
+                self.proc_manager.kill()
 
-                    next_finished = next(
-                        futures.as_completed(running_futures.keys())
-                    )
-                    name, pipe_plexer = running_futures.pop(next_finished)
+        previous_signal = signal.signal(signal.SIGINT, request_stop)
 
-                    if pipe_plexer is not None:
-                        pipe_plexer.dump(sys.stdout, sys.stderr)
+        try:
+            results = self._execute(
+                sorter, running_futures, stop, lambda: should_stop
+            )
+        finally:
+            signal.signal(signal.SIGINT, previous_signal)
 
-                    try:
-                        time_spent = next_finished.result()
-                    except ExceptionWithTimeSpentException as exc:
-                        results[name] = exc.original_exception, exc.time_spent
-
-                        if (
-                            isinstance(
-                                exc.original_exception,
-                                UnavailableInterpreterException,
-                            )
-                            and self.config.skip_missing_interpreters
-                        ):
-                            sorter.done(name)
-                        else:
-                            if self.config.fail_fast:
-                                should_stop = True
-                                for future in running_futures:
-                                    future.cancel()
-
-                            # We won't be able to enqueue new results after a failure
-                            # anyways
-                            continue
-                    except futures.CancelledError as exc:
-                        results[name] = exc, timedelta()
-                        continue
-                    else:
-                        results[name] = None, time_spent
-                        sorter.done(name)
-
-                if should_stop:
-                    continue
-
-                for name in ready:
-                    pipe_plexer = (
-                        PipePlexer() if self.config.n_jobs != 1 else None
-                    )
-
-                    # XXX: Save the context to be able to rerun in it with each
-                    # executor. This needs to be done every time as it's not
-                    # possible to re-enter a context.
-                    pipeline_context = copy_context()
-
-                    future = executor.submit(
-                        self._run_step_in_context,
-                        pipeline_context,
-                        name,
-                        pipe_plexer,
-                    )
-                    running_futures[future] = name, pipe_plexer
-
-            self._log_summary(graph, results, start_time)
+        self._log_summary(graph, results, start_time)
 
     def get_step(self, step_name: str) -> BaseStepHandler:
         return self._steps[step_name]
@@ -332,6 +294,84 @@ class Pipeline:
                 LOGGER.info("\t* %s%s", step, dep_info)
             else:
                 LOGGER.info("\t%s- %s%s", Fore.LIGHTBLACK_EX, step, dep_info)
+
+    def _execute(
+        self,
+        sorter: "graphlib.TopologicalSorter[str]",
+        running_futures: Dict[
+            futures.Future[timedelta], Tuple[str, Optional[PipePlexer]]
+        ],
+        stop: Callable[[], None],
+        should_stop: Callable[[], bool],
+    ) -> Dict[str, Tuple[Optional[Exception], timedelta]]:
+        results: Dict[str, Tuple[Optional[Exception], timedelta]] = {}
+
+        with futures.ThreadPoolExecutor(self.config.n_jobs) as executor:
+            while sorter.is_active():
+                ready = sorter.get_ready()
+                if not ready:
+                    if not running_futures:
+                        # No more tasks ready to run, and all tasks has finished
+                        # we can't move forward
+                        break
+
+                    next_finished = next(
+                        futures.as_completed(running_futures.keys())
+                    )
+                    name, pipe_plexer = running_futures.pop(next_finished)
+
+                    if pipe_plexer is not None:
+                        pipe_plexer.dump(sys.stdout, sys.stderr)
+
+                    try:
+                        time_spent = next_finished.result()
+                    except ExceptionWithTimeSpentException as exc:
+                        results[name] = exc.original_exception, exc.time_spent
+
+                        if (
+                            isinstance(
+                                exc.original_exception,
+                                UnavailableInterpreterException,
+                            )
+                            and self.config.skip_missing_interpreters
+                        ):
+                            sorter.done(name)
+                        else:
+                            if self.config.fail_fast:
+                                stop()
+
+                            # We won't be able to enqueue new results after a failure
+                            # anyways
+                            continue
+                    except futures.CancelledError as exc:
+                        results[name] = exc, timedelta()
+                        continue
+                    else:
+                        results[name] = None, time_spent
+                        sorter.done(name)
+
+                if should_stop():
+                    continue
+
+                for name in ready:
+                    pipe_plexer = (
+                        PipePlexer() if self.config.n_jobs != 1 else None
+                    )
+
+                    # XXX: Save the context to be able to rerun in it with each
+                    # executor. This needs to be done every time as it's not
+                    # possible to re-enter a context.
+                    pipeline_context = copy_context()
+
+                    future = executor.submit(
+                        self._run_step_in_context,
+                        pipeline_context,
+                        name,
+                        pipe_plexer,
+                    )
+                    running_futures[future] = name, pipe_plexer
+
+        return results
 
     def _log_summary(
         self,

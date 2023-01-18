@@ -96,7 +96,11 @@ class StepHandler(BaseStepHandler):
         self._func = func
         step_environment = self._resolve_environ(passenv, setenv)
         self._venv_runner = VenvRunner(
-            self.name, self.python, self.config, step_environment
+            self.name,
+            self.python,
+            self.config,
+            step_environment,
+            proc_manager=self._pipeline.proc_manager,
         )
         self._step_runner = StepRunner(self)
 
