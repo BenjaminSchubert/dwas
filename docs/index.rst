@@ -138,5 +138,6 @@ design:
     :caption: Appendix
     :hidden:
 
+    changelog.rst
     glossary.rst
     genindex.rst

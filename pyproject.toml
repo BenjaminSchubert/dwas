@@ -35,6 +35,7 @@ homepage = "https://github.com/BenjaminSchubert/dwas"
 repository = "https://github.com/BenjaminSchubert/dwas"
 tracker = "https://github.com/BenjaminSchubert/dwas/issues"
 documentation = "https://dwas.readthedocs.io/en/latest/"
+changelog = "https://github.com/BenjaminSchubert/dwas/CHANGELOG.rst"
 
 [project.entry-points.console_scripts]
 dwas = "dwas.__main__:main"
