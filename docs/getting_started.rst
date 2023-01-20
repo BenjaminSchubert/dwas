@@ -57,7 +57,7 @@ And you can obviously run the step itself:
 
     dwas
     # Or, if you want to run this specific step:
-    dwas -s pytest
+    dwas pytest
 
 
 2. Running against multiple python versions (parametrization)
@@ -103,9 +103,9 @@ Now try running some of them:
     # Runs all steps, by default
     dwas
     # Runs pytest and all it's dependencies
-    dwas --step pytest
+    dwas pytest
     # Run only against python3.11
-    dwas --step pytest[3.11]
+    dwas pytest[3.11]
 
 
 3. Using predefined (provided) step generators

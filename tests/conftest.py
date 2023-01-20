@@ -10,9 +10,11 @@ import pytest
 from dwas import Config, predefined
 from dwas._pipeline import Pipeline, set_pipeline
 
-from ._utils import isolated_context
+# Register assert rewrites before importing dependencies
+# pylint: disable=wrong-import-position
+pytest.register_assert_rewrite("tests.predefined.mixins", "tests._utils")
 
-pytest.register_assert_rewrite("tests.predefined.mixins")
+from ._utils import isolated_context
 
 
 @pytest.fixture

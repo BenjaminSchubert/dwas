@@ -113,9 +113,9 @@ def cli(
     else:
         args.append("--no-color")
 
-    if step is not None:
-        args.append(f"--step={step}")
-
     args.append(f"--cache-path={cache_path}")
+
+    if step is not None:
+        args.append(step)
 
     return execute(args, expected_status)

@@ -136,12 +136,10 @@ class Pipeline:
     def _build_graph(
         self,
         steps: Optional[List[str]] = None,
-        only_steps: Optional[List[str]] = None,
         except_steps: Optional[List[str]] = None,
+        only_selected_steps: bool = False,
     ) -> Dict[str, List[str]]:
-        assert not (only_steps and except_steps)
-        if only_steps:
-            steps = only_steps
+        assert not (only_selected_steps and except_steps)
         if except_steps is None:
             except_steps = []
 
@@ -166,8 +164,8 @@ class Pipeline:
                 continue
 
             required_steps = step_info.requires
-            if only_steps:
-                required_steps = [r for r in required_steps if r in only_steps]
+            if only_selected_steps:
+                required_steps = [r for r in required_steps if r in steps]
             elif except_steps:
                 required_steps = [
                     r for r in required_steps if r not in except_steps
@@ -200,15 +198,15 @@ class Pipeline:
     def execute(
         self,
         steps: Optional[List[str]],
-        only_steps: Optional[List[str]],
         except_steps: Optional[List[str]],
+        only_selected_steps: bool,
         clean: bool,
     ) -> None:
         # we should refactor at some point
         # pylint: disable=too-many-branches,too-many-locals,too-many-statements
         start_time = time.monotonic()
 
-        graph = self._build_graph(steps, only_steps, except_steps)
+        graph = self._build_graph(steps, except_steps, only_selected_steps)
         steps_in_order = self._resolve_execution_order(graph)
 
         if clean:
@@ -262,15 +260,15 @@ class Pipeline:
     def list_all_steps(
         self,
         steps: Optional[List[str]] = None,
-        only_steps: Optional[List[str]] = None,
         except_steps: Optional[List[str]] = None,
+        only_selected_steps: bool = False,
         show_dependencies: bool = False,
     ) -> None:
         all_steps = self._resolve_execution_order(
             self._build_graph(list(self._steps.keys()))
         )
         selected_steps = self._resolve_execution_order(
-            self._build_graph(steps, only_steps, except_steps)
+            self._build_graph(steps, except_steps, only_selected_steps)
         )
 
         LOGGER.info("Available steps (* means selected, - means skipped):")

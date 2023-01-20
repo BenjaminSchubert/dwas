@@ -44,16 +44,9 @@ def _parse_args(args: Optional[List[str]] = None) -> Namespace:
 
     parser.add_argument("--config", default="./dwasfile.py")
     parser.add_argument(
-        "-s",
-        "--step",
-        action=_SplitAppendAction,
-        dest="steps",
-        help="which step(s) to run",
-    )
-    parser.add_argument(
         "-o",
         "--only",
-        action=_SplitAppendAction,
+        action="store_true",
         dest="only_steps",
         help="Only run the specified step(s), even if they have dependencies",
     )
@@ -138,7 +131,7 @@ def _parse_args(args: Optional[List[str]] = None) -> Namespace:
         action="store_true",
         help="Don't report a missing interpreter as a failure, and skip the step instead",
     )
-
+    parser.add_argument("steps", nargs="*", help="Specifies the steps to run")
     return parser.parse_args(args)
 
 
@@ -179,7 +172,7 @@ def _execute_pipeline(
     config: Config,
     pipeline_config: str,
     steps: Optional[List[str]],
-    only_steps: Optional[List[str]],
+    only_selected_step: bool,
     except_steps: Optional[List[str]],
     clean: bool,
     list_only: bool,
@@ -193,11 +186,11 @@ def _execute_pipeline(
 
     if list_only or list_dependencies:
         pipeline.list_all_steps(
-            steps, only_steps, except_steps, list_dependencies
+            steps, except_steps, only_selected_step, list_dependencies
         )
         return
 
-    pipeline.execute(steps, only_steps, except_steps, clean=clean)
+    pipeline.execute(steps, except_steps, only_selected_step, clean=clean)
 
 
 def main(sys_args: Optional[List[str]] = None) -> None:
@@ -219,7 +212,7 @@ def main(sys_args: Optional[List[str]] = None) -> None:
         _execute_pipeline(
             config,
             args.config,
-            args.steps,
+            args.steps or None,
             args.only_steps,
             args.except_steps,
             args.clean,
