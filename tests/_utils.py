@@ -65,6 +65,8 @@ class Result:
     stderr: str
 
 
+@isolated_context
+@isolated_logging
 def execute(args: List[str], expected_status: int = 0) -> Result:
     """
     Runs dwas in an isolated context and returns the result from the run.
