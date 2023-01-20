@@ -133,12 +133,12 @@ class Pipeline:
         if len(parameters) > 1:
             yield StepGroupHandler(name, self, all_created, all_run_by_default)
 
-    def _resolve_execution_order(
+    def _build_graph(
         self,
         steps: Optional[List[str]] = None,
         only_steps: Optional[List[str]] = None,
         except_steps: Optional[List[str]] = None,
-    ) -> List[str]:
+    ) -> Dict[str, List[str]]:
         assert not (only_steps and except_steps)
         if only_steps:
             steps = only_steps
@@ -185,7 +185,13 @@ class Pipeline:
         if unknown_steps:
             raise UnknownStepsException(unknown_steps)
 
+        return graph
+
+    def _resolve_execution_order(
+        self, graph: Dict[str, List[str]]
+    ) -> List[str]:
         sorter = graphlib.TopologicalSorter(graph)
+
         try:
             return list(sorter.static_order())
         except graphlib.CycleError as exc:
@@ -202,27 +208,15 @@ class Pipeline:
         # pylint: disable=too-many-branches,too-many-locals,too-many-statements
         start_time = time.monotonic()
 
-        steps = self._resolve_execution_order(steps, only_steps, except_steps)
-        if only_steps is None:
-            only_steps = steps
-        if except_steps is None:
-            except_steps = []
+        graph = self._build_graph(steps, only_steps, except_steps)
+        steps_in_order = self._resolve_execution_order(graph)
 
         if clean:
             LOGGER.debug("Cleaning up workspace")
-            for step in steps:
+            for step in steps_in_order:
                 self._steps[step].clean()
 
-        LOGGER.info("Running steps: %s", ", ".join(steps))
-
-        graph = {
-            step: [
-                r
-                for r in self._steps[step].requires
-                if r in only_steps and r not in except_steps
-            ]
-            for step in steps
-        }
+        LOGGER.info("Running steps: %s", ", ".join(steps_in_order))
 
         sorter = graphlib.TopologicalSorter(graph)
         sorter.prepare()
@@ -272,9 +266,11 @@ class Pipeline:
         except_steps: Optional[List[str]] = None,
         show_dependencies: bool = False,
     ) -> None:
-        all_steps = self._resolve_execution_order(list(self._steps.keys()))
+        all_steps = self._resolve_execution_order(
+            self._build_graph(list(self._steps.keys()))
+        )
         selected_steps = self._resolve_execution_order(
-            steps, only_steps, except_steps
+            self._build_graph(steps, only_steps, except_steps)
         )
 
         LOGGER.info("Available steps (* means selected, - means skipped):")
