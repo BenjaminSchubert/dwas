@@ -69,7 +69,7 @@ def twine(*, additional_arguments: Optional[List[str]] = None) -> Step:
                 requires=["package"],
             )
 
-        And if you want to be able to use ``dwas -s twine:publish`` to publish:
+        And if you want to be able to use ``dwas twine:publish`` to publish:
 
         .. code-block::
 
