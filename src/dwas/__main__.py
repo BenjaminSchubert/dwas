@@ -46,7 +46,11 @@ def _parse_args(args: Optional[List[str]] = None) -> Namespace:
         "--version", action="version", version=f"%(prog)s {version('dwas')}"
     )
 
-    parser.add_argument("--config", default="./dwasfile.py")
+    parser.add_argument(
+        "--config",
+        default="./dwasfile.py",
+        help="The configuration file to use (default: %(default)s)",
+    )
     parser.add_argument(
         "-o",
         "--only",
@@ -145,6 +149,11 @@ def _parse_args(args: Optional[List[str]] = None) -> Namespace:
             " `<step> --args='<args> ...'`, or `<step> -- <args>`"
         ),
     )
+
+    # Fix the end of the usage string, which can't be set when using 'REMAINDER'
+    usage = parser.format_usage()
+    usage = f"{usage[7:-5]} [step [--args ARGS]] ... [step -- ARGS]"
+    parser.usage = usage
     return parser.parse_args(args)
 
 
