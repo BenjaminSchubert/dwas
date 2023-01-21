@@ -48,3 +48,15 @@ def test_error_if_requesting_a_non_existent_step(monkeypatch, tmp_path):
         cache_path=tmp_path / ".dwas", steps=["nonexistent"], expected_status=2
     )
     assert "Unkown step requested: nonexistent" in result.stderr
+
+
+def test_error_if_excluded_step_does_not_exist(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    tmp_path.joinpath("dwasfile.py").touch()
+
+    result = cli(
+        cache_path=tmp_path / ".dwas",
+        except_steps=["nonexistent"],
+        expected_status=2,
+    )
+    assert "Unkown step excepted: nonexistent" in result.stderr

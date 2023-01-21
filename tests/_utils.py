@@ -104,6 +104,7 @@ def cli(
     steps: Optional[List[str]] = None,
     cache_path: Path,
     colors: Optional[bool] = None,
+    except_steps: Optional[List[str]] = None,
     expected_status: int = 0,
 ) -> Result:
     args = ["--verbose"]
@@ -112,6 +113,9 @@ def cli(
         args.append("--color")
     else:
         args.append("--no-color")
+
+    if except_steps is not None:
+        args.append(f"--except={','.join(except_steps)}")
 
     args.append(f"--cache-path={cache_path}")
 

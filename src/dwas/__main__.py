@@ -253,6 +253,11 @@ def _execute_pipeline(
 
     steps = _parse_steps(steps_parameters, pipeline.steps)
 
+    if except_steps:
+        for step in except_steps:
+            if step not in pipeline.steps:
+                raise BaseDwasException(f"Unkown step excepted: {step}")
+
     if list_only or list_dependencies:
         pipeline.list_all_steps(
             steps, except_steps, only_selected_step, list_dependencies
