@@ -123,7 +123,7 @@ class BaseFormatterTest(BaseLinterTest):
         token_file.parent.mkdir()
         token_file.write_text(self.invalid_file)
 
-        cli(cache_path=cache_path, step=self.autofix_step)
+        cli(cache_path=cache_path, steps=[self.autofix_step])
         assert token_file.read_text() != self.invalid_file
 
         # And run the default step one last time to ensure it did fix everything

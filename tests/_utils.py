@@ -101,7 +101,7 @@ def execute(args: List[str], expected_status: int = 0) -> Result:
 
 def cli(
     *,
-    step: Optional[str] = None,
+    steps: Optional[List[str]] = None,
     cache_path: Path,
     colors: Optional[bool] = None,
     expected_status: int = 0,
@@ -115,7 +115,7 @@ def cli(
 
     args.append(f"--cache-path={cache_path}")
 
-    if step is not None:
-        args.append(step)
+    if steps is not None:
+        args.extend(steps)
 
     return execute(args, expected_status)

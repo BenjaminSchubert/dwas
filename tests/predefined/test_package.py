@@ -14,7 +14,7 @@ class TestPackage(BaseStepTest):
         return "it worked!"
 
     def test_exposes_sdists_and_wheels(self, cache_path):
-        cli(cache_path=cache_path, step="output_artifacts")
+        cli(cache_path=cache_path, steps=["output_artifacts"])
         artifacts = json.loads(Path("artifacts.json").read_text("utf-8"))
         assert list(artifacts.keys()) == ["sdists", "wheels"]
         assert Path(artifacts["sdists"][0]).name == "test-package-0.0.0.tar.gz"

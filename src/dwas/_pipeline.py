@@ -64,7 +64,7 @@ class Pipeline:
         self._steps_cache: Optional[Dict[str, BaseStepHandler]] = None
 
     @property
-    def _steps(self) -> Dict[str, BaseStepHandler]:
+    def steps(self) -> Dict[str, BaseStepHandler]:
         if self._steps_cache is None:
             self._steps_cache = self._resolve_steps()
         return self._steps_cache
@@ -146,7 +146,7 @@ class Pipeline:
         if steps is None:
             steps = [
                 name
-                for name, step in self._steps.items()
+                for name, step in self.steps.items()
                 if step.run_by_default and name not in except_steps
             ]
 
@@ -158,7 +158,7 @@ class Pipeline:
             step = steps_to_process.pop()
 
             try:
-                step_info = self._steps[step]
+                step_info = self.steps[step]
             except KeyError:
                 unknown_steps.append(step)
                 continue
@@ -212,7 +212,7 @@ class Pipeline:
         if clean:
             LOGGER.debug("Cleaning up workspace")
             for step in steps_in_order:
-                self._steps[step].clean()
+                self.steps[step].clean()
 
         LOGGER.info("Running steps: %s", ", ".join(steps_in_order))
 
@@ -255,7 +255,7 @@ class Pipeline:
         self._log_summary(graph, results, start_time)
 
     def get_step(self, step_name: str) -> BaseStepHandler:
-        return self._steps[step_name]
+        return self.steps[step_name]
 
     def list_all_steps(
         self,
@@ -265,7 +265,7 @@ class Pipeline:
         show_dependencies: bool = False,
     ) -> None:
         all_steps = self._resolve_execution_order(
-            self._build_graph(list(self._steps.keys()))
+            self._build_graph(list(self.steps.keys()))
         )
         selected_steps = self._resolve_execution_order(
             self._build_graph(steps, except_steps, only_selected_steps)
@@ -274,13 +274,13 @@ class Pipeline:
         LOGGER.info("Available steps (* means selected, - means skipped):")
         for step in sorted(all_steps):
             dep_info = ""
-            if show_dependencies and self._steps[step].requires:
+            if show_dependencies and self.steps[step].requires:
                 dep_info = " --> " + ", ".join(
                     reversed(
                         [
                             s
                             for s in all_steps
-                            if s in self._steps[step].requires
+                            if s in self.steps[step].requires
                         ]
                     )
                 )
@@ -479,7 +479,7 @@ class Pipeline:
         start_time = time.monotonic()
 
         try:
-            self._steps[name].execute()
+            self.steps[name].execute()
         except UnavailableInterpreterException as exc:
             LOGGER.warning("Step %s failed: %s", name, exc)
             raise ExceptionWithTimeSpentException(
