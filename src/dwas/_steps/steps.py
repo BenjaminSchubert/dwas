@@ -85,6 +85,9 @@ class Step(Protocol):
             parameters being reserved by the system. Namely:
 
             - ``step``, which is used to pass the :py:class:`StepRunner`.
+            - ``user_args``, which is used to pass arguments that the user would
+              have passed on the cli. This can be useful, to allow users to
+              interact with some cli tool your step might be calling.
 
             For passing other arguments, see :py:func:`dwas.parametrize` and
             :py:func:`dwas.set_defaults`.

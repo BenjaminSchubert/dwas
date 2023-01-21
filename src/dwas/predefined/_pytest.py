@@ -21,9 +21,17 @@ class Pytest(Step):
 
         return {"coverage_files": [str(coverage_file)]}
 
-    def __call__(self, step: StepRunner, args: Sequence[str]) -> None:
+    def __call__(
+        self,
+        step: StepRunner,
+        args: Sequence[str],
+        user_args: Optional[Sequence[str]],
+    ) -> None:
+        if user_args is None:
+            user_args = []
+
         step.run(
-            ["pytest", *args],
+            ["pytest", *args, *user_args],
             env={"COVERAGE_FILE": str(self._get_coverage_file(step))},
         )
 

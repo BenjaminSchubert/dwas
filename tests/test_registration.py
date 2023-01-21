@@ -38,7 +38,7 @@ def _get_all_steps_from_pipeline(pipeline: Pipeline) -> Dict[str, Any]:
     # We are testing some internals here
     # pylint: disable=protected-access
     pipeline._resolve_steps()
-    return {key: _format_step(step) for key, step in pipeline._steps.items()}
+    return {key: _format_step(step) for key, step in pipeline.steps.items()}
 
 
 def _expect_step(
@@ -46,7 +46,7 @@ def _expect_step(
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
-    parameters: Optional[Dict[str, Any]] = None,
+    parameters: Dict[str, Any],
 ) -> Dict[str, Any]:
     if python is None:
         python = f"python{sys.version_info[0]}.{sys.version_info[1]}"
@@ -54,8 +54,6 @@ def _expect_step(
         run_by_default = True
     if requires is None:
         requires = []
-    if parameters is None:
-        parameters = {}
 
     return {
         "python": python,
@@ -95,7 +93,11 @@ def test_can_register_step(pipeline, name, python, run_by_default):
         name = "noop"
 
     assert steps == {
-        name: _expect_step(python=python, run_by_default=run_by_default)
+        name: _expect_step(
+            python=python,
+            run_by_default=run_by_default,
+            parameters={"user_args": None},
+        )
     }
 
 
@@ -117,8 +119,8 @@ def test_registering_parametrized_step_creates_multiple_entries(pipeline):
             "run_by_default": True,
             "type": "group",
         },
-        "noop[1]": _expect_step(parameters={"param": 1}),
-        "noop[2]": _expect_step(parameters={"param": 2}),
+        "noop[1]": _expect_step(parameters={"param": 1, "user_args": None}),
+        "noop[2]": _expect_step(parameters={"param": 2, "user_args": None}),
     }
 
 
@@ -156,7 +158,9 @@ def test_can_register_managed_step(pipeline, from_parameters):
 
     steps = _get_all_steps_from_pipeline(pipeline)
     assert steps == {
-        "noop": _expect_step(parameters={"dependencies": ["one"]})
+        "noop": _expect_step(
+            parameters={"dependencies": ["one"], "user_args": None}
+        )
     }
 
 

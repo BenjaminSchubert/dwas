@@ -111,7 +111,7 @@ jobs:
           path: ${{ env.PACKAGES_PATH }}
 
       - name: pytest[${{ matrix.python }}]
-        run: dwas --verbose --only pytest[${{ matrix.python }}]
+        run: dwas --verbose --only pytest[${{ matrix.python }}] -- --numprocesses auto
 
       - name: Save coverage files
         uses: actions/upload-artifact@v3

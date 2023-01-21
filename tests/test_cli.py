@@ -26,5 +26,25 @@ def test_handles_invalid_dwasfile_nicely(
     if content is not None:
         tmp_path.joinpath("dwasfile.py").write_text(content)
 
-    result = cli(cache_path=tmp_path, expected_status=2)
+    result = cli(cache_path=tmp_path / ".dwas", expected_status=2)
     assert expected_error in result.stderr
+
+
+def test_error_if_passing_posargs_without_step(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    tmp_path.joinpath("dwasfile.py").touch()
+
+    result = cli(
+        cache_path=tmp_path / ".dwas", steps=["--"], expected_status=2
+    )
+    assert "Can't specify '--' without specifying a step" in result.stderr
+
+
+def test_error_if_requesting_a_non_existent_step(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    tmp_path.joinpath("dwasfile.py").touch()
+
+    result = cli(
+        cache_path=tmp_path / ".dwas", steps=["nonexistent"], expected_status=2
+    )
+    assert "Unkown step requested: nonexistent" in result.stderr

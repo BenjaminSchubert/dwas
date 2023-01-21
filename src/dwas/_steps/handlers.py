@@ -1,3 +1,4 @@
+import inspect
 import itertools
 import logging
 import os
@@ -53,6 +54,10 @@ class BaseStepHandler(ABC):
         pass
 
     @abstractmethod
+    def set_user_args(self, args: List[str]) -> None:
+        pass
+
+    @abstractmethod
     def _execute_dependent_setup(
         self, current_step: "BaseStepHandler"
     ) -> None:
@@ -105,19 +110,35 @@ class StepHandler(BaseStepHandler):
         self._step_runner = StepRunner(self)
 
         if parameters is None:
-            self.parameters = {"step": self._step_runner}
+            self.parameters: Dict[str, Any] = {
+                "step": self._step_runner,
+                "user_args": None,
+            }
         else:
-            if "step" in parameters:
-                raise BaseDwasException(
-                    "'step' cannot be used as a parameter name. It is reserved by the StepHandler."
-                )
+            for param in ["step", "user_args"]:
+                if param in parameters:
+                    raise BaseDwasException(
+                        f"Cannot instantiate step {name}: '{param}' cannot be"
+                        "used as a parameter name. It is reserved by the"
+                        " StepHandler."
+                    )
 
             self.parameters = parameters
             self.parameters["step"] = self._step_runner
+            self.parameters["user_args"] = None
 
     @property
     def config(self) -> Config:
         return self._pipeline.config
+
+    def set_user_args(self, args: List[str]) -> None:
+        step_signature = inspect.signature(self._func)
+        if "user_args" not in step_signature.parameters:
+            LOGGER.warning(
+                "Step '%s' was passed user arguments but does not handle them.",
+                self.name,
+            )
+        self.parameters["user_args"] = args
 
     def get_artifacts(self, key: str) -> List[Any]:
         return list(
@@ -247,6 +268,10 @@ class StepGroupHandler(BaseStepHandler):
 
     def execute(self) -> None:
         LOGGER.debug("Step %s is a meta step. Nothing to do", self.name)
+
+    def set_user_args(self, args: List[str]) -> None:
+        for requirement in self.requires:
+            self._pipeline.get_step(requirement).set_user_args(args)
 
     def _execute_dependent_setup(
         self, current_step: "BaseStepHandler"

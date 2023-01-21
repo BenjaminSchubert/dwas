@@ -1,6 +1,8 @@
 import importlib.util
 import logging
+import shlex
 from argparse import (
+    REMAINDER,
     ArgumentParser,
     BooleanOptionalAction,
     Namespace,
@@ -8,7 +10,9 @@ from argparse import (
 )
 from contextvars import copy_context
 from importlib.metadata import version
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
+
+from dwas._steps.handlers import BaseStepHandler
 
 from . import _pipeline
 from ._config import Config
@@ -131,8 +135,62 @@ def _parse_args(args: Optional[List[str]] = None) -> Namespace:
         action="store_true",
         help="Don't report a missing interpreter as a failure, and skip the step instead",
     )
-    parser.add_argument("steps", nargs="*", help="Specifies the steps to run")
+    parser.add_argument(
+        "steps_parameters",
+        metavar="steps",
+        nargs=REMAINDER,
+        help=(
+            "Specifies the steps to run, and optionally specify arguments for"
+            " the steps. Can be specified either as"
+            " `<step> --args='<args> ...'`, or `<step> -- <args>`"
+        ),
+    )
     return parser.parse_args(args)
+
+
+def _parse_steps(
+    args: List[str], known_steps: Dict[str, BaseStepHandler]
+) -> Optional[List[str]]:
+    if not args:
+        return None
+
+    LOGGER.debug("Arguments for steps: %s", args)
+    LOGGER.debug("Discovered steps: %s", sorted(known_steps.keys()))
+
+    if args[0] == "--":
+        raise BaseDwasException(
+            "Can't specify '--' without specifying a step to apply arguments for first."
+            " Please use 'dwas <step> -- <arg> ...'"
+        )
+
+    steps = []
+
+    parser = ArgumentParser()
+    parser.add_argument("--args", default=[], type=shlex.split)
+    parser.add_argument("remainder", nargs=REMAINDER)
+
+    while args:
+        step = args[0]
+        if step not in known_steps:
+            raise BaseDwasException(f"Unkown step requested: {step}")
+
+        steps.append(step)
+
+        parsed_args = parser.parse_args(args[1:])
+
+        if parsed_args.remainder and parsed_args.remainder[0] == "--":
+            parsed_args.args += parsed_args.remainder[1:]
+            parsed_args.remainder = []
+
+        if parsed_args.args:
+            LOGGER.debug(
+                "Passing arguments to step %s: %s", step, parsed_args.args
+            )
+            known_steps[step].set_user_args(parsed_args.args)
+
+        args = parsed_args.remainder
+
+    return steps
 
 
 def _load_user_config(
@@ -171,7 +229,7 @@ def _load_user_config(
 def _execute_pipeline(
     config: Config,
     pipeline_config: str,
-    steps: Optional[List[str]],
+    steps_parameters: List[str],
     only_selected_step: bool,
     except_steps: Optional[List[str]],
     clean: bool,
@@ -183,6 +241,8 @@ def _execute_pipeline(
     context = copy_context()
     pipeline = context.run(_load_user_config, pipeline, pipeline_config)
     LOGGER.debug("Pipeline definition found at %s", pipeline_config)
+
+    steps = _parse_steps(steps_parameters, pipeline.steps)
 
     if list_only or list_dependencies:
         pipeline.list_all_steps(
@@ -212,7 +272,7 @@ def main(sys_args: Optional[List[str]] = None) -> None:
         _execute_pipeline(
             config,
             args.config,
-            args.steps or None,
+            args.steps_parameters,
             args.only_steps,
             args.except_steps,
             args.clean,
