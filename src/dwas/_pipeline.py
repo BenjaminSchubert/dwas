@@ -385,23 +385,32 @@ class Pipeline:
                 result, time_spent = results[name]
                 if result is None:
                     LOGGER.info(
-                        "\t%s[%s] %s: success", Fore.GREEN, time_spent, name
+                        "\t%s[%s] %s%s%s: success",
+                        Fore.GREEN,
+                        time_spent,
+                        Style.BRIGHT,
+                        name,
+                        Style.NORMAL,
                     )
                 elif (
                     isinstance(result, UnavailableInterpreterException)
                     and self.config.skip_missing_interpreters
                 ):
                     LOGGER.info(
-                        "\t%s%s: Skipped: %s",
+                        "\t%s[-:--:--.------] %s%s%s: Skipped: %s",
                         Fore.YELLOW,
+                        Style.BRIGHT,
                         name,
+                        Style.NORMAL,
                         result,
                     )
                 elif isinstance(result, futures.CancelledError):
                     LOGGER.info(
-                        "\t%s%s: Cancelled",
+                        "\t%s[-:--:--.------] %s%s%s: Cancelled",
                         Fore.YELLOW,
+                        Style.BRIGHT,
                         name,
+                        Style.NORMAL,
                     )
                     cancelled_jobs.append(name)
                 else:
@@ -416,9 +425,11 @@ class Pipeline:
                     failed_jobs.append(name)
             elif cancelled_jobs:
                 LOGGER.info(
-                    "\t%s%s: Cancelled",
+                    "\t%s[-:--:--.------] %s%s%s: Cancelled",
                     Fore.YELLOW,
+                    Style.BRIGHT,
                     name,
+                    Style.NORMAL,
                 )
                 cancelled_jobs.append(name)
             else:
@@ -430,9 +441,11 @@ class Pipeline:
                 assert blocking_dependencies is not None
                 blocked_jobs.append(name)
                 LOGGER.warning(
-                    "\t%s%s: blocked by %s",
+                    "\t%s[-:--:--.------] %s%s%s: blocked by %s",
                     Fore.YELLOW,
+                    Style.BRIGHT,
                     name,
+                    Style.NORMAL,
                     ", ".join(blocking_dependencies),
                 )
 
@@ -481,7 +494,9 @@ class Pipeline:
         try:
             self.steps[name].execute()
         except UnavailableInterpreterException as exc:
-            LOGGER.warning("Step %s failed: %s", name, exc)
+            LOGGER.warning(
+                "Step %s%s%s failed: %s", Style.BRIGHT, name, Style.NORMAL, exc
+            )
             raise ExceptionWithTimeSpentException(
                 exc, get_timedelta_since(start_time)
             ) from exc
@@ -498,7 +513,13 @@ class Pipeline:
                 exc, get_timedelta_since(start_time)
             ) from exc
 
-        LOGGER.info("%sStep %s finished successfully", Fore.GREEN, name)
+        LOGGER.info(
+            "%sStep %s%s%s finished successfully",
+            Fore.GREEN,
+            Style.BRIGHT,
+            name,
+            Style.NORMAL,
+        )
         return get_timedelta_since(start_time)
 
     def _format_exception(self, exc: Exception) -> str:
