@@ -139,9 +139,20 @@ class Pipeline:
         except_steps: Optional[List[str]] = None,
         only_selected_steps: bool = False,
     ) -> Dict[str, List[str]]:
-        assert not (only_selected_steps and except_steps)
+        def expand_group(steps: List[str]) -> List[str]:
+            expanded_steps = []
+            for step in steps:
+                expanded_steps.append(step)
+                step_info = self.steps[step]
+                if isinstance(step_info, StepGroupHandler):
+                    expanded_steps.extend(step_info.requires)
+
+            return expanded_steps
+
         if except_steps is None:
             except_steps = []
+        else:
+            except_steps = expand_group(except_steps)
 
         if steps is None:
             steps = [
@@ -164,7 +175,9 @@ class Pipeline:
                 continue
 
             required_steps = step_info.requires
-            if only_selected_steps:
+            if only_selected_steps and not isinstance(
+                step_info, StepGroupHandler
+            ):
                 required_steps = [r for r in required_steps if r in steps]
             elif except_steps:
                 required_steps = [
