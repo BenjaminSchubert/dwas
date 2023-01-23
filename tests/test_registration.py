@@ -1,5 +1,5 @@
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import pytest
 
@@ -44,7 +44,6 @@ def _get_all_steps_from_pipeline(pipeline: Pipeline) -> Dict[str, Any]:
 def _expect_step(
     *,
     python: Optional[str] = None,
-    requires: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
     parameters: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -52,13 +51,11 @@ def _expect_step(
         python = f"python{sys.version_info[0]}.{sys.version_info[1]}"
     if run_by_default is None:
         run_by_default = True
-    if requires is None:
-        requires = []
 
     return {
         "python": python,
         "run_by_default": run_by_default,
-        "requires": requires,
+        "requires": [],
         "parameters": parameters,
     }
 
@@ -170,10 +167,10 @@ def test_cannot_override_setup_with_managed_step(pipeline):
 
     class Noop:
         def setup(self) -> None:
-            pass
+            pass  # pragma: nocover
 
         def __call__(self) -> None:
-            pass
+            pass  # pragma: nocover
 
     with pytest.raises(BaseDwasException) as exc_wrapper:
         register_managed_step(Noop())
