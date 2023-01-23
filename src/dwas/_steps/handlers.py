@@ -67,10 +67,6 @@ class BaseStepHandler(ABC):
     def _get_artifacts(self, key: str) -> List[Any]:
         pass
 
-    @abstractmethod
-    def _gather_artifacts(self) -> Dict[str, List[Any]]:
-        pass
-
 
 class StepHandler(BaseStepHandler):
     def __init__(
@@ -214,7 +210,13 @@ class StepHandler(BaseStepHandler):
             )
 
     def _get_artifacts(self, key: str) -> List[Any]:
-        artifacts = self._gather_artifacts().get(key, [])
+        if isinstance(self._func, StepWithArtifacts):
+            all_artifacts = self._func.gather_artifacts(self._step_runner)
+        else:
+            LOGGER.debug("Step %s does not provide any artifacts", self.name)
+            all_artifacts = {}
+
+        artifacts = all_artifacts.get(key, [])
         if not artifacts:
             LOGGER.warning(
                 "No artifact provided for key '%s' by step '%s'",
@@ -222,13 +224,6 @@ class StepHandler(BaseStepHandler):
                 self.name,
             )
         return artifacts
-
-    def _gather_artifacts(self) -> Dict[str, List[Any]]:
-        if not isinstance(self._func, StepWithArtifacts):
-            LOGGER.debug("Step %s does not provide any artifacts", self.name)
-            return {}
-
-        return self._func.gather_artifacts(self._step_runner)
 
     def _resolve_environ(
         self, passenv: Optional[List[str]], setenv: Optional[Dict[str, str]]
@@ -294,6 +289,3 @@ class StepGroupHandler(BaseStepHandler):
                 ]
             )
         )
-
-    def _gather_artifacts(self) -> Dict[str, List[Any]]:
-        raise NotImplementedError("This should never get called")
