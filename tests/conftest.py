@@ -17,6 +17,16 @@ pytest.register_assert_rewrite("tests.predefined.mixins", "tests._utils")
 from ._utils import isolated_context
 
 
+def pytest_collection_modifyitems(items):
+    # Add the 'predefined' mark to all tests in tests/predefined
+    predefined_tests_path = Path(__file__).parent.joinpath("predefined")
+    assert predefined_tests_path.exists()
+
+    for item in items:
+        if item.path.is_relative_to(predefined_tests_path):
+            item.add_marker(pytest.mark.predefined)
+
+
 @pytest.fixture
 def tmp_path(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)

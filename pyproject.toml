@@ -133,7 +133,10 @@ disable = [
 addopts = "--ignore tests/predefined/examples --verbose --verbose --cov --cov-config=pyproject.toml --cov-report="
 log_level = "DEBUG"
 xfail_strict = true
-markers = "project: the project in which to run tests"
+markers = [
+    "predefined: tests for the predefined steps provided by dwas",
+    "project: the project in which to run tests (only used by test setup)"
+]
 
 ##
 # Coverage
