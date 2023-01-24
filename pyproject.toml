@@ -137,6 +137,10 @@ markers = [
     "predefined: tests for the predefined steps provided by dwas",
     "project: the project in which to run tests (only used by test setup)"
 ]
+filterwarnings = [
+    "error",
+    "ignore:The --rsyncdir command line argument.*:DeprecationWarning"
+]
 
 ##
 # Coverage
