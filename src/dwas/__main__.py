@@ -1,11 +1,14 @@
 import importlib.util
 import logging
+import os
 import shlex
+import sys
 from argparse import (
     REMAINDER,
     ArgumentParser,
     BooleanOptionalAction,
     Namespace,
+    RawDescriptionHelpFormatter,
     _AppendAction,
 )
 from contextvars import copy_context
@@ -41,7 +44,13 @@ class _SplitAppendAction(_AppendAction):
 
 
 def _parse_args(args: Optional[List[str]] = None) -> Namespace:
-    parser = ArgumentParser()
+    parser = ArgumentParser(
+        formatter_class=RawDescriptionHelpFormatter,
+        epilog="""\
+Environment variables:
+  DWAS_ADDOPTS\t\tExtra command line arguments, prepended to other arguments
+""",
+    )
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {version('dwas')}"
     )
@@ -268,6 +277,11 @@ def _execute_pipeline(
 
 
 def main(sys_args: Optional[List[str]] = None) -> None:
+    if sys_args is None:
+        sys_args = sys.argv[1:]
+    if env_args := os.environ.get("DWAS_ADDOPTS"):
+        sys_args = shlex.split(env_args) + sys_args
+
     args = _parse_args(sys_args)
     verbosity = args.verbose - args.quiet
     config = Config(
