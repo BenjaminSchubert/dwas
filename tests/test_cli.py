@@ -60,3 +60,12 @@ def test_error_if_excluded_step_does_not_exist(monkeypatch, tmp_path):
         expected_status=2,
     )
     assert "Unkown step excepted: nonexistent" in result.stderr
+
+
+def test_can_expand_parameters_from_environment(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    tmp_path.joinpath("dwasfile.py").touch()
+
+    monkeypatch.setenv("DWAS_ADDOPTS", "--list")
+    result = cli(cache_path=tmp_path / ".dwas")
+    assert "Available steps" in result.stderr
