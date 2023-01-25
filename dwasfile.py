@@ -23,6 +23,9 @@ dwas.register_managed_step(dwas.predefined.unimport())
 dwas.register_managed_step(dwas.predefined.isort(files=PYTHON_FILES))
 dwas.register_managed_step(dwas.predefined.docformatter(files=PYTHON_FILES))
 dwas.register_managed_step(dwas.predefined.black())
+dwas.register_step_group(
+    "format-check", ["black", "docformatter", "isort", "unimport"]
+)
 
 # With auto fix
 dwas.register_managed_step(
@@ -167,4 +170,10 @@ dwas.register_managed_step(
     passenv=["TWINE_REPOSITORY", "TWINE_USERNAME", "TWINE_PASSWORD"],
     requires=["package", "twine:check"],
     run_by_default=False,
+)
+
+##
+# Reproduce all that CI does
+dwas.register_step_group(
+    "ci", ["docs", "format-check", "lint", "coverage", "twine:check"], False
 )
