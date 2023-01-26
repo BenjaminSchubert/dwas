@@ -57,9 +57,9 @@ class Pipeline:
         self.config = config
         self.proc_manager = ProcessManager()
 
-        self._registered_steps: List[Tuple[str, Step]] = []
+        self._registered_steps: List[Tuple[str, Step, Optional[str]]] = []
         self._registered_step_groups: List[
-            Tuple[str, List[str], Optional[bool]]
+            Tuple[str, List[str], Optional[str], Optional[bool]]
         ] = []
         self._steps_cache: Optional[Dict[str, BaseStepHandler]] = None
 
@@ -69,57 +69,77 @@ class Pipeline:
             self._steps_cache = self._resolve_steps()
         return self._steps_cache
 
-    def register_step(self, name: str, step: "Step") -> None:
-        self._registered_steps.append((name, step))
+    def register_step(
+        self, name: str, description: Optional[str], step: "Step"
+    ) -> None:
+        self._registered_steps.append((name, step, description))
 
     def register_step_group(
         self,
         name: str,
         requires: List[str],
+        description: Optional[str] = None,
         run_by_default: Optional[bool] = None,
     ) -> None:
-        self._registered_step_groups.append((name, requires, run_by_default))
+        self._registered_step_groups.append(
+            (name, requires, description, run_by_default)
+        )
 
     def _resolve_steps(self) -> Dict[str, BaseStepHandler]:
         steps = {}
 
-        for name, func in self._registered_steps:
-            for step in self._resolve_parameters(name, func):
+        for name, func, description in self._registered_steps:
+            for step in self._resolve_parameters(name, func, description):
                 if step.name in steps:
                     raise DuplicateStepException(step.name)
 
                 steps[step.name] = step
 
-        for name, requires, run_by_default in self._registered_step_groups:
+        for (
+            name,
+            requires,
+            description,
+            run_by_default,
+        ) in self._registered_step_groups:
             if name in steps:
                 raise DuplicateStepException(name)
 
             steps[name] = StepGroupHandler(
-                name, self, requires, run_by_default
+                name, self, requires, run_by_default, description
             )
 
         return steps
 
     def _resolve_parameters(
-        self, name: str, func: Step
+        self, name: str, func: Step, description: Optional[str]
     ) -> Generator[BaseStepHandler, None, None]:
+
         parameters = extract_parameters(func)
         all_run_by_default = True
         all_created = []
 
         for params_id, args in parameters:
             step_name = ""
+            current_description = description
             if len(parameters) > 1 and params_id != "":
                 step_name = f"[{params_id}]"
 
             step_name = f"{name}{step_name}"
             current_run_by_default = args.pop("run_by_default", None)
 
+            if "description" in args:
+                current_description = args.pop("description").format(**args)
+            elif description is not None:
+                current_description = description.format(**args)
+            else:
+                current_description = None
+
             all_created.append(step_name)
             all_run_by_default = all_run_by_default and current_run_by_default
 
             yield StepHandler(
                 name=step_name,
+                description=current_description,
                 func=func,
                 pipeline=self,
                 python=args.pop("python", None),
@@ -131,7 +151,9 @@ class Pipeline:
             )
 
         if len(parameters) > 1:
-            yield StepGroupHandler(name, self, all_created, all_run_by_default)
+            yield StepGroupHandler(
+                name, self, all_created, all_run_by_default, description
+            )
 
     def _build_graph(
         self,
@@ -277,6 +299,7 @@ class Pipeline:
         only_selected_steps: bool = False,
         show_dependencies: bool = False,
     ) -> None:
+        # pylint: disable=too-many-locals
         all_steps = self._resolve_execution_order(
             self._build_graph(list(self.steps.keys()))
         )
@@ -284,23 +307,51 @@ class Pipeline:
             self._build_graph(steps, except_steps, only_selected_steps)
         )
 
-        LOGGER.info("Available steps (* means selected, - means skipped):")
+        step_infos = []
         for step in sorted(all_steps):
+            step_info = self.steps[step]
+
             dep_info = ""
-            if show_dependencies and self.steps[step].requires:
+            if show_dependencies and step_info.requires:
                 dep_info = " --> " + ", ".join(
-                    reversed(
-                        [
-                            s
-                            for s in all_steps
-                            if s in self.steps[step].requires
-                        ]
-                    )
+                    reversed([s for s in all_steps if s in step_info.requires])
                 )
-            if step in selected_steps:
-                LOGGER.info("\t%s* %s%s", Style.BRIGHT, step, dep_info)
+
+            description = ""
+            if self.config.verbosity > 0 and step_info.description:
+                description = step_info.description
+
+            step_infos.append((step, dep_info, description))
+
+        LOGGER.info("Available steps (* means selected, - means skipped):")
+        if not step_infos:
+            return
+
+        max_step_length = max(len(s[0]) for s in step_infos)
+        max_dependencies_length = max(len(s[1]) for s in step_infos)
+
+        for step, dependencies, description in step_infos:
+            indicator = "*"
+            style = Style.BRIGHT
+            if step not in selected_steps:
+                style = ""
+                indicator = "-"
+
+            if self.config.verbosity > 0 and description:
+                description = f"\t[{Fore.BLUE}{Style.NORMAL}{description}{Style.RESET_ALL}{style}]"
             else:
-                LOGGER.info("\t%s- %s%s", "", step, dep_info)
+                description = ""
+
+            LOGGER.info(
+                "\t%s%s %-*s%-*s%s",
+                style,
+                indicator,
+                max_step_length,
+                step,
+                max_dependencies_length,
+                dependencies,
+                description,
+            )
 
     def _execute(
         self,

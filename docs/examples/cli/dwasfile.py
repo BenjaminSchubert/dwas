@@ -27,6 +27,7 @@ dwas.register_managed_step(
 )
 dwas.register_step_group(
     name="fix",
+    description="Fix all auto-fixable issues on the project",
     requires=["isort:fix", "black:fix"],
     run_by_default=False,
 )
@@ -53,7 +54,9 @@ dwas.register_managed_step(
     ],
     python=OLDEST_SUPPORTED_PYTHON,
 )
-dwas.register_step_group("lint", ["mypy", "pylint"])
+dwas.register_step_group(
+    "lint", ["mypy", "pylint"], description="Run linter on the project"
+)
 
 ##
 # Packaging
@@ -67,8 +70,11 @@ dwas.register_managed_step(
 # Testing
 ##
 dwas.register_managed_step(
-    dwas.parametrize("python", SUPPORTED_PYTHONS)(dwas.predefined.pytest()),
+    dwas.parametrize("description", ("Run tests for python {python}",))(
+        dwas.parametrize("python", SUPPORTED_PYTHONS)(dwas.predefined.pytest())
+    ),
     dependencies=[TEST_REQUIREMENTS],
     passenv=["TERM"],
     requires=["package"],
+    description="Run tests for all supported python versions",
 )
