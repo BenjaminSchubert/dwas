@@ -70,6 +70,7 @@ Getting started
 
     installation.rst
     getting_started.rst
+    cli.rst
 
 
 If you are new to ``dwas``, the following documentations would be the best place
@@ -77,6 +78,7 @@ to start, it will get you up and running:
 
 - :doc:`installation`
 - :doc:`getting_started`
+- :doc:`cli`
 
 And the :doc:`glossary` might be useful if you have terms that you do not
 understand in the current context.

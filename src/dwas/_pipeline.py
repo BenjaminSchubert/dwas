@@ -298,9 +298,9 @@ class Pipeline:
                     )
                 )
             if step in selected_steps:
-                LOGGER.info("\t* %s%s", step, dep_info)
+                LOGGER.info("\t%s* %s%s", Style.BRIGHT, step, dep_info)
             else:
-                LOGGER.info("\t%s- %s%s", Fore.LIGHTBLACK_EX, step, dep_info)
+                LOGGER.info("\t%s- %s%s", "", step, dep_info)
 
     def _execute(
         self,
