@@ -3,3 +3,4 @@ sphinx
 sphinxcontrib-spelling
 sphinx-copybutton
 sphinx-inline-tabs
+pygments-ansi-color

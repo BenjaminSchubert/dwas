@@ -15,7 +15,7 @@ _ContextHandler = ContextVar[logging.Handler]("_ContextHandler")
 class ColorFormatter(logging.Formatter):
     COLOR_MAPPING = {
         logging.DEBUG: Fore.CYAN,
-        logging.INFO: Fore.WHITE,
+        logging.INFO: "",
         logging.WARN: Fore.YELLOW,
         logging.ERROR: Fore.RED + Style.BRIGHT,
         logging.FATAL: Back.RED + Fore.WHITE + Style.BRIGHT,

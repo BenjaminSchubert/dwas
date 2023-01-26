@@ -4,6 +4,8 @@
 # TODO: can we automate the generation of the 'defaults' values for our methods?
 # TODO: validate code blocks, especially examples
 
+import os
+import subprocess
 import sys
 from importlib import metadata
 from pathlib import Path
@@ -16,6 +18,7 @@ SRC_PATH = DOCS_PATH.parent.joinpath("src")
 
 sys.path.append(str(EXTENSIONS_PATH))
 
+
 ##
 # Project Metadata
 ##
@@ -26,12 +29,33 @@ author = _project_metadata["Author-email"]
 # pylint: disable=redefined-builtin
 copyright = "2022, Benjamin Schubert"
 
+html_context = {
+    "github_user": "BenjaminSchubert",
+    "github_repo": "dwas",
+    "github_version": "main",
+    "conf_py_path": "/docs/",
+}
+rtd_version_type = os.getenv("READTHEDOCS_VERSION_TYPE")
+if rtd_version_type == "external":
+    # Likely a PR build, link to the commit directly
+    commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        stdout=subprocess.PIPE,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    html_context["github_version"] = commit
+elif rtd_version_type == "tag":
+    html_context["github_version"] = os.environ["READTHEDOCS_VERSION_NAME"]
+
+
 ##
 # Global configuration
 ##
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     # TODO: get rid of this once we tackled all the todos
     "sphinx.ext.todo",
@@ -39,7 +63,9 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_inline_tabs",
     "sphinxcontrib.spelling",
+    # Internal extensions
     "cleanup_signatures",
+    "execute",
 ]
 
 # Where to store our custom templates
@@ -57,8 +83,8 @@ nitpick_ignore = [
 # Theme options
 html_theme = "furo"
 highlight_language = "python3"
-pygments_style = "sphinx"
-pygments_dark_style = "monokai"
+pygments_style = "styles.AnsiDefaultStyle"
+pygments_dark_style = "styles.AnsiMonokaiStyle"
 
 # Autosummary configuration
 autosummary_ignore_module_all = False
@@ -77,6 +103,17 @@ autodoc_default_options = {
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
 }
+
+# Extlinks
+extlinks = {
+    "repofile": (
+        "https://github.com/{github_user}/{github_repo}/tree/{github_version}/%s".format(
+            **html_context
+        ),
+        "repo %s",
+    ),
+}
+extlinks_detect_hardcoded_links = True
 
 # Customisation for the rst that gets generated
 # Add here things that need to be reused between files
@@ -110,14 +147,6 @@ rst_epilog = """
 # Spelling config
 spelling_show_suggestions = True
 spelling_word_list_filename = str(DOCS_PATH / "_spelling_allowlist.txt")
-
-
-html_context = {
-    "github_user": "BenjaminSchubert",
-    "github_repo": "dwas",
-    "github_version": "main",
-    "conf_py_path": "/docs/",
-}
 
 
 ##
