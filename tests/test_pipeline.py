@@ -133,7 +133,7 @@ def test_graph_computation_is_correct(
     pipeline.register_step_group(
         "step-nondefault",
         ["step-1-1", "step-1-2"],
-        False,
+        run_by_default=False,
     )
 
     def func():
@@ -141,17 +141,17 @@ def test_graph_computation_is_correct(
 
     # Sub steps
     pipeline.register_step(
-        "step-1-1", build_parameters(requires=["step-1-1-1"])(func())
+        "step-1-1", None, build_parameters(requires=["step-1-1-1"])(func())
     )
     pipeline.register_step(
-        "step-1-2", build_parameters(requires=["step-1-2-1"])(func())
+        "step-1-2", None, build_parameters(requires=["step-1-2-1"])(func())
     )
     pipeline.register_step_group("step-1-3", ["step-1-3-1"])
 
     # Sub sub steps
-    pipeline.register_step("step-1-1-1", func())
-    pipeline.register_step("step-1-2-1", func())
-    pipeline.register_step("step-1-3-1", func())
+    pipeline.register_step("step-1-1-1", None, func())
+    pipeline.register_step("step-1-2-1", None, func())
+    pipeline.register_step("step-1-3-1", None, func())
 
     # pylint: disable=protected-access
     assert pipeline._build_graph(steps, except_steps, only_selected) == result

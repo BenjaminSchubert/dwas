@@ -36,6 +36,12 @@ You can also know which steps run in which order:
 .. command-output:: dwas --list-dependencies
     :cwd: examples/cli/
 
+It is also possible to get more information on each step, providing the project
+did add a description. For this, use a more verbose mode:
+
+.. command-output:: dwas --list --verbose
+    :cwd: examples/cli/
+
 
 Controlling steps execution more closely
 ----------------------------------------

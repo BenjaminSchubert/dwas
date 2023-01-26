@@ -11,6 +11,7 @@ def register_step(
     func: Step,
     *,
     name: Optional[str] = None,
+    description: Optional[str] = None,
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
@@ -45,6 +46,63 @@ def register_step(
                 register_step(my_step)
 
             and it will be available as ``my_step``.
+
+    :param description:
+
+        An optional description of what the current step does
+
+        In order to help developers on your project, adding descriptions to
+        various steps can make it easier to understand what they should use.
+
+        For example:
+
+        .. code-block::
+
+            register_step(your_step, description="This step does something")
+            # The description here will be:
+            #   "This step does something"
+
+        The description will be added to all steps generated here unless you
+        also parametrize them with a description. In which case, only the top
+        level group created will use the description passed.
+
+        The other steps will use the parametrized description.
+
+        In the case of multiple steps, the description will also be formatted
+        with the various arguments passed.
+
+        For example:
+
+        .. code-block::
+
+            register_step(
+                parametrize("python", ["3.9", "3.10"])(test),
+                description="Run tests for python {python}",
+            )
+            # Will give the following descriptions:
+            #   - test: "Run tests for python {python}"
+            #   - test[3.9]: "Run tests for python 3.9"
+            #   - test[3.10]: "Run tests for python3.10"
+
+        Or if you want to give a separate description for each:
+
+        .. code-block::
+
+            register_step(
+                parametrize(
+                    ("builder", "description"),
+                    [
+                        ("html", "Build html documentation"),
+                        ("linkcheck", "Check documentation links are valid"),
+                    ]
+                )(sphinx_step),
+                name="docs",
+                description="Build and check documentation"
+            )
+            # Will give the following descriptions:
+            #   - docs: Build and check documentation
+            #   - docs[html]: Build html documentation
+            #   - docs[linkcheck]: Check documentation links are valid
 
     :param python: The python version to use in this step.
 
@@ -91,7 +149,7 @@ def register_step(
         setenv=setenv,
     )(func)
 
-    pipeline.register_step(name, func)
+    pipeline.register_step(name, description, func)
     return func
 
 
@@ -100,6 +158,7 @@ def register_managed_step(
     dependencies: Optional[Sequence[str]] = None,
     *,
     name: Optional[str] = None,
+    description: Optional[str] = None,
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
@@ -124,6 +183,7 @@ def register_managed_step(
                          parameter to be passed via :py:func:`parametrize`.
     :param name: The name to give to the step.
                  Defaults to :python:`func.__name__`
+    :param description: An optional description of what the current step does
     :param python: The python version to use for this step
     :param requires: The list of steps this step depends on
     :param run_by_default: Whether to run by default or not
@@ -153,6 +213,7 @@ def register_managed_step(
     return register_step(
         func,
         name=name,
+        description=description,
         python=python,
         requires=requires,
         run_by_default=run_by_default,
@@ -162,7 +223,10 @@ def register_managed_step(
 
 
 def register_step_group(
-    name: str, requires: List[str], run_by_default: Optional[bool] = None
+    name: str,
+    requires: List[str],
+    description: Optional[str] = None,
+    run_by_default: Optional[bool] = None,
 ) -> None:
     """
     Register a :term:`step group`.
@@ -178,15 +242,17 @@ def register_step_group(
 
     :param name: The name to give to the group of step
     :param requires: The list of steps that are part of the group
+    :param description: An optional description of what the current step does
     :param run_by_default: Whether to run this step by default or not
     """
     pipeline = get_pipeline()
-    pipeline.register_step_group(name, requires, run_by_default)
+    pipeline.register_step_group(name, requires, description, run_by_default)
 
 
 def step(
     *,
     name: Optional[str] = None,
+    description: Optional[str] = None,
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
@@ -200,6 +266,7 @@ def step(
     the decorated object.
 
     :param name: The name used to refer to this step
+    :param description: An optional description of what the current step does
     :param python: The python version to use in this step
     :param requires: The list of steps that this step depends on
     :param run_by_default: Whether this step should run by default or not
@@ -212,6 +279,7 @@ def step(
         register_step(
             func,
             name=name,
+            description=description,
             python=python,
             requires=requires,
             run_by_default=run_by_default,
@@ -227,6 +295,7 @@ def managed_step(
     dependencies: Sequence[str],
     *,
     name: Optional[str] = None,
+    description: Optional[str] = None,
     python: Optional[str] = None,
     requires: Optional[List[str]] = None,
     run_by_default: Optional[bool] = None,
@@ -241,6 +310,7 @@ def managed_step(
 
     :param dependencies: A list of dependencies to install as a setup phase.
     :param name: The name used to refer to this step
+    :param description: An optional description of what the current step does
     :param python: The python version to use in this step
     :param requires: The list of steps that this step depends on
     :param run_by_default: Whether this step should run by default or not
@@ -254,6 +324,7 @@ def managed_step(
             func,
             dependencies,
             name=name,
+            description=description,
             python=python,
             requires=requires,
             run_by_default=run_by_default,

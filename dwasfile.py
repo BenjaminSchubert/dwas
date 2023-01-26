@@ -26,7 +26,10 @@ ARTIFACTS_PATH = ROOT_PATH / "_artifacts"
 ##
 # Formatting
 ##
-dwas.register_managed_step(dwas.predefined.unimport())
+dwas.register_managed_step(
+    dwas.predefined.unimport(),
+    description="Show which imports are unnecessary",
+)
 dwas.register_managed_step(dwas.predefined.isort(files=PYTHON_FILES))
 dwas.register_managed_step(dwas.predefined.docformatter(files=PYTHON_FILES))
 dwas.register_managed_step(dwas.predefined.black())
@@ -67,7 +70,8 @@ dwas.register_managed_step(
 )
 dwas.register_step_group(
     name="fix",
-    requires=["isort:fix", "docformatter:fix", "black:fix"],
+    description="Fix all auto-fixable issues on the project",
+    requires=["unimport:fix", "isort:fix", "docformatter:fix", "black:fix"],
     run_by_default=False,
 )
 
@@ -109,10 +113,13 @@ dwas.register_managed_step(
 # Testing
 ##
 dwas.register_managed_step(
-    dwas.parametrize("python", SUPPORTED_PYTHONS)(dwas.predefined.pytest()),
+    dwas.parametrize("description", ("Run tests for python {python}",))(
+        dwas.parametrize("python", SUPPORTED_PYTHONS)(dwas.predefined.pytest())
+    ),
     dependencies=[TEST_REQUIREMENTS],
     passenv=["TERM"],
     requires=["package"],
+    description="Run tests for all supported python versions",
 )
 
 ##
@@ -128,6 +135,7 @@ dwas.register_managed_step(
     ),
     requires=["pytest"],
     dependencies=["coverage[toml]"],
+    description="Report coverage from the tests",
 )
 
 ##
@@ -137,11 +145,15 @@ dwas.register_managed_step(
 #       clean them up on dwas --clean.
 dwas.register_managed_step(
     dwas.parametrize(
-        ("builder", "output"),
+        ("builder", "output", "description"),
         [
-            ("html", ARTIFACTS_PATH / "docs"),
-            ("linkcheck", None),
-            ("spelling", None),
+            (
+                "html",
+                ARTIFACTS_PATH / "docs",
+                "Build an HTML version of the docs",
+            ),
+            ("linkcheck", None, "Check that all links in the docs are valid"),
+            ("spelling", None, "Check spelling for the docs"),
         ],
         ids=["html", "linkcheck", "spelling"],
     )(
@@ -151,6 +163,7 @@ dwas.register_managed_step(
         )
     ),
     name="docs",
+    description="Build and validate the documentation",
     dependencies=[DOCS_REQUIREMENTS],
     requires=["package"],
     run_by_default=False,
@@ -182,5 +195,8 @@ dwas.register_managed_step(
 ##
 # Reproduce all that CI does
 dwas.register_step_group(
-    "ci", ["docs", "format-check", "lint", "coverage", "twine:check"], False
+    "ci",
+    ["docs", "format-check", "lint", "coverage", "twine:check"],
+    "Run all checks that are run on CI",
+    False,
 )
