@@ -8,8 +8,11 @@ import sys
 from importlib import metadata
 from pathlib import Path
 
+from jinja2.filters import FILTERS
+
 DOCS_PATH = Path(__file__).parent
 EXTENSIONS_PATH = DOCS_PATH / "_extensions"
+SRC_PATH = DOCS_PATH.parent.joinpath("src")
 
 sys.path.append(str(EXTENSIONS_PATH))
 
@@ -107,3 +110,28 @@ rst_epilog = """
 # Spelling config
 spelling_show_suggestions = True
 spelling_word_list_filename = str(DOCS_PATH / "_spelling_allowlist.txt")
+
+
+html_context = {
+    "github_user": "BenjaminSchubert",
+    "github_repo": "dwas",
+    "github_version": "main",
+    "conf_py_path": "/docs/",
+}
+
+
+##
+# Custom jinja filters
+##
+# NOTE: sphinx doesn't allow us adding filters in a standard way, so we
+#       modify the global environment here
+def module_path(module: str) -> str:
+    path = SRC_PATH / module.replace(".", "/")
+    if path.is_dir():
+        path = path / "__init__.py"
+
+    assert path.exists()
+    return str(path.relative_to(SRC_PATH.parent))
+
+
+FILTERS["module_path"] = module_path
