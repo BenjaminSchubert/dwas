@@ -1,3 +1,5 @@
 pytest
 pytest-cov
 pytest-xdist
+# Required for nicer pytest output
+pygments
