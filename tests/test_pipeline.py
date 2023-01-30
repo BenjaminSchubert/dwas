@@ -69,7 +69,7 @@ def test_compute_slowest_chain_dependencies(pipeline):
             ["step-1-2"],
             False,
             {
-                "step-1": ["step-1-1", "step-1-3"],
+                "step-1": ["step-1-1", "step-1-2-1", "step-1-3"],
                 "step-1-1": ["step-1-1-1"],
                 "step-1-1-1": [],
                 "step-1-2-1": [],
@@ -90,6 +90,19 @@ def test_compute_slowest_chain_dependencies(pipeline):
                 "step-1-2-1": [],
             },
             id="exclude-group",
+        ),
+        pytest.param(
+            ["step-1", "step-1-3-1"],
+            ["step-1-3"],
+            False,
+            {
+                "step-1": ["step-1-1", "step-1-2", "step-1-3-1"],
+                "step-1-1": ["step-1-1-1"],
+                "step-1-1-1": [],
+                "step-1-2": ["step-1-2-1"],
+                "step-1-2-1": [],
+            },
+            id="exclude-group-include-subgroup",
         ),
         pytest.param(
             ["step-1-1"],
@@ -120,6 +133,26 @@ def test_compute_slowest_chain_dependencies(pipeline):
                 "step-1-3-1": [],
             },
             id="only-step-exclude-substep",
+        ),
+        pytest.param(
+            None,
+            ["step-1"],
+            False,
+            {"step-1-1-1": [], "step-1-2-1": []},
+            id="exclude-top-level",
+        ),
+        pytest.param(
+            ["step-1"],
+            None,
+            True,
+            {
+                "step-1": ["step-1-1", "step-1-2", "step-1-3"],
+                "step-1-1": [],
+                "step-1-2": [],
+                "step-1-3": ["step-1-3-1"],
+                "step-1-3-1": [],
+            },
+            id="only-top-level",
         ),
     ),
 )
@@ -155,3 +188,35 @@ def test_graph_computation_is_correct(
 
     # pylint: disable=protected-access
     assert pipeline._build_graph(steps, except_steps, only_selected) == result
+
+
+def test_only_keeps_dependency_information(pipeline):
+    def func():
+        return lambda: None  # pragma: nocover
+
+    pipeline.register_step("1", None, build_parameters(requires=["2"])(func()))
+    pipeline.register_step("2", None, build_parameters(requires=["3"])(func()))
+    pipeline.register_step("3", None, build_parameters(requires=["4"])(func()))
+    pipeline.register_step("4", None, func())
+
+    # pylint: disable=protected-access
+    assert pipeline._build_graph(["1", "4"], None, True) == {
+        "1": ["4"],
+        "4": [],
+    }
+
+
+def test_exclude_keeps_dependency_information(pipeline):
+    def func():
+        return lambda: None  # pragma: nocover
+
+    pipeline.register_step("1", None, build_parameters(requires=["2"])(func()))
+    pipeline.register_step("2", None, build_parameters(requires=["3"])(func()))
+    pipeline.register_step("3", None, build_parameters(requires=["4"])(func()))
+    pipeline.register_step("4", None, func())
+
+    # pylint: disable=protected-access
+    assert pipeline._build_graph(None, ["2", "3"], False) == {
+        "1": ["4"],
+        "4": [],
+    }

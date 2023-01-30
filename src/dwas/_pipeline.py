@@ -9,7 +9,7 @@ from contextvars import Context, ContextVar, copy_context
 from datetime import timedelta
 from subprocess import CalledProcessError
 from types import FrameType
-from typing import Callable, Dict, Generator, List, Optional, Tuple
+from typing import Callable, Dict, Generator, List, Optional, Set, Tuple, cast
 
 from colorama import Fore, Style
 
@@ -161,26 +161,35 @@ class Pipeline:
         except_steps: Optional[List[str]] = None,
         only_selected_steps: bool = False,
     ) -> Dict[str, List[str]]:
-        def expand_group(steps: List[str]) -> List[str]:
-            expanded_steps = []
-            for step in steps:
-                expanded_steps.append(step)
+        # we should refactor at some point
+        # pylint: disable=too-many-branches,too-many-locals,too-many-statements
+
+        # First build the whole graph, without ignoring edges. This is necessary
+        # to ensure we keep all dependency relations
+        def expand(steps: List[str]) -> Set[str]:
+            expanded = set()
+            to_process = deque(steps)
+            while to_process:
+                step = to_process.pop()
+                expanded.add(step)
                 step_info = self.steps[step]
                 if isinstance(step_info, StepGroupHandler):
-                    expanded_steps.extend(step_info.requires)
+                    for req in step_info.requires:
+                        if req not in expanded:
+                            to_process.append(req)
 
-            return expanded_steps
+            return expanded
 
         if except_steps is None:
-            except_steps = []
+            except_steps_set = set()
         else:
-            except_steps = expand_group(except_steps)
+            except_steps_set = expand(except_steps)
 
         if steps is None:
             steps = [
                 name
                 for name, step in self.steps.items()
-                if step.run_by_default and name not in except_steps
+                if step.run_by_default and name not in except_steps_set
             ]
 
         graph = {}
@@ -196,27 +205,81 @@ class Pipeline:
                 unknown_steps.append(step)
                 continue
 
-            required_steps = step_info.requires
-            if only_selected_steps and not isinstance(
-                step_info, StepGroupHandler
-            ):
-                required_steps = [r for r in required_steps if r in steps]
-            elif except_steps:
-                required_steps = [
-                    r for r in required_steps if r not in except_steps
-                ]
+            graph[step] = step_info.requires
 
-            graph[step] = required_steps
-
-            for requirement in required_steps:
-                if (
-                    requirement not in graph
-                    and requirement not in except_steps
-                ):
+            for requirement in step_info.requires:
+                if requirement not in graph:
                     steps_to_process.append(requirement)
 
         if unknown_steps:
             raise UnknownStepsException(unknown_steps)
+
+        if except_steps_set:
+            except_replacements: Dict[str, List[str]] = {}
+
+            # FIXME: ensure we handle cycles
+            def compute_replacement(requirements: List[str]) -> List[str]:
+                replacements = []
+                for requirement in requirements:
+                    if requirement in cast(List[str], steps):
+                        replacements.append(requirement)
+                    else:
+                        if requirement not in except_replacements:
+                            except_replacements[
+                                requirement
+                            ] = compute_replacement(graph[requirement])
+                        replacements.extend(except_replacements[requirement])
+
+                return replacements
+
+            for step in except_steps_set:
+                if step not in except_replacements:
+                    # The step might not be in the graph, if it is not depended
+                    # upon by anything else
+                    if deps := graph.get(step):
+                        except_replacements[step] = compute_replacement(deps)
+
+            graph = {
+                key: [
+                    x for v in value for x in except_replacements.get(v, [v])
+                ]
+                for key, value in graph.items()
+                if key not in except_steps_set
+            }
+
+        if only_selected_steps:
+            only = expand(steps)
+            only_replacements = {}
+
+            def compute_only_replacement(
+                step: str, requirements: List[str]
+            ) -> List[str]:
+                if step in only:
+                    return [step]
+
+                replacements = []
+                for requirement in requirements:
+                    if requirement not in only_replacements:
+                        only_replacements[
+                            requirement
+                        ] = compute_only_replacement(
+                            requirement, graph[requirement]
+                        )
+                    replacements.extend(only_replacements[requirement])
+
+                return replacements
+
+            for step in graph.keys():
+                if step not in only_replacements:
+                    only_replacements[step] = compute_only_replacement(
+                        step, graph[step]
+                    )
+
+            graph = {
+                key: [x for v in value for x in only_replacements.get(v, [v])]
+                for key, value in graph.items()
+                if key in only
+            }
 
         return graph
 
