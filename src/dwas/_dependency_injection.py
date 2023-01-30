@@ -3,7 +3,7 @@ import logging
 from typing import Any, Callable, Dict, TypeVar
 
 from ._exceptions import BaseDwasException
-from ._inspect import get_location
+from ._inspect import get_location, get_name
 
 LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -18,7 +18,7 @@ def call_with_parameters(
     for name, value in signature.parameters.items():
         if value.kind not in [value.POSITIONAL_OR_KEYWORD, value.KEYWORD_ONLY]:
             raise BaseDwasException(
-                f"Unsupported parameter type for function '{func.__name__}'"
+                f"Unsupported parameter type for function '{get_name(func)}'"
                 f" defined in {get_location(func)}. Steps currently only support"
                 " positional_or_keyword or keyword_only parameters."
             )
@@ -34,16 +34,9 @@ def call_with_parameters(
                 )
                 continue
 
-            actual_func = getattr(func, "__call__", func)
-            func_name = actual_func.__name__
-            if actual_func != func:
-                func_name = f"{func.__name__}.{func_name}"
-
-            file = inspect.getsourcefile(actual_func)
-            line = inspect.getsourcelines(actual_func)[-1]
             raise BaseDwasException(
                 f"Parameter '{name}' was not provided for function"
-                f" '{func_name}' defined in {file}:{line}"
+                f" '{get_name(func)}' defined in {get_location(func)}"
             ) from exc
 
     return func(**kwargs)
