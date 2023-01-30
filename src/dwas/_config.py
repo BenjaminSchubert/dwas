@@ -118,7 +118,7 @@ class Config:
         self,
         cache_path: str,
         verbosity: int,
-        colors: bool,
+        colors: Optional[bool],
         n_jobs: int,
         skip_missing_interpreters: bool,
         skip_setup: bool,
