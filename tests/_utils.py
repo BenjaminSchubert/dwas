@@ -1,5 +1,6 @@
 import functools
 import logging
+import re
 import sys
 from contextvars import Context
 from dataclasses import dataclass
@@ -14,6 +15,7 @@ from dwas._subproc import set_subprocess_default_pipes
 from tests import TESTS_PATH
 
 _T = TypeVar("_T")
+ANSI_COLOR_CODES_RE = re.compile(r"\x1B\[\dm")
 
 
 # TODO: this could be done via ParamSpec but it's only python3.10+
