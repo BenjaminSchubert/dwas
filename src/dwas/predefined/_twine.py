@@ -24,6 +24,7 @@ class Twine(Step):
         sdists = step.get_artifacts("sdists")
         wheels = step.get_artifacts("wheels")
         if not sdists and not wheels:
+            # pylint: disable=broad-exception-raised
             raise Exception(
                 "No sdists or wheels provided: this step expects at least one"
                 " of them to be provided by a previous step"

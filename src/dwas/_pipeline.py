@@ -113,7 +113,6 @@ class Pipeline:
     def _resolve_parameters(
         self, name: str, func: Step, description: Optional[str]
     ) -> Generator[BaseStepHandler, None, None]:
-
         parameters = extract_parameters(func)
         all_run_by_default = True
         all_created = []

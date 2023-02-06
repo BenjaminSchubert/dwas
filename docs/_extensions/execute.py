@@ -20,7 +20,7 @@ class ExecuteDirective(rst.Directive):
     final_argument_whitespace = True
     required_arguments = 1
 
-    option_spec = dict(returncode=nonnegative_int, cwd=unchanged)
+    option_spec = {"returncode": nonnegative_int, "cwd": unchanged}
 
     def run(self) -> List[nodes.Element]:
         env = self.state.document.settings.env

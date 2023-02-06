@@ -55,7 +55,9 @@ class ContextBasedHandler(logging.Handler):
     def emit(self, record: logging.LogRecord) -> None:
         try:
             handler = _ContextHandler.get()
-        except LookupError:  # There is no way of setting a handler after the fact
+        except (
+            LookupError
+        ):  # There is no way of setting a handler after the fact
             handler = self._default
 
         handler.setFormatter(self.formatter)

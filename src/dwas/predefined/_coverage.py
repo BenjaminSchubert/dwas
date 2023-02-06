@@ -26,6 +26,7 @@ class Coverage(Step):
 
         coverage_files = step.get_artifacts("coverage_files")
         if not coverage_files:
+            # pylint: disable=broad-exception-raised
             raise Exception("No coverage files provided. Can't proceed")
 
         step.run(["coverage", "combine", "--keep", *coverage_files], env=env)
