@@ -26,6 +26,7 @@ from ._exceptions import (
     UnavailableInterpreterException,
     UnknownStepsException,
 )
+from ._frontend import Frontend, StepSummary
 from ._subproc import ProcessManager
 from ._timing import format_timedelta, get_timedelta_since
 
@@ -342,9 +343,18 @@ class Pipeline:
         previous_signal = signal.signal(signal.SIGINT, request_stop)
 
         try:
-            results = self._execute(
-                sorter, running_futures, stop, lambda: should_stop
-            )
+            summary = StepSummary(list(graph))
+            with ExitStack() as stack:
+                if self.config.is_interactive:
+                    stack.enter_context(Frontend(summary).activate())
+
+                results = self._execute(
+                    sorter,
+                    running_futures,
+                    stop,
+                    lambda: should_stop,
+                    summary,
+                )
         finally:
             signal.signal(signal.SIGINT, previous_signal)
 
@@ -422,6 +432,7 @@ class Pipeline:
         ],
         stop: Callable[[], None],
         should_stop: Callable[[], bool],
+        summary: StepSummary,
     ) -> Dict[str, Tuple[Optional[Exception], timedelta]]:
         results: Dict[str, Tuple[Optional[Exception], timedelta]] = {}
 
@@ -483,10 +494,11 @@ class Pipeline:
                         executor.submit(
                             # XXX: mypy gets confused here, but the result is
                             #      sane
-                            copy_context().run,  # type: ignore
-                            self._run_step,  # type: ignore
-                            name,  # type: ignore
-                            pipe_plexer,  # type: ignore
+                            copy_context().run,  # type: ignore[arg-type]
+                            self._run_step,  # type: ignore[arg-type]
+                            name,  # type: ignore[arg-type]
+                            pipe_plexer,  # type: ignore[arg-type]
+                            summary,  # type: ignore[arg-type]
                         ),
                     )
                     running_futures[future] = name, pipe_plexer
@@ -590,6 +602,7 @@ class Pipeline:
         self,
         name: str,
         pipe_plexer: Optional[_io.PipePlexer],
+        summary: StepSummary,
     ) -> timedelta:
         with ExitStack() as stack:
             if pipe_plexer is not None:
@@ -607,7 +620,13 @@ class Pipeline:
             LOGGER.debug("Log file can be found at %s", log_file)
             stack.enter_context(_io.log_file(log_file))
 
-            time_taken = self._run_step_with_logging(name)
+            summary.mark_running(name)
+            try:
+                time_taken = self._run_step_with_logging(name)
+            except Exception:
+                summary.mark_failure(name)
+                raise
+            summary.mark_success(name)
 
         return time_taken
 

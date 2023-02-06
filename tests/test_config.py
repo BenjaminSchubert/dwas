@@ -1,5 +1,6 @@
 # pylint: disable=redefined-outer-name
 
+import itertools
 import os
 
 import pytest
@@ -45,12 +46,17 @@ def test_can_control_colors_explicitly(enable, kwargs):
         )
 
 
-@pytest.mark.parametrize("is_tty", (True, False))
-def test_enables_colors_if_tty(monkeypatch, is_tty, kwargs):
-    monkeypatch.setattr("sys.stdin.isatty", lambda: is_tty)
+@pytest.mark.parametrize(
+    ("stdout_is_tty", "stderr_is_tty"), itertools.permutations([True, False])
+)
+def test_enables_colors_if_tty(
+    monkeypatch, stdout_is_tty, stderr_is_tty, kwargs
+):
+    monkeypatch.setattr("sys.stdout.isatty", lambda: stdout_is_tty)
+    monkeypatch.setattr("sys.stderr.isatty", lambda: stderr_is_tty)
 
     conf = Config(**kwargs, colors=None)
-    assert conf.colors == is_tty
+    assert conf.colors == (stdout_is_tty and stderr_is_tty)
 
 
 @pytest.mark.parametrize(

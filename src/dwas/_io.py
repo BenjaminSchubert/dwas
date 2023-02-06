@@ -52,24 +52,29 @@ class MemoryPipe(io.TextIOWrapper):
 
 
 class PipePlexer:
-    def __init__(self) -> None:
+    def __init__(self, write_on_flush: bool = True) -> None:
         self.stderr = MemoryPipe(self)
         self.stdout = MemoryPipe(self)
 
         self._buffer: deque[Tuple[MemoryPipe, str]] = deque()
+        self._write_on_flush = write_on_flush
 
     def write(self, stream: MemoryPipe, data: str) -> int:
         self._buffer.append((stream, data))
         return len(data)
 
-    def flush(self) -> None:
-        with suppress(IndexError):
-            while True:
-                stream, line = self._buffer.popleft()
-                if stream == self.stdout:
-                    sys.stdout.write(line)
-                else:
-                    sys.stderr.write(line)
+    def flush(self, force_write: bool = False) -> None:
+        if self._write_on_flush or force_write:
+            with suppress(IndexError):
+                while True:
+                    stream, line = self._buffer.popleft()
+                    if stream == self.stdout:
+                        sys.stdout.write(line)
+                    else:
+                        sys.stderr.write(line)
+
+            sys.stdout.flush()
+            sys.stderr.flush()
 
 
 class StreamHandler(io.TextIOWrapper):

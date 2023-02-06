@@ -154,6 +154,10 @@ class Config:
             n_jobs = multiprocessing.cpu_count()
         self.n_jobs = n_jobs
 
+        self.is_interactive = (
+            sys.__stdout__.isatty() and sys.__stderr__.isatty()
+        )
+
         self.environ = {
             # XXX: keep this list in sync with the above documentation
             key: os.environ[key]
@@ -225,7 +229,7 @@ class Config:
         if "GITHUB_ACTION" in os.environ:
             return True
 
-        return sys.stdin.isatty()
+        return self.is_interactive
 
     def _prepare_and_clean_log_path(self) -> None:
         self.log_path.mkdir(parents=True, exist_ok=True)
