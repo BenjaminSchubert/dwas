@@ -264,6 +264,7 @@ def set_defaults(values: Dict[str, Any]) -> Callable[[T], T]:
     :raise DefaultsAlreadySetException: If :py:func:`set_defaults` was already
                                         called on the given object.
     """
+
     # FIXME: allow merging defaults instead of failing if they do not conflict
     def _apply(func: T) -> T:
         if hasattr(func, _DEFAULTS):
