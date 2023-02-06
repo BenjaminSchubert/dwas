@@ -91,9 +91,7 @@ Encountering issues with ``dwas``? Found a bug? Have suggestions for
 improvements? Please feel free to get in touch and `submit an issue`_ or add
 your point of view or additional information on an existing one if relevant.
 
-Want to contribute? Please comment on the issue you would like to address, or
-open a new one before getting started proposing a patch, so there is visibility
-on what is planned.
+Want to contribute? Please see :doc:`our contributing guide <contributing>`.
 
 
 Public API
@@ -141,5 +139,6 @@ design:
     :hidden:
 
     changelog.rst
+    contributing.rst
     glossary.rst
     genindex.rst
