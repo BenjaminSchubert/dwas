@@ -28,7 +28,7 @@ from ._exceptions import (
 from ._log_capture import PipePlexer
 from ._logging import set_context_handler
 from ._subproc import ProcessManager, set_subprocess_default_pipes
-from ._timing import get_timedelta_since
+from ._timing import format_timedelta, get_timedelta_since
 
 LOGGER = logging.getLogger(__name__)
 
@@ -513,7 +513,7 @@ class Pipeline:
                     LOGGER.info(
                         "\t%s[%s] %s%s%s: success",
                         Fore.GREEN,
-                        time_spent,
+                        format_timedelta(time_spent),
                         Style.BRIGHT,
                         name,
                         Style.NORMAL,
@@ -544,7 +544,7 @@ class Pipeline:
                         "\t%s%s[%s] %s: error: %s",
                         Style.BRIGHT,
                         Fore.RED,
-                        time_spent,
+                        format_timedelta(time_spent),
                         name,
                         self._format_exception(result),
                     )
@@ -577,7 +577,10 @@ class Pipeline:
 
         self._display_slowest_dependency_chain(graph, results)
 
-        LOGGER.info("All steps ran in %s", get_timedelta_since(start_time))
+        LOGGER.info(
+            "All steps ran in %s",
+            format_timedelta(get_timedelta_since(start_time)),
+        )
         if failed_jobs:
             raise FailedPipelineException(
                 len(failed_jobs), len(blocked_jobs), len(cancelled_jobs)
