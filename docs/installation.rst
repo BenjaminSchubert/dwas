@@ -7,11 +7,7 @@ There are multiple ways of installing ``dwas``. If you have a preferred method o
 installing python cli packages, you can obviously stick to it, otherwise, some
 ways are described below.
 
-.. note::
-
-    Currently, ``dwas`` is not published on `Pypi`_, and thus needs to be
-    installed from the repository.
-
+You can find ``dwas`` on `PyPI`_.
 
 Via pipx
 --------
@@ -24,7 +20,7 @@ Once you have pipx installed, you can install ``dwas`` like:
 
 .. code-block:: shell
 
-    pipx install git+https://github.com/BenjaminSchubert/dwas.git@main
+    pipx install dwas
 
 
 Via pip
@@ -38,4 +34,17 @@ your user, or even in a virtual environment, you can then install it via pip:
     # Here PYTHON_VERSION is the version for which you want to install ``dwas``.
     # Remember that it needs at least python3.9. In a virtual environment, using
     # `python` should be enough.
-    python${PYTHON_VERSION} -m pip install git+https://github.com/BenjaminSchubert/dwas.git@main
+    python${PYTHON_VERSION} -m pip install dwas
+
+
+Installing an unreleased version
+--------------------------------
+
+If you want to install an unreleased version of ``dwas``, you can install it
+from the repository:
+
+.. code-block:: shell
+
+    git clone https://github.com/BenjaminSchubert/dwas
+    # Remove the -e if you don't want to install it in editable mode.
+    pip install -e dwas/
