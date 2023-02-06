@@ -137,7 +137,7 @@ rst_epilog = """
 .. _the manylinux project: https://github.com/pypa/manylinux
 .. _github actions: https://github.com/features/actions
 .. _pipx: https://pypa.github.io/pipx/
-.. _pypi: https://pypi.org/
+.. _PyPI: https://pypi.org/project/dwas/
 .. _tox: https://tox.wiki/
 .. _nox: https://nox.thea.codes/
 .. _Invoke: https://www.pyinvoke.org/
