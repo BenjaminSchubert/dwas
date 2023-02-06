@@ -25,6 +25,7 @@ pipx
 pylint
 pypi
 pytest
+readthedocs
 reusability
 sdist
 tox
