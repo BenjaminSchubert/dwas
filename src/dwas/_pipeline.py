@@ -523,7 +523,7 @@ class Pipeline:
                     and self.config.skip_missing_interpreters
                 ):
                     LOGGER.info(
-                        "\t%s[-:--:--.------] %s%s%s: Skipped: %s",
+                        "\t%s[-:--:--] %s%s%s: Skipped: %s",
                         Fore.YELLOW,
                         Style.BRIGHT,
                         name,
@@ -532,7 +532,7 @@ class Pipeline:
                     )
                 elif isinstance(result, futures.CancelledError):
                     LOGGER.info(
-                        "\t%s[-:--:--.------] %s%s%s: Cancelled",
+                        "\t%s[-:--:--] %s%s%s: Cancelled",
                         Fore.YELLOW,
                         Style.BRIGHT,
                         name,
@@ -551,7 +551,7 @@ class Pipeline:
                     failed_jobs.append(name)
             elif cancelled_jobs:
                 LOGGER.info(
-                    "\t%s[-:--:--.------] %s%s%s: Cancelled",
+                    "\t%s[-:--:--] %s%s%s: Cancelled",
                     Fore.YELLOW,
                     Style.BRIGHT,
                     name,
@@ -567,7 +567,7 @@ class Pipeline:
                 assert blocking_dependencies is not None
                 blocked_jobs.append(name)
                 LOGGER.warning(
-                    "\t%s[-:--:--.------] %s%s%s: blocked by %s",
+                    "\t%s[-:--:--] %s%s%s: blocked by %s",
                     Fore.YELLOW,
                     Style.BRIGHT,
                     name,
