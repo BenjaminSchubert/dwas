@@ -11,7 +11,7 @@ import pytest
 from _pytest.capture import FDCapture, MultiCapture
 
 from dwas.__main__ import main
-from dwas._subproc import set_subprocess_default_pipes
+from dwas._subproc import subprocess_default_pipes
 from tests import TESTS_PATH
 
 _T = TypeVar("_T")
@@ -78,24 +78,24 @@ def execute(args: List[str], expected_status: int = 0) -> Result:
     """
     capture = MultiCapture(out=FDCapture(1), err=FDCapture(2), in_=None)
     capture.start_capturing()
-    set_subprocess_default_pipes(sys.stdout, sys.stderr)
 
-    exception = None
-    # See https://github.com/python/typeshed/issues/8513#issue-1333671093
-    exit_code: Union[str, int, None] = 0
+    with subprocess_default_pipes(sys.stdout, sys.stderr):
+        exception = None
+        # See https://github.com/python/typeshed/issues/8513#issue-1333671093
+        exit_code: Union[str, int, None] = 0
 
-    try:
-        main(args)
-    except SystemExit as exc:
-        if exc.code != 0:
-            exit_code = exc.code
-            exception = exc
-    finally:
-        out, err = capture.readouterr()
-        capture.stop_capturing()
-        set_subprocess_default_pipes(sys.stdout, sys.stderr)
-        print(out)
-        print(err, file=sys.stderr)
+        try:
+            main(args)
+        except SystemExit as exc:
+            if exc.code != 0:
+                exit_code = exc.code
+                exception = exc
+        finally:
+            out, err = capture.readouterr()
+            capture.stop_capturing()
+
+            print(out)
+            print(err, file=sys.stderr)
 
     assert exit_code == expected_status
     return Result(exc=exception, stdout=out, stderr=err)

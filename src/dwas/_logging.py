@@ -1,15 +1,16 @@
 import logging
 import re
 import sys
+from contextlib import contextmanager
 from contextvars import ContextVar
 from types import TracebackType
-from typing import Any, Optional, Tuple, Type, Union, cast
+from typing import Any, Generator, Optional, Tuple, Type, Union, cast
 
 from colorama import Back, Fore, Style, init
 
 from ._log_capture import WriterProtocol
 
-_ContextHandler = ContextVar[logging.Handler]("_ContextHandler")
+_StderrHandler = ContextVar[logging.Handler]("_StderrHandler")
 
 
 class ColorFormatter(logging.Formatter):
@@ -48,24 +49,14 @@ class NoColorFormatter(logging.Formatter):
 
 
 class ContextBasedHandler(logging.Handler):
-    def __init__(self, level: int = logging.NOTSET) -> None:
+    def __init__(
+        self, var: ContextVar[logging.Handler], level: int = logging.NOTSET
+    ) -> None:
         super().__init__(level)
-        self._default = _create_handler(sys.stderr)
+        self._var = var
 
     def emit(self, record: logging.LogRecord) -> None:
-        try:
-            handler = _ContextHandler.get()
-        except (
-            LookupError
-        ):  # There is no way of setting a handler after the fact
-            handler = self._default
-
-        handler.setFormatter(self.formatter)
-        handler.emit(record)
-
-
-def _create_handler(output: WriterProtocol) -> logging.Handler:
-    return logging.StreamHandler(output)
+        self._var.get().emit(record)
 
 
 def setup_logging(level: int, colors: bool) -> None:
@@ -83,10 +74,24 @@ def setup_logging(level: int, colors: bool) -> None:
     logger = logging.getLogger()
     logger.setLevel(level)
 
-    handler = ContextBasedHandler()
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+    stderr_handler = logging.StreamHandler(sys.stderr)
+    stderr_handler.setFormatter(formatter)
+    _StderrHandler.set(stderr_handler)
+
+    logger.addHandler(ContextBasedHandler(_StderrHandler))
 
 
-def set_context_handler(output: WriterProtocol) -> None:
-    _ContextHandler.set(_create_handler(output))
+@contextmanager
+def context_handler(output: WriterProtocol) -> Generator[None, None, None]:
+    previous = _StderrHandler.get()
+
+    new_handler = logging.StreamHandler(output)
+    new_handler.setFormatter(previous.formatter)
+    token = _StderrHandler.set(new_handler)
+
+    try:
+        yield
+    finally:
+        new_handler.flush()
+        new_handler.close()
+        _StderrHandler.reset(token)
