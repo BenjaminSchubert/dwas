@@ -5,10 +5,10 @@ import signal
 import subprocess
 import sys
 import time
-from contextlib import suppress
+from contextlib import contextmanager, suppress
 from contextvars import ContextVar, copy_context
 from threading import Lock, Thread
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, Generator, List, Set
 
 from ._log_capture import PipePlexer, WriterProtocol
 
@@ -18,11 +18,18 @@ _STDOUT_PIPE = ContextVar[WriterProtocol]("_STDOUT_PIPE", default=sys.stdout)
 _STDERR_PIPE = ContextVar[WriterProtocol]("_STDERR_PIPE", default=sys.stderr)
 
 
-def set_subprocess_default_pipes(
+@contextmanager
+def subprocess_default_pipes(
     stdout: WriterProtocol, stderr: WriterProtocol
-) -> None:
-    _STDOUT_PIPE.set(stdout)
-    _STDERR_PIPE.set(stderr)
+) -> Generator[None, None, None]:
+    stdout_token = _STDOUT_PIPE.set(stdout)
+    stderr_token = _STDERR_PIPE.set(stderr)
+
+    try:
+        yield
+    finally:
+        _STDOUT_PIPE.reset(stdout_token)
+        _STDERR_PIPE.reset(stderr_token)
 
 
 def _stream(source: int, dest: WriterProtocol) -> None:
@@ -140,10 +147,10 @@ class ProcessManager:
         pipe_plexer = PipePlexer()
 
         def _run_in_context() -> subprocess.CompletedProcess[None]:
-            set_subprocess_default_pipes(
+            with subprocess_default_pipes(
                 pipe_plexer.stdout, pipe_plexer.stderr
-            )
-            return _run()
+            ):
+                return _run()
 
         context = copy_context()
 

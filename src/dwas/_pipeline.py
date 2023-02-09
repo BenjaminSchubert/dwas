@@ -5,6 +5,7 @@ import sys
 import time
 from collections import deque
 from concurrent import futures
+from contextlib import ExitStack
 from contextvars import ContextVar, copy_context
 from datetime import timedelta
 from subprocess import CalledProcessError
@@ -22,11 +23,11 @@ from ._exceptions import (
     UnknownStepsException,
 )
 from ._log_capture import PipePlexer
-from ._logging import set_context_handler
+from ._logging import context_handler
 from ._steps.handlers import BaseStepHandler, StepGroupHandler, StepHandler
 from ._steps.parametrize import extract_parameters
 from ._steps.steps import Step
-from ._subproc import ProcessManager, set_subprocess_default_pipes
+from ._subproc import ProcessManager, subprocess_default_pipes
 from ._timing import format_timedelta, get_timedelta_since
 
 LOGGER = logging.getLogger(__name__)
@@ -590,12 +591,20 @@ class Pipeline:
         name: str,
         pipe_plexer: Optional[PipePlexer],
     ) -> timedelta:
-        if pipe_plexer is not None:
-            set_context_handler(pipe_plexer.stderr)
-            set_subprocess_default_pipes(
-                pipe_plexer.stdout, pipe_plexer.stderr
-            )
+        with ExitStack() as stack:
+            if pipe_plexer is not None:
+                stack.enter_context(context_handler(pipe_plexer.stderr))
+                stack.enter_context(
+                    subprocess_default_pipes(
+                        pipe_plexer.stdout, pipe_plexer.stderr
+                    )
+                )
 
+            time_taken = self._run_step_with_logging(name)
+
+        return time_taken
+
+    def _run_step_with_logging(self, name: str) -> timedelta:
         LOGGER.info(
             "%s--- Step: %s ---%s", Style.BRIGHT, name, Style.RESET_ALL
         )
