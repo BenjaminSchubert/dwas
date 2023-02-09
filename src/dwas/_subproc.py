@@ -112,10 +112,12 @@ class ProcessManager:
                     os.close(fd)
 
                 stdout_reader = Thread(
-                    target=_stream, args=[p_stdout, _STDOUT_PIPE.get()]
+                    target=copy_context().run,
+                    args=[_stream, p_stdout, _STDOUT_PIPE.get()],
                 )
                 stderr_reader = Thread(
-                    target=_stream, args=[p_stderr, _STDERR_PIPE.get()]
+                    target=copy_context().run,
+                    args=[_stream, p_stderr, _STDERR_PIPE.get()],
                 )
 
                 stdout_reader.start()
