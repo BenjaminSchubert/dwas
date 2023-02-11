@@ -37,6 +37,7 @@ def tmp_path(tmp_path, monkeypatch):
 def sample_config(tmp_path):
     return Config(
         cache_path=tmp_path / "cache",
+        log_path=None,
         verbosity=2,
         colors=False,
         n_jobs=1,
@@ -74,6 +75,7 @@ def ensure_defaults_are_untouched(tmp_path_factory):
         pipeline = Pipeline(
             Config(
                 cache_path=tmp_path_factory.mktemp("defaults-validation"),
+                log_path=None,
                 verbosity=2,
                 colors=False,
                 n_jobs=1,

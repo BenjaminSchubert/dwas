@@ -440,7 +440,8 @@ class Pipeline:
                     name, pipe_plexer = running_futures.pop(next_finished)
 
                     if pipe_plexer is not None:
-                        pipe_plexer.flush()
+                        with _io.log_file(None):
+                            pipe_plexer.flush()
 
                     try:
                         time_spent = next_finished.result()
@@ -598,14 +599,19 @@ class Pipeline:
                     )
                 )
 
+            LOGGER.info(
+                "%s--- Step: %s ---%s", Style.BRIGHT, name, Style.RESET_ALL
+            )
+            log_file = self.config.log_path / f"{name}.log"
+
+            LOGGER.debug("Log file can be found at %s", log_file)
+            stack.enter_context(_io.log_file(log_file))
+
             time_taken = self._run_step_with_logging(name)
 
         return time_taken
 
     def _run_step_with_logging(self, name: str) -> timedelta:
-        LOGGER.info(
-            "%s--- Step: %s ---%s", Style.BRIGHT, name, Style.RESET_ALL
-        )
         start_time = time.monotonic()
 
         try:
