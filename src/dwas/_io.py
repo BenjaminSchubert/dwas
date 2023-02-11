@@ -1,15 +1,17 @@
 import io
 import re
 import sys
+from collections import deque
 from contextlib import (
     ExitStack,
     contextmanager,
     redirect_stderr,
     redirect_stdout,
+    suppress,
 )
 from contextvars import ContextVar
 from pathlib import Path
-from typing import Generator, Iterator, List, Optional, TextIO, Tuple
+from typing import Generator, Iterator, Optional, TextIO, Tuple
 
 STDOUT = ContextVar[TextIO]("STDOUT")
 STDERR = ContextVar[TextIO]("STDERR")
@@ -54,18 +56,20 @@ class PipePlexer:
         self.stderr = MemoryPipe(self)
         self.stdout = MemoryPipe(self)
 
-        self._buffer: List[Tuple[MemoryPipe, str]] = []
+        self._buffer: deque[Tuple[MemoryPipe, str]] = deque()
 
     def write(self, stream: MemoryPipe, data: str) -> int:
         self._buffer.append((stream, data))
         return len(data)
 
     def flush(self) -> None:
-        for stream, line in self._buffer:
-            if stream == self.stdout:
-                sys.stdout.write(line)
-            else:
-                sys.stderr.write(line)
+        with suppress(IndexError):
+            while True:
+                stream, line = self._buffer.popleft()
+                if stream == self.stdout:
+                    sys.stdout.write(line)
+                else:
+                    sys.stderr.write(line)
 
 
 class StreamHandler(io.TextIOWrapper):
