@@ -13,10 +13,6 @@ from typing import Callable, Dict, Generator, List, Optional, Set, Tuple, cast
 
 from colorama import Fore, Style
 
-from dwas._steps.handlers import BaseStepHandler, StepGroupHandler, StepHandler
-from dwas._steps.parametrize import extract_parameters
-from dwas._steps.steps import Step
-
 from ._config import Config
 from ._exceptions import (
     CyclicStepDependenciesException,
@@ -27,6 +23,9 @@ from ._exceptions import (
 )
 from ._log_capture import PipePlexer
 from ._logging import set_context_handler
+from ._steps.handlers import BaseStepHandler, StepGroupHandler, StepHandler
+from ._steps.parametrize import extract_parameters
+from ._steps.steps import Step
 from ._subproc import ProcessManager, set_subprocess_default_pipes
 from ._timing import format_timedelta, get_timedelta_since
 
