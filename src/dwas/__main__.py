@@ -15,12 +15,11 @@ from contextvars import copy_context
 from importlib.metadata import version
 from typing import Any, Dict, List, Optional
 
-from dwas._steps.handlers import BaseStepHandler
-
 from . import _pipeline
 from ._config import Config
 from ._exceptions import BaseDwasException, FailedPipelineException
 from ._logging import setup_logging
+from ._steps.handlers import BaseStepHandler
 
 LOGGER = logging.getLogger(__name__)
 
