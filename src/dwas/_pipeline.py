@@ -1,7 +1,6 @@
 import graphlib
 import logging
 import signal
-import sys
 import time
 from collections import deque
 from concurrent import futures
@@ -14,6 +13,11 @@ from typing import Callable, Dict, Generator, List, Optional, Set, Tuple, cast
 
 from colorama import Fore, Style
 
+from dwas._steps.handlers import BaseStepHandler, StepGroupHandler, StepHandler
+from dwas._steps.parametrize import extract_parameters
+from dwas._steps.steps import Step
+
+from . import _io
 from ._config import Config
 from ._exceptions import (
     CyclicStepDependenciesException,
@@ -22,12 +26,7 @@ from ._exceptions import (
     UnavailableInterpreterException,
     UnknownStepsException,
 )
-from ._log_capture import PipePlexer
-from ._logging import context_handler
-from ._steps.handlers import BaseStepHandler, StepGroupHandler, StepHandler
-from ._steps.parametrize import extract_parameters
-from ._steps.steps import Step
-from ._subproc import ProcessManager, subprocess_default_pipes
+from ._subproc import ProcessManager
 from ._timing import format_timedelta, get_timedelta_since
 
 LOGGER = logging.getLogger(__name__)
@@ -318,7 +317,7 @@ class Pipeline:
 
         should_stop = False
         running_futures: Dict[
-            futures.Future[timedelta], Tuple[str, Optional[PipePlexer]]
+            futures.Future[timedelta], Tuple[str, Optional[_io.PipePlexer]]
         ] = {}
 
         def stop() -> None:
@@ -419,7 +418,7 @@ class Pipeline:
         self,
         sorter: "graphlib.TopologicalSorter[str]",
         running_futures: Dict[
-            futures.Future[timedelta], Tuple[str, Optional[PipePlexer]]
+            futures.Future[timedelta], Tuple[str, Optional[_io.PipePlexer]]
         ],
         stop: Callable[[], None],
         should_stop: Callable[[], bool],
@@ -441,7 +440,7 @@ class Pipeline:
                     name, pipe_plexer = running_futures.pop(next_finished)
 
                     if pipe_plexer is not None:
-                        pipe_plexer.dump(sys.stdout, sys.stderr)
+                        pipe_plexer.flush()
 
                     try:
                         time_spent = next_finished.result()
@@ -475,7 +474,7 @@ class Pipeline:
 
                 for name in ready:
                     pipe_plexer = (
-                        PipePlexer() if self.config.n_jobs != 1 else None
+                        _io.PipePlexer() if self.config.n_jobs != 1 else None
                     )
 
                     future = cast(
@@ -589,13 +588,12 @@ class Pipeline:
     def _run_step(
         self,
         name: str,
-        pipe_plexer: Optional[PipePlexer],
+        pipe_plexer: Optional[_io.PipePlexer],
     ) -> timedelta:
         with ExitStack() as stack:
             if pipe_plexer is not None:
-                stack.enter_context(context_handler(pipe_plexer.stderr))
                 stack.enter_context(
-                    subprocess_default_pipes(
+                    _io.redirect_streams(
                         pipe_plexer.stdout, pipe_plexer.stderr
                     )
                 )

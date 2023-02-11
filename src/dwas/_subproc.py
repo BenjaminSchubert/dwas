@@ -5,34 +5,17 @@ import signal
 import subprocess
 import sys
 import time
-from contextlib import contextmanager, suppress
-from contextvars import ContextVar, copy_context
+from contextlib import suppress
+from contextvars import copy_context
 from threading import Lock, Thread
-from typing import Any, Dict, Generator, List, Set
+from typing import Any, Dict, List, Set, TextIO
 
-from ._log_capture import PipePlexer, WriterProtocol
+from . import _io
 
 LOGGER = logging.getLogger(__name__)
 
-_STDOUT_PIPE = ContextVar[WriterProtocol]("_STDOUT_PIPE", default=sys.stdout)
-_STDERR_PIPE = ContextVar[WriterProtocol]("_STDERR_PIPE", default=sys.stderr)
 
-
-@contextmanager
-def subprocess_default_pipes(
-    stdout: WriterProtocol, stderr: WriterProtocol
-) -> Generator[None, None, None]:
-    stdout_token = _STDOUT_PIPE.set(stdout)
-    stderr_token = _STDERR_PIPE.set(stderr)
-
-    try:
-        yield
-    finally:
-        _STDOUT_PIPE.reset(stdout_token)
-        _STDERR_PIPE.reset(stderr_token)
-
-
-def _stream(source: int, dest: WriterProtocol) -> None:
+def _stream(source: int, dest: TextIO) -> None:
     with suppress(IOError):
         while data := os.read(source, 2048):
             dest.write(data.decode())
@@ -120,11 +103,11 @@ class ProcessManager:
 
                 stdout_reader = Thread(
                     target=copy_context().run,
-                    args=[_stream, p_stdout, _STDOUT_PIPE.get()],
+                    args=[_stream, p_stdout, sys.stdout],
                 )
                 stderr_reader = Thread(
                     target=copy_context().run,
-                    args=[_stream, p_stderr, _STDERR_PIPE.get()],
+                    args=[_stream, p_stderr, sys.stderr],
                 )
 
                 stdout_reader.start()
@@ -144,12 +127,10 @@ class ProcessManager:
         if not silent_on_success:
             return _run()
 
-        pipe_plexer = PipePlexer()
+        pipe_plexer = _io.PipePlexer()
 
         def _run_in_context() -> subprocess.CompletedProcess[None]:
-            with subprocess_default_pipes(
-                pipe_plexer.stdout, pipe_plexer.stderr
-            ):
+            with _io.redirect_streams(pipe_plexer.stdout, pipe_plexer.stderr):
                 return _run()
 
         context = copy_context()
@@ -157,7 +138,7 @@ class ProcessManager:
         try:
             return context.run(_run_in_context)
         except subprocess.CalledProcessError:
-            pipe_plexer.dump(sys.stdout, sys.stderr)
+            pipe_plexer.flush()
             raise
 
     def _add(self, proc: subprocess.Popen[Any]) -> None:

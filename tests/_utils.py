@@ -2,16 +2,16 @@ import functools
 import logging
 import re
 import sys
+from contextlib import contextmanager
 from contextvars import Context
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, List, Optional, TypeVar, Union
+from typing import Any, Callable, Iterator, List, Optional, TypeVar, Union
 
 import pytest
 from _pytest.capture import FDCapture, MultiCapture
 
 from dwas.__main__ import main
-from dwas._subproc import subprocess_default_pipes
 from tests import TESTS_PATH
 
 _T = TypeVar("_T")
@@ -29,26 +29,23 @@ def isolated_context(func: Callable[..., _T]) -> Callable[..., _T]:
 
 
 # TODO: this could be done via ParamSpec but it's only python3.10+
-def isolated_logging(func: Callable[..., _T]) -> Callable[..., _T]:
-    @functools.wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> _T:
-        logger = logging.getLogger()
-        old_handlers = logger.handlers
-        logger.handlers = []
+@contextmanager
+def isolated_logging() -> Iterator[None]:
+    logger = logging.getLogger()
+    old_handlers = logger.handlers
+    logger.handlers = []
 
-        try:
-            return func(*args, **kwargs)
-        finally:
-            for handler in logger.handlers:
-                # Simplified from `logging.shutdown`
-                handler.acquire()
-                handler.flush()
-                handler.close()
-                handler.release()
+    try:
+        yield
+    finally:
+        for handler in logger.handlers:
+            # Simplified from `logging.shutdown`
+            handler.acquire()
+            handler.flush()
+            handler.close()
+            handler.release()
 
-            logger.handlers = old_handlers
-
-    return wrapper
+        logger.handlers = old_handlers
 
 
 def using_project(project: str) -> Callable[[_T], _T]:
@@ -68,7 +65,6 @@ class Result:
 
 
 @isolated_context
-@isolated_logging
 def execute(args: List[str], expected_status: int = 0) -> Result:
     """
     Runs dwas in an isolated context and returns the result from the run.
@@ -79,23 +75,23 @@ def execute(args: List[str], expected_status: int = 0) -> Result:
     capture = MultiCapture(out=FDCapture(1), err=FDCapture(2), in_=None)
     capture.start_capturing()
 
-    with subprocess_default_pipes(sys.stdout, sys.stderr):
-        exception = None
-        # See https://github.com/python/typeshed/issues/8513#issue-1333671093
-        exit_code: Union[str, int, None] = 0
+    exception = None
+    # See https://github.com/python/typeshed/issues/8513#issue-1333671093
+    exit_code: Union[str, int, None] = 0
 
-        try:
+    try:
+        with isolated_logging():
             main(args)
-        except SystemExit as exc:
-            if exc.code != 0:
-                exit_code = exc.code
-                exception = exc
-        finally:
-            out, err = capture.readouterr()
-            capture.stop_capturing()
+    except SystemExit as exc:
+        if exc.code != 0:
+            exit_code = exc.code
+            exception = exc
+    finally:
+        out, err = capture.readouterr()
+        capture.stop_capturing()
 
-            print(out)
-            print(err, file=sys.stderr)
+        print(out)
+        print(err, file=sys.stderr)
 
     assert exit_code == expected_status
     return Result(exc=exception, stdout=out, stderr=err)
