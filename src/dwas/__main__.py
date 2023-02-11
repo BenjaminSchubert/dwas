@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional
 from . import _pipeline
 from ._config import Config
 from ._exceptions import BaseDwasException, FailedPipelineException
+from ._io import instrument_streams
 from ._logging import setup_logging
 from ._steps.handlers import BaseStepHandler
 
@@ -275,6 +276,7 @@ def _execute_pipeline(
     pipeline.execute(steps, except_steps, only_selected_step, clean=clean)
 
 
+@instrument_streams()
 def main(sys_args: Optional[List[str]] = None) -> None:
     if sys_args is None:
         sys_args = sys.argv[1:]
