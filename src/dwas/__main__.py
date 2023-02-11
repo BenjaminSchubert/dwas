@@ -15,10 +15,9 @@ from contextvars import copy_context
 from importlib.metadata import version
 from typing import Any, Dict, List, Optional
 
-from . import _pipeline
+from . import _io, _pipeline
 from ._config import Config
 from ._exceptions import BaseDwasException, FailedPipelineException
-from ._io import instrument_streams
 from ._logging import setup_logging
 from ._steps.handlers import BaseStepHandler
 
@@ -142,6 +141,10 @@ Environment variables:
         "--cache-path",
         help="Directory where to store the persistent cache (default: %(default)s)",
         default="./.dwas",
+    )
+    parser.add_argument(
+        "--log-path",
+        help="Directory where to store the log files (default: <cache-path>/logs)",
     )
     parser.add_argument(
         "--skip-missing-interpreters",
@@ -276,7 +279,7 @@ def _execute_pipeline(
     pipeline.execute(steps, except_steps, only_selected_step, clean=clean)
 
 
-@instrument_streams()
+@_io.instrument_streams()
 def main(sys_args: Optional[List[str]] = None) -> None:
     if sys_args is None:
         sys_args = sys.argv[1:]
@@ -287,6 +290,7 @@ def main(sys_args: Optional[List[str]] = None) -> None:
     verbosity = args.verbose - args.quiet
     config = Config(
         args.cache_path,
+        args.log_path,
         verbosity,
         args.colors,
         args.jobs,
@@ -295,23 +299,29 @@ def main(sys_args: Optional[List[str]] = None) -> None:
         args.setup_only,
         args.fail_fast,
     )
-    setup_logging(logging.INFO - 10 * verbosity, config.colors)
+    setup_logging(
+        logging.INFO - 10 * verbosity, config.colors, _io.STDERR, _io.LOG_FILE
+    )
 
-    try:
-        _execute_pipeline(
-            config,
-            args.config,
-            args.steps_parameters,
-            args.only_steps,
-            args.except_steps,
-            args.clean,
-            args.list_only,
-            args.list_dependencies,
-        )
-    except BaseDwasException as exc:
-        if config.verbosity >= 1 and not isinstance(
-            exc, FailedPipelineException
-        ):
-            LOGGER.debug(exc, exc_info=exc)
-        LOGGER.error("%s", exc)
-        raise SystemExit(exc.exit_code) from exc
+    log_path = config.log_path / "main.log"
+    with _io.log_file(log_path):
+        try:
+            _execute_pipeline(
+                config,
+                args.config,
+                args.steps_parameters,
+                args.only_steps,
+                args.except_steps,
+                args.clean,
+                args.list_only,
+                args.list_dependencies,
+            )
+        except BaseDwasException as exc:
+            if config.verbosity >= 1 and not isinstance(
+                exc, FailedPipelineException
+            ):
+                LOGGER.debug(exc, exc_info=exc)
+            LOGGER.error("%s", exc)
+            raise SystemExit(exc.exit_code) from exc
+        finally:
+            LOGGER.info("Logs can be found at %s", log_path)

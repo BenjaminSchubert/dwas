@@ -18,6 +18,7 @@ def isolate_env(monkeypatch):
 def kwargs(tmp_path):
     return {
         "cache_path": tmp_path,
+        "log_path": None,
         "verbosity": 2,
         "n_jobs": 0,
         "skip_missing_interpreters": False,

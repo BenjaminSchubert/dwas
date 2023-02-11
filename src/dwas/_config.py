@@ -2,6 +2,7 @@ import logging
 import multiprocessing
 import os
 import random
+import shutil
 import sys
 from pathlib import Path
 from typing import Dict, Optional
@@ -29,6 +30,11 @@ class Config:
     Note that in most cases, you can use the step-specific cache at
     :py:attr:`StepRunner.cache_path` and expose data via
     :py:func:`StepWithArtifacts.gather_artifacts`.
+    """
+
+    log_path: Path
+    """
+    The path to the directory in which logs are stored.
     """
 
     colors: bool
@@ -117,6 +123,7 @@ class Config:
     def __init__(
         self,
         cache_path: str,
+        log_path: Optional[str],
         verbosity: int,
         colors: Optional[bool],
         n_jobs: int,
@@ -126,6 +133,13 @@ class Config:
         fail_fast: bool,
     ) -> None:
         self.cache_path = Path(cache_path).resolve()
+        if log_path is None:
+            self.log_path = self.cache_path / "logs"
+        else:
+            self.log_path = Path(log_path).resolve()
+
+        self._prepare_and_clean_log_path()
+
         self.venvs_path = self.cache_path / "venvs"
 
         self.verbosity = verbosity
@@ -212,3 +226,12 @@ class Config:
             return True
 
         return sys.stdin.isatty()
+
+    def _prepare_and_clean_log_path(self) -> None:
+        self.log_path.mkdir(parents=True, exist_ok=True)
+
+        for file in self.log_path.glob("*"):
+            if file.is_dir():
+                shutil.rmtree(file)
+            else:
+                file.unlink()
