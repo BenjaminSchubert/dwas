@@ -106,10 +106,12 @@ class Frontend:
     def _refresh(self) -> None:
         previous_summary_height = 0
         previous_summary_last_line_length = 0
+        previous_line_length = None
 
         def refresh(skip_summary: bool = False) -> None:
             nonlocal previous_summary_height
             nonlocal previous_summary_last_line_length
+            nonlocal previous_line_length
 
             # Erase the current line
             if previous_summary_last_line_length != 0:
@@ -125,11 +127,23 @@ class Frontend:
                     * (previous_summary_height - 1)
                 )
 
+            # Move the cursor back to where we were if the last line did not end
+            # with a '\n'
+            if previous_line_length:
+                sys.stderr.write(
+                    f"{Cursor.UP(1)}{Cursor.FORWARD(previous_line_length)}"
+                )
+
             # Force a flush, to ensure that if the next line is printed on
             # stdout, we pass the erasing first
             sys.stderr.flush()
 
-            self._pipe_plexer.flush(force_write=True)
+            new_previous_line_length = self._pipe_plexer.flush(
+                force_write=True
+            )
+            # Only update if there was something actually written
+            if new_previous_line_length is not None:
+                previous_line_length = new_previous_line_length
 
             if skip_summary:
                 previous_summary_last_line_length = 0
@@ -138,7 +152,8 @@ class Frontend:
                 summary = self._summary.lines()
 
                 sys.stderr.write(
-                    ansi.clear_line() + f"\n{ansi.clear_line()}".join(summary)
+                    ("" if not previous_line_length else "\n")
+                    + "\n".join(summary)
                 )
                 previous_summary_height = len(summary)
                 if previous_summary_height:
