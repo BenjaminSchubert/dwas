@@ -1,5 +1,6 @@
 import copy
 import logging
+import time
 from collections import deque
 from typing import Any, Dict, Iterable, List, Mapping, Set, Tuple
 
@@ -23,7 +24,7 @@ class Scheduler:
 
         self.waiting: Set[str] = set()
         self.ready: List[str] = []
-        self.running: Set[str] = set()
+        self.running: Dict[str, float] = {}
         self.done: Set[str] = set()
         self.failed: Set[str] = set()
         self.blocked: Set[str] = set()
@@ -41,20 +42,20 @@ class Scheduler:
         assert not self._stopped
 
         self.ready.remove(step)
-        self.running.add(step)
+        self.running[step] = time.monotonic()
 
     def mark_failed(self, step: str) -> None:
-        self.running.remove(step)
+        del self.running[step]
         self.failed.add(step)
         self._mark_dependents_blocked(step)
 
     def mark_done(self, step: str) -> None:
-        self.running.remove(step)
+        del self.running[step]
         self.done.add(step)
         self._mark_dependents_ready(step)
 
     def mark_skipped(self, step: str) -> None:
-        self.running.remove(step)
+        del self.running[step]
         self.skipped.add(step)
         self._mark_dependents_ready(step)
 

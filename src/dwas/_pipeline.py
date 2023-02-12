@@ -293,6 +293,7 @@ class Pipeline:
 
         graph = self._build_graph(steps, except_steps, only_selected_steps)
         resolver = Resolver(graph)
+        scheduler = resolver.get_scheduler()
         steps_in_order = resolver.order()
 
         if clean:
@@ -321,16 +322,13 @@ class Pipeline:
         previous_signal = signal.signal(signal.SIGINT, request_stop)
 
         try:
-            summary = StepSummary(list(graph))
             with ExitStack() as stack:
                 if self.config.is_interactive:
-                    stack.enter_context(Frontend(summary).activate())
+                    stack.enter_context(
+                        Frontend(StepSummary(scheduler, start_time)).activate()
+                    )
 
-                results = self._execute(
-                    resolver.get_scheduler(),
-                    lambda: should_stop,
-                    summary,
-                )
+                results = self._execute(scheduler, lambda: should_stop)
         finally:
             signal.signal(signal.SIGINT, previous_signal)
 
@@ -404,7 +402,6 @@ class Pipeline:
         self,
         scheduler: Scheduler,
         should_stop: Callable[[], bool],
-        summary: StepSummary,
     ) -> Dict[str, Tuple[Optional[Exception], timedelta]]:
         running_futures: Dict[
             futures.Future[timedelta], Tuple[str, Optional[_io.PipePlexer]]
@@ -438,7 +435,6 @@ class Pipeline:
                             self._run_step,  # type: ignore[arg-type]
                             step,  # type: ignore[arg-type]
                             pipe_plexer,  # type: ignore[arg-type]
-                            summary,  # type: ignore[arg-type]
                         ),
                     )
                     running_futures[future] = step, pipe_plexer
@@ -584,7 +580,6 @@ class Pipeline:
         self,
         name: str,
         pipe_plexer: Optional[_io.PipePlexer],
-        summary: StepSummary,
     ) -> timedelta:
         with ExitStack() as stack:
             if pipe_plexer is not None:
@@ -602,13 +597,7 @@ class Pipeline:
             LOGGER.debug("Log file can be found at %s", log_file)
             stack.enter_context(_io.log_file(log_file))
 
-            summary.mark_running(name)
-            try:
-                time_taken = self._run_step_with_logging(name)
-            except Exception:
-                summary.mark_failure(name)
-                raise
-            summary.mark_success(name)
+            time_taken = self._run_step_with_logging(name)
 
         return time_taken
 

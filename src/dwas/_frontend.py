@@ -1,73 +1,67 @@
 import shutil
 import sys
+import time
 from contextlib import contextmanager
 from contextvars import copy_context
-from datetime import datetime
-from threading import Event, Lock, Thread
-from typing import Dict, Iterator, List
+from datetime import timedelta
+from threading import Event, Thread
+from typing import Iterator, List
 
-from colorama import Cursor, Fore, ansi
+from colorama import Cursor, Fore, Style, ansi
 
 from . import _io
+from ._scheduler import Scheduler
 from ._timing import format_timedelta
 
 
 class StepSummary:
-    def __init__(self, all_steps: List[str]) -> None:
-        self._running_steps: Dict[str, datetime] = {}
-        self._lock = Lock()
+    def __init__(self, scheduler: Scheduler, start_time: float) -> None:
+        self._start_time = start_time
+        self._scheduler = scheduler
 
-        self._start = datetime.now()
-
-        self._n_success = 0
-        self._n_failure = 0
-        self._waiting = all_steps
-
-    def mark_running(self, step: str) -> None:
-        with self._lock:
-            self._running_steps[step] = datetime.now()
-            self._waiting.remove(step)
-
-    def mark_success(self, step: str) -> None:
-        with self._lock:
-            del self._running_steps[step]
-            self._n_success += 1
-
-    def mark_failure(self, step: str) -> None:
-        with self._lock:
-            del self._running_steps[step]
-            self._n_failure += 1
+    def _counter(self, value: int, color: str) -> str:
+        return f"{color}{Style.BRIGHT}{value}{Style.NORMAL}{Fore.YELLOW}"
 
     def lines(self) -> List[str]:
-        update_at = datetime.now()
+        update_at = time.monotonic()
 
         term_width = shutil.get_terminal_size().columns
+
+        time_since_start = format_timedelta(
+            timedelta(seconds=update_at - self._start_time)
+        )
+        n_non_runnable = (
+            len(self._scheduler.cancelled)
+            + len(self._scheduler.skipped)
+            + len(self._scheduler.blocked)
+        )
+
         headline = (
-            f" {Fore.YELLOW}Runtime: {format_timedelta(update_at - self._start)} "
+            f" {Fore.YELLOW}Runtime: {time_since_start} "
             f"["
-            f"{len(self._waiting)}/"
-            f"{Fore.CYAN}{len(self._running_steps)}{Fore.YELLOW}/"
-            f"{Fore.GREEN}{self._n_success}{Fore.YELLOW}/"
-            f"{Fore.RED}{self._n_failure}{Fore.YELLOW}"
+            f"{len(self._scheduler.waiting)}/"
+            f"{self._counter(len(self._scheduler.running), Fore.CYAN)}/"
+            f"{self._counter(len(self._scheduler.done), Fore.GREEN)}/"
+            f"{self._counter(len(self._scheduler.failed), Fore.RED)}/"
+            f"{self._counter(n_non_runnable, Fore.YELLOW)}"
             f"]{Fore.RESET} "
         ).center(
-            # 40 comes from the number of color codes * 5, as this is what is added
+            # 90 comes from the number of color codes * 5, as this is what is added
             # to the real length of the array
-            term_width + 40,
+            term_width + 86,
             "~",
         )
 
-        waiting_line = (
-            f"[-:--:--] {Fore.YELLOW}waiting: {' '.join(self._waiting)}"
-        )
+        waiting_line = f"[-:--:--] {Fore.YELLOW}waiting: {' '.join(self._scheduler.waiting)}"
         if len(waiting_line) > term_width:
             waiting_line = waiting_line[: term_width + 5 - 3] + "..."
 
         return (
             [headline]
             + [
-                f"[{format_timedelta(update_at - since)}] {Fore.CYAN}{step}: running{Fore.RESET}"
-                for step, since in self._running_steps.items()
+                f"[{format_timedelta(timedelta(seconds=update_at - since))}]"
+                f" {Fore.CYAN}{step}: running{Fore.RESET}"
+                for step, since in self._scheduler.running.items()
             ]
             + [f"{waiting_line}{Fore.RESET}"]
         )
