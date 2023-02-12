@@ -104,24 +104,25 @@ class Frontend:
                 self._refresh_thread.join()
 
     def _refresh(self) -> None:
-        previous_progress_height = 0
-        previous_last_line_length = 0
+        previous_summary_height = 0
+        previous_summary_last_line_length = 0
 
         def refresh(skip_summary: bool = False) -> None:
-            nonlocal previous_progress_height
-            nonlocal previous_last_line_length
+            nonlocal previous_summary_height
+            nonlocal previous_summary_last_line_length
 
             # Erase the current line
-            if previous_last_line_length != 0:
+            if previous_summary_last_line_length != 0:
                 sys.stderr.write(
-                    Cursor.BACK(previous_last_line_length) + ansi.clear_line()
+                    Cursor.BACK(previous_summary_last_line_length)
+                    + ansi.clear_line()
                 )
 
             # Erase the previous summary lines
-            if previous_progress_height >= 2:
+            if previous_summary_height >= 2:
                 sys.stderr.write(
                     f"{Cursor.UP(1)}{ansi.clear_line()}"
-                    * (previous_progress_height - 1)
+                    * (previous_summary_height - 1)
                 )
 
             # Force a flush, to ensure that if the next line is printed on
@@ -131,17 +132,17 @@ class Frontend:
             self._pipe_plexer.flush(force_write=True)
 
             if skip_summary:
-                previous_last_line_length = 0
-                previous_progress_height = 0
+                previous_summary_last_line_length = 0
+                previous_summary_height = 0
             else:
                 summary = self._summary.lines()
 
                 sys.stderr.write(
                     ansi.clear_line() + f"\n{ansi.clear_line()}".join(summary)
                 )
-                previous_progress_height = len(summary)
-                if previous_progress_height:
-                    previous_last_line_length = len(summary[-1])
+                previous_summary_height = len(summary)
+                if previous_summary_height:
+                    previous_summary_last_line_length = len(summary[-1])
 
             sys.stderr.flush()
 
