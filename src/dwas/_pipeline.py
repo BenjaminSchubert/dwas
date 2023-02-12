@@ -1,4 +1,3 @@
-import graphlib
 import logging
 import signal
 import time
@@ -20,13 +19,13 @@ from dwas._steps.steps import Step
 from . import _io
 from ._config import Config
 from ._exceptions import (
-    CyclicStepDependenciesException,
     DuplicateStepException,
     FailedPipelineException,
     UnavailableInterpreterException,
     UnknownStepsException,
 )
 from ._frontend import Frontend, StepSummary
+from ._scheduler import Resolver, Scheduler
 from ._subproc import ProcessManager
 from ._timing import format_timedelta, get_timedelta_since
 
@@ -282,16 +281,6 @@ class Pipeline:
 
         return graph
 
-    def _resolve_execution_order(
-        self, graph: Dict[str, List[str]]
-    ) -> List[str]:
-        sorter = graphlib.TopologicalSorter(graph)
-
-        try:
-            return list(sorter.static_order())
-        except graphlib.CycleError as exc:
-            raise CyclicStepDependenciesException(exc.args[1]) from exc
-
     def execute(
         self,
         steps: Optional[List[str]],
@@ -299,12 +288,12 @@ class Pipeline:
         only_selected_steps: bool,
         clean: bool,
     ) -> None:
-        # we should refactor at some point
-        # pylint: disable=too-many-branches,too-many-locals,too-many-statements
+        # pylint: disable=too-many-locals
         start_time = time.monotonic()
 
         graph = self._build_graph(steps, except_steps, only_selected_steps)
-        steps_in_order = self._resolve_execution_order(graph)
+        resolver = Resolver(graph)
+        steps_in_order = resolver.order()
 
         if clean:
             LOGGER.debug("Cleaning up workspace")
@@ -313,29 +302,18 @@ class Pipeline:
 
         LOGGER.info("Running steps: %s", ", ".join(steps_in_order))
 
-        sorter = graphlib.TopologicalSorter(graph)
-        sorter.prepare()
-
         should_stop = False
-        running_futures: Dict[
-            futures.Future[timedelta], Tuple[str, Optional[_io.PipePlexer]]
-        ] = {}
-
-        def stop() -> None:
-            nonlocal should_stop
-            should_stop = True
-            for future, (name, _) in running_futures.items():
-                LOGGER.debug("Cancelling step %s", name)
-                future.cancel()
 
         def request_stop(_signum: int, _frame: Optional[FrameType]) -> None:
+            nonlocal should_stop
+
             if not should_stop:
                 LOGGER.warning(
                     "%sStopping requested. This will finish current jobs."
                     " To abort, hit ^C a second time.",
                     Style.BRIGHT,
                 )
-                stop()
+                should_stop = True
             else:
                 LOGGER.critical("Aborting")
                 self.proc_manager.kill()
@@ -349,9 +327,7 @@ class Pipeline:
                     stack.enter_context(Frontend(summary).activate())
 
                 results = self._execute(
-                    sorter,
-                    running_futures,
-                    stop,
+                    resolver.get_scheduler(),
                     lambda: should_stop,
                     summary,
                 )
@@ -371,12 +347,12 @@ class Pipeline:
         show_dependencies: bool = False,
     ) -> None:
         # pylint: disable=too-many-locals
-        all_steps = self._resolve_execution_order(
+        all_steps = Resolver(
             self._build_graph(list(self.steps.keys()))
-        )
-        selected_steps = self._resolve_execution_order(
+        ).order()
+        selected_steps = Resolver(
             self._build_graph(steps, except_steps, only_selected_steps)
-        )
+        ).order()
 
         step_infos = []
         for step in sorted(all_steps):
@@ -426,65 +402,29 @@ class Pipeline:
 
     def _execute(
         self,
-        sorter: "graphlib.TopologicalSorter[str]",
-        running_futures: Dict[
-            futures.Future[timedelta], Tuple[str, Optional[_io.PipePlexer]]
-        ],
-        stop: Callable[[], None],
+        scheduler: Scheduler,
         should_stop: Callable[[], bool],
         summary: StepSummary,
     ) -> Dict[str, Tuple[Optional[Exception], timedelta]]:
+        running_futures: Dict[
+            futures.Future[timedelta], Tuple[str, Optional[_io.PipePlexer]]
+        ] = {}
         results: Dict[str, Tuple[Optional[Exception], timedelta]] = {}
 
         with futures.ThreadPoolExecutor(self.config.n_jobs) as executor:
-            while sorter.is_active():
-                ready = sorter.get_ready()
-                if not ready:
-                    if not running_futures:
-                        # No more tasks ready to run, and all tasks has finished
-                        # we can't move forward
-                        break
-
-                    next_finished = next(
-                        futures.as_completed(running_futures.keys())
-                    )
-                    name, pipe_plexer = running_futures.pop(next_finished)
-
-                    if pipe_plexer is not None:
-                        with _io.log_file(None):
-                            pipe_plexer.flush()
-
-                    try:
-                        time_spent = next_finished.result()
-                    except ExceptionWithTimeSpentException as exc:
-                        results[name] = exc.original_exception, exc.time_spent
-
-                        if (
-                            isinstance(
-                                exc.original_exception,
-                                UnavailableInterpreterException,
-                            )
-                            and self.config.skip_missing_interpreters
-                        ):
-                            sorter.done(name)
-                        else:
-                            if self.config.fail_fast:
-                                stop()
-
-                            # We won't be able to enqueue new results after a failure
-                            # anyways
-                            continue
-                    except futures.CancelledError as exc:
-                        results[name] = exc, timedelta()
-                        continue
-                    else:
-                        results[name] = None, time_spent
-                        sorter.done(name)
-
+            while scheduler:
+                # Check if we should stop, and cancel new jobs
                 if should_stop():
-                    continue
+                    scheduler.stop()
 
-                for name in ready:
+                # Enqueue new jobs if possible
+                while (
+                    len(running_futures) < self.config.n_jobs
+                    and scheduler.ready
+                ):
+                    step = scheduler.ready[0]
+                    scheduler.mark_started(step)
+
                     pipe_plexer = (
                         _io.PipePlexer() if self.config.n_jobs != 1 else None
                     )
@@ -496,12 +436,53 @@ class Pipeline:
                             #      sane
                             copy_context().run,  # type: ignore[arg-type]
                             self._run_step,  # type: ignore[arg-type]
-                            name,  # type: ignore[arg-type]
+                            step,  # type: ignore[arg-type]
                             pipe_plexer,  # type: ignore[arg-type]
                             summary,  # type: ignore[arg-type]
                         ),
                     )
-                    running_futures[future] = name, pipe_plexer
+                    running_futures[future] = step, pipe_plexer
+
+                # Wait for previous jobs to finish
+                if not running_futures:
+                    continue
+
+                next_finished = next(
+                    futures.as_completed(running_futures.keys())
+                )
+                name, pipe_plexer = running_futures.pop(next_finished)
+
+                if pipe_plexer is not None:
+                    with _io.log_file(None):
+                        pipe_plexer.flush()
+
+                try:
+                    time_spent = next_finished.result()
+                except ExceptionWithTimeSpentException as exc:
+                    results[name] = exc.original_exception, exc.time_spent
+
+                    if (
+                        isinstance(
+                            exc.original_exception,
+                            UnavailableInterpreterException,
+                        )
+                        and self.config.skip_missing_interpreters
+                    ):
+                        scheduler.mark_skipped(name)
+                    else:
+                        scheduler.mark_failed(name)
+                        if self.config.fail_fast:
+                            scheduler.stop()
+
+                        # We won't be able to enqueue new results after a failure
+                        # anyways
+                        continue
+                except futures.CancelledError as exc:
+                    results[name] = exc, timedelta()
+                    continue
+                else:
+                    results[name] = None, time_spent
+                    scheduler.mark_done(name)
 
         return results
 
@@ -561,31 +542,32 @@ class Pipeline:
                         self._format_exception(result),
                     )
                     failed_jobs.append(name)
-            elif cancelled_jobs:
-                LOGGER.info(
-                    "\t%s[-:--:--] %s%s%s: Cancelled",
-                    Fore.YELLOW,
-                    Style.BRIGHT,
-                    name,
-                    Style.NORMAL,
-                )
-                cancelled_jobs.append(name)
             else:
                 blocking_dependencies = [
                     dep
                     for dep in graph[name]
                     if dep in failed_jobs or dep in blocked_jobs
                 ]
-                assert blocking_dependencies is not None
-                blocked_jobs.append(name)
-                LOGGER.warning(
-                    "\t%s[-:--:--] %s%s%s: blocked by %s",
-                    Fore.YELLOW,
-                    Style.BRIGHT,
-                    name,
-                    Style.NORMAL,
-                    ", ".join(blocking_dependencies),
-                )
+
+                if not blocking_dependencies:
+                    LOGGER.info(
+                        "\t%s[-:--:--] %s%s%s: Cancelled",
+                        Fore.YELLOW,
+                        Style.BRIGHT,
+                        name,
+                        Style.NORMAL,
+                    )
+                    cancelled_jobs.append(name)
+                else:
+                    blocked_jobs.append(name)
+                    LOGGER.warning(
+                        "\t%s[-:--:--] %s%s%s: blocked by %s",
+                        Fore.YELLOW,
+                        Style.BRIGHT,
+                        name,
+                        Style.NORMAL,
+                        ", ".join(blocking_dependencies),
+                    )
 
         self._display_slowest_dependency_chain(graph, results)
 

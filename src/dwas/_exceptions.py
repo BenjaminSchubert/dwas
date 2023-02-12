@@ -51,6 +51,7 @@ class CyclicStepDependenciesException(BaseDwasException):
     def __init__(self, cycle: List[str]) -> None:
         message = f"Cyclic dependencies between steps: {' --> '.join(cycle)}"
         super().__init__(message)
+        self.cycle = cycle
 
 
 class DuplicateStepException(BaseDwasException):
