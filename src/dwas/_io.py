@@ -63,7 +63,9 @@ class PipePlexer:
         self._buffer.append((stream, data))
         return len(data)
 
-    def flush(self, force_write: bool = False) -> None:
+    def flush(self, force_write: bool = False) -> Optional[int]:
+        line = None
+
         if self._write_on_flush or force_write:
             with suppress(IndexError):
                 while True:
@@ -75,6 +77,14 @@ class PipePlexer:
 
             sys.stdout.flush()
             sys.stderr.flush()
+
+        if line is None:
+            return None
+
+        try:
+            return len(line) - line.rindex("\n") - 1
+        except ValueError:
+            return len(line)
 
 
 class StreamHandler(io.TextIOWrapper):
