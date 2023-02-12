@@ -358,7 +358,7 @@ class Pipeline:
         finally:
             signal.signal(signal.SIGINT, previous_signal)
 
-        self._log_summary(graph, results, start_time)
+        self._log_summary(graph, steps_in_order, results, start_time)
 
     def get_step(self, step_name: str) -> BaseStepHandler:
         return self.steps[step_name]
@@ -508,17 +508,17 @@ class Pipeline:
     def _log_summary(
         self,
         graph: Dict[str, List[str]],
+        steps_order: List[str],
         results: Dict[str, Tuple[Optional[Exception], timedelta]],
         start_time: float,
     ) -> None:
         LOGGER.info("%s*** Steps summary ***", Style.BRIGHT)
-        sorter = graphlib.TopologicalSorter(graph)
 
         failed_jobs = []
         blocked_jobs = []
         cancelled_jobs = []
 
-        for name in sorter.static_order():
+        for name in steps_order:
             if name in results:
                 result, time_spent = results[name]
                 if result is None:
