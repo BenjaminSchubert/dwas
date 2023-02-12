@@ -41,9 +41,7 @@ class StepSummary:
     def lines(self) -> List[str]:
         update_at = datetime.now()
 
-        # 40 comes from the number of color codes * 5, as this is what is added
-        # to the real length of the array
-        term_width = shutil.get_terminal_size().columns + 40
+        term_width = shutil.get_terminal_size().columns
         headline = (
             f" {Fore.YELLOW}Runtime: {format_timedelta(update_at - self._start)} "
             f"["
@@ -52,7 +50,18 @@ class StepSummary:
             f"{Fore.GREEN}{self._n_success}{Fore.YELLOW}/"
             f"{Fore.RED}{self._n_failure}{Fore.YELLOW}"
             f"]{Fore.RESET} "
-        ).center(term_width, "~")
+        ).center(
+            # 40 comes from the number of color codes * 5, as this is what is added
+            # to the real length of the array
+            term_width + 40,
+            "~",
+        )
+
+        waiting_line = (
+            f"[-:--:--] {Fore.YELLOW}waiting: {' '.join(self._waiting)}"
+        )
+        if len(waiting_line) > term_width:
+            waiting_line = waiting_line[: term_width + 5 - 3] + "..."
 
         return (
             [headline]
@@ -60,9 +69,7 @@ class StepSummary:
                 f"[{format_timedelta(update_at - since)}] {Fore.CYAN}{step}: running{Fore.RESET}"
                 for step, since in self._running_steps.items()
             ]
-            + [
-                f"[-:--:--] {Fore.YELLOW}waiting: {' '.join(self._waiting)}{Fore.RESET}"
-            ]
+            + [f"{waiting_line}{Fore.RESET}"]
         )
 
 
