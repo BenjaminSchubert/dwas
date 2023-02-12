@@ -1,4 +1,5 @@
-from typing import List, Optional, Set
+from typing import Dict, List, Optional, Set
+from unittest.mock import ANY
 
 import pytest
 
@@ -10,7 +11,7 @@ def assert_scheduler_state(
     scheduler: Scheduler,
     waiting: Optional[Set[str]] = None,
     ready: Optional[List[str]] = None,
-    running: Optional[Set[str]] = None,
+    running: Optional[Dict[str, float]] = None,
     done: Optional[Set[str]] = None,
     failed: Optional[Set[str]] = None,
     blocked: Optional[Set[str]] = None,
@@ -29,7 +30,7 @@ def assert_scheduler_state(
     } == {
         "waiting": waiting or set(),
         "ready": ready or [],
-        "running": running or set(),
+        "running": running or {},
         "done": done or set(),
         "failed": failed or set(),
         "blocked": blocked or set(),
@@ -67,12 +68,16 @@ def test_simple_scenario():
     scheduler.mark_started("d")
     scheduler.mark_started("e")
     assert_scheduler_state(
-        scheduler, running={"d", "e"}, waiting={"a", "b", "c"}
+        scheduler, running={"d": ANY, "e": ANY}, waiting={"a", "b", "c"}
     )
 
     scheduler.mark_done("d")
     assert_scheduler_state(
-        scheduler, ready=["b"], running={"e"}, waiting={"a", "c"}, done={"d"}
+        scheduler,
+        ready=["b"],
+        running={"e": ANY},
+        waiting={"a", "c"},
+        done={"d"},
     )
 
     scheduler.mark_skipped("e")
@@ -99,7 +104,7 @@ def test_scheduler_cancelled_become_blocked():
     scheduler.mark_started("b")
     scheduler.stop()
 
-    assert_scheduler_state(scheduler, running={"b"}, cancelled={"a"})
+    assert_scheduler_state(scheduler, running={"b": ANY}, cancelled={"a"})
 
     scheduler.mark_failed("b")
 
@@ -112,7 +117,7 @@ def test_scheduler_cancelled_does_not_become_ready():
     scheduler.mark_started("b")
     scheduler.stop()
 
-    assert_scheduler_state(scheduler, running={"b"}, cancelled={"a", "c"})
+    assert_scheduler_state(scheduler, running={"b": ANY}, cancelled={"a", "c"})
 
     scheduler.mark_done("b")
 
