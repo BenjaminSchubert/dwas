@@ -13,6 +13,9 @@ from . import _io
 from ._scheduler import Scheduler
 from ._timing import format_timedelta
 
+ANSI_SHOW_CURSOR = f"{ansi.CSI}?25h"
+ANSI_HIDE_CURSOR = f"{ansi.CSI}?25l"
+
 
 class StepSummary:
     def __init__(self, scheduler: Scheduler, start_time: float) -> None:
@@ -91,16 +94,22 @@ class Frontend:
 
     @contextmanager
     def activate(self) -> Iterator[None]:
-        with _io.redirect_streams(
-            self._pipe_plexer.stdout, self._pipe_plexer.stderr
-        ):
-            self._refresh_thread.start()
+        try:
+            sys.stderr.write(ANSI_HIDE_CURSOR)
 
-            try:
-                yield
-            finally:
-                self._stop.set()
-                self._refresh_thread.join()
+            with _io.redirect_streams(
+                self._pipe_plexer.stdout, self._pipe_plexer.stderr
+            ):
+                self._refresh_thread.start()
+
+                try:
+                    yield
+                finally:
+                    self._stop.set()
+                    self._refresh_thread.join()
+        finally:
+            sys.stderr.write(ANSI_SHOW_CURSOR)
+            sys.stderr.flush()
 
     def _refresh(self) -> None:
         previous_summary_height = 0
