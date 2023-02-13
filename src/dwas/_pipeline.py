@@ -25,7 +25,7 @@ from ._exceptions import (
     UnknownStepsException,
 )
 from ._frontend import Frontend, StepSummary
-from ._scheduler import Resolver, Scheduler
+from ._scheduler import JobResult, Resolver, Scheduler
 from ._subproc import ProcessManager
 from ._timing import format_timedelta, get_timedelta_since
 
@@ -328,11 +328,11 @@ class Pipeline:
                         Frontend(StepSummary(scheduler, start_time)).activate()
                     )
 
-                results = self._execute(scheduler, lambda: should_stop)
+                self._execute(scheduler, lambda: should_stop)
         finally:
             signal.signal(signal.SIGINT, previous_signal)
 
-        self._log_summary(graph, steps_in_order, results, start_time)
+        self._log_summary(scheduler, steps_in_order, graph, start_time)
 
     def get_step(self, step_name: str) -> BaseStepHandler:
         return self.steps[step_name]
@@ -402,11 +402,10 @@ class Pipeline:
         self,
         scheduler: Scheduler,
         should_stop: Callable[[], bool],
-    ) -> Dict[str, Tuple[Optional[Exception], timedelta]]:
+    ) -> None:
         running_futures: Dict[
-            futures.Future[timedelta], Tuple[str, Optional[_io.PipePlexer]]
+            futures.Future[None], Tuple[str, Optional[_io.PipePlexer]]
         ] = {}
-        results: Dict[str, Tuple[Optional[Exception], timedelta]] = {}
 
         with futures.ThreadPoolExecutor(self.config.n_jobs) as executor:
             while scheduler:
@@ -427,7 +426,7 @@ class Pipeline:
                     )
 
                     future = cast(
-                        futures.Future[timedelta],
+                        futures.Future[None],
                         executor.submit(
                             # XXX: mypy gets confused here, but the result is
                             #      sane
@@ -452,135 +451,139 @@ class Pipeline:
                     with _io.log_file(None):
                         pipe_plexer.flush()
 
-                try:
-                    time_spent = next_finished.result()
-                except ExceptionWithTimeSpentException as exc:
-                    results[name] = exc.original_exception, exc.time_spent
+                self._handle_step_result(name, next_finished, scheduler)
 
-                    if (
-                        isinstance(
-                            exc.original_exception,
-                            UnavailableInterpreterException,
-                        )
-                        and self.config.skip_missing_interpreters
-                    ):
-                        scheduler.mark_skipped(name)
-                    else:
-                        scheduler.mark_failed(name)
-                        if self.config.fail_fast:
-                            scheduler.stop()
+    def _handle_step_result(
+        self,
+        name: str,
+        result: futures.Future[None],
+        scheduler: Scheduler,
+    ) -> None:
+        try:
+            result.result()
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            if (
+                isinstance(exc, UnavailableInterpreterException)
+                and self.config.skip_missing_interpreters
+            ):
+                scheduler.mark_skipped(name, exc)
+                LOGGER.warning(
+                    "Step %s%s%s failed: %s",
+                    Style.BRIGHT,
+                    name,
+                    Style.NORMAL,
+                    exc,
+                )
+            else:
+                scheduler.mark_failed(name, exc)
+                # FIXME: allow another exception that can be thrown programatically
+                exc_info = (
+                    exc if not isinstance(exc, CalledProcessError) else None
+                )
+                LOGGER.error(
+                    "Step %s failed: %s",
+                    name,
+                    self._format_exception(exc),
+                    exc_info=exc_info,
+                )
 
-                        # We won't be able to enqueue new results after a failure
-                        # anyways
-                        continue
-                except futures.CancelledError as exc:
-                    results[name] = exc, timedelta()
-                    continue
-                else:
-                    results[name] = None, time_spent
-                    scheduler.mark_done(name)
-
-        return results
+                if self.config.fail_fast:
+                    scheduler.stop()
+        else:
+            scheduler.mark_success(name)
+            LOGGER.info(
+                "%sStep %s%s%s finished successfully",
+                Fore.GREEN,
+                Style.BRIGHT,
+                name,
+                Style.NORMAL,
+            )
 
     def _log_summary(
         self,
-        graph: Dict[str, List[str]],
+        scheduler: Scheduler,
         steps_order: List[str],
-        results: Dict[str, Tuple[Optional[Exception], timedelta]],
+        graph: Dict[str, List[str]],
         start_time: float,
     ) -> None:
         LOGGER.info("%s*** Steps summary ***", Style.BRIGHT)
 
-        failed_jobs = []
-        blocked_jobs = []
-        cancelled_jobs = []
-
         for name in steps_order:
-            if name in results:
-                result, time_spent = results[name]
-                if result is None:
-                    LOGGER.info(
-                        "\t%s[%s] %s%s%s: success",
-                        Fore.GREEN,
-                        format_timedelta(time_spent),
-                        Style.BRIGHT,
-                        name,
-                        Style.NORMAL,
-                    )
-                elif (
-                    isinstance(result, UnavailableInterpreterException)
-                    and self.config.skip_missing_interpreters
-                ):
-                    LOGGER.info(
-                        "\t%s[-:--:--] %s%s%s: Skipped: %s",
-                        Fore.YELLOW,
-                        Style.BRIGHT,
-                        name,
-                        Style.NORMAL,
-                        result,
-                    )
-                elif isinstance(result, futures.CancelledError):
-                    LOGGER.info(
-                        "\t%s[-:--:--] %s%s%s: Cancelled",
-                        Fore.YELLOW,
-                        Style.BRIGHT,
-                        name,
-                        Style.NORMAL,
-                    )
-                    cancelled_jobs.append(name)
-                else:
-                    LOGGER.info(
-                        "\t%s%s[%s] %s: error: %s",
-                        Style.BRIGHT,
-                        Fore.RED,
-                        format_timedelta(time_spent),
-                        name,
-                        self._format_exception(result),
-                    )
-                    failed_jobs.append(name)
-            else:
+            result, time_spent, exc = scheduler.results[name]
+
+            if result == JobResult.SUCCESS:
+                assert time_spent is not None
+
+                LOGGER.info(
+                    "\t%s[%s] %s%s%s: success",
+                    Fore.GREEN,
+                    format_timedelta(time_spent),
+                    Style.BRIGHT,
+                    name,
+                    Style.NORMAL,
+                )
+            elif result == JobResult.SKIPPED:
+                LOGGER.info(
+                    "\t%s[-:--:--] %s%s%s: Skipped: %s",
+                    Fore.YELLOW,
+                    Style.BRIGHT,
+                    name,
+                    Style.NORMAL,
+                    exc,
+                )
+            elif result == JobResult.CANCELLED:
+                LOGGER.info(
+                    "\t%s[-:--:--] %s%s%s: Cancelled",
+                    Fore.YELLOW,
+                    Style.BRIGHT,
+                    name,
+                    Style.NORMAL,
+                )
+            elif result == JobResult.FAILED:
+                assert time_spent is not None
+                assert exc is not None
+
+                LOGGER.info(
+                    "\t%s%s[%s] %s: error: %s",
+                    Style.BRIGHT,
+                    Fore.RED,
+                    format_timedelta(time_spent),
+                    name,
+                    self._format_exception(exc),
+                )
+            elif result == JobResult.BLOCKED:
                 blocking_dependencies = [
                     dep
                     for dep in graph[name]
-                    if dep in failed_jobs or dep in blocked_jobs
+                    if dep in scheduler.failed or dep in scheduler.blocked
                 ]
+                LOGGER.warning(
+                    "\t%s[-:--:--] %s%s%s: blocked by %s",
+                    Fore.YELLOW,
+                    Style.BRIGHT,
+                    name,
+                    Style.NORMAL,
+                    ", ".join(blocking_dependencies),
+                )
 
-                if not blocking_dependencies:
-                    LOGGER.info(
-                        "\t%s[-:--:--] %s%s%s: Cancelled",
-                        Fore.YELLOW,
-                        Style.BRIGHT,
-                        name,
-                        Style.NORMAL,
-                    )
-                    cancelled_jobs.append(name)
-                else:
-                    blocked_jobs.append(name)
-                    LOGGER.warning(
-                        "\t%s[-:--:--] %s%s%s: blocked by %s",
-                        Fore.YELLOW,
-                        Style.BRIGHT,
-                        name,
-                        Style.NORMAL,
-                        ", ".join(blocking_dependencies),
-                    )
-
-        self._display_slowest_dependency_chain(graph, results)
+        self._display_slowest_dependency_chain(graph, scheduler.results)
 
         LOGGER.info(
             "All steps ran in %s",
             format_timedelta(get_timedelta_since(start_time)),
         )
-        if failed_jobs:
+        if scheduler.failed or scheduler.blocked or scheduler.cancelled:
             raise FailedPipelineException(
-                len(failed_jobs), len(blocked_jobs), len(cancelled_jobs)
+                len(scheduler.failed),
+                len(scheduler.blocked),
+                len(scheduler.cancelled),
             )
 
     def _run_step(
         self,
         name: str,
         pipe_plexer: Optional[_io.PipePlexer],
-    ) -> timedelta:
+    ) -> None:
         with ExitStack() as stack:
             if pipe_plexer is not None:
                 stack.enter_context(
@@ -597,43 +600,7 @@ class Pipeline:
             LOGGER.debug("Log file can be found at %s", log_file)
             stack.enter_context(_io.log_file(log_file))
 
-            time_taken = self._run_step_with_logging(name)
-
-        return time_taken
-
-    def _run_step_with_logging(self, name: str) -> timedelta:
-        start_time = time.monotonic()
-
-        try:
             self.steps[name].execute()
-        except UnavailableInterpreterException as exc:
-            LOGGER.warning(
-                "Step %s%s%s failed: %s", Style.BRIGHT, name, Style.NORMAL, exc
-            )
-            raise ExceptionWithTimeSpentException(
-                exc, get_timedelta_since(start_time)
-            ) from exc
-        except Exception as exc:
-            # FIXME: allow another exception that can be thrown programatically
-            exc_info = exc if not isinstance(exc, CalledProcessError) else None
-            LOGGER.error(
-                "Step %s failed: %s",
-                name,
-                self._format_exception(exc),
-                exc_info=exc_info,
-            )
-            raise ExceptionWithTimeSpentException(
-                exc, get_timedelta_since(start_time)
-            ) from exc
-
-        LOGGER.info(
-            "%sStep %s%s%s finished successfully",
-            Fore.GREEN,
-            Style.BRIGHT,
-            name,
-            Style.NORMAL,
-        )
-        return get_timedelta_since(start_time)
 
     def _format_exception(self, exc: Exception) -> str:
         if isinstance(exc, CalledProcessError):
@@ -643,7 +610,7 @@ class Pipeline:
     def _display_slowest_dependency_chain(
         self,
         graph: Dict[str, List[str]],
-        results: Dict[str, Tuple[Optional[Exception], timedelta]],
+        results: Dict[str, Tuple[JobResult, timedelta, Optional[Exception]]],
     ) -> None:
         if len(graph) <= 1:
             # If there's a single entry in the whole graph, no need to show
@@ -678,7 +645,7 @@ class Pipeline:
     def _compute_slowest_chains(
         self,
         graph: Dict[str, List[str]],
-        results: Dict[str, Tuple[Optional[Exception], timedelta]],
+        results: Dict[str, Tuple[JobResult, timedelta, Optional[Exception]]],
     ) -> Dict[str, Tuple[List[str], timedelta]]:
         total_time_per_step: Dict[str, Tuple[List[str], timedelta]] = {}
 

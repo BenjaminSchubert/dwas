@@ -22,7 +22,7 @@ def assert_scheduler_state(
         "waiting": scheduler.waiting,
         "ready": scheduler.ready,
         "running": scheduler.running,
-        "done": scheduler.done,
+        "done": scheduler.success,
         "failed": scheduler.failed,
         "blocked": scheduler.blocked,
         "cancelled": scheduler.cancelled,
@@ -71,7 +71,7 @@ def test_simple_scenario():
         scheduler, running={"d": ANY, "e": ANY}, waiting={"a", "b", "c"}
     )
 
-    scheduler.mark_done("d")
+    scheduler.mark_success("d")
     assert_scheduler_state(
         scheduler,
         ready=["b"],
@@ -80,19 +80,19 @@ def test_simple_scenario():
         done={"d"},
     )
 
-    scheduler.mark_skipped("e")
+    scheduler.mark_skipped("e", Exception())
     assert_scheduler_state(
         scheduler, ready=["b", "c"], waiting={"a"}, done={"d"}, skipped={"e"}
     )
 
     scheduler.mark_started("b")
-    scheduler.mark_done("b")
+    scheduler.mark_success("b")
     assert_scheduler_state(
         scheduler, ready=["c"], waiting={"a"}, done={"b", "d"}, skipped={"e"}
     )
 
     scheduler.mark_started("c")
-    scheduler.mark_failed("c")
+    scheduler.mark_failed("c", Exception())
     assert_scheduler_state(
         scheduler, failed={"c"}, blocked={"a"}, done={"b", "d"}, skipped={"e"}
     )
@@ -106,7 +106,7 @@ def test_scheduler_cancelled_become_blocked():
 
     assert_scheduler_state(scheduler, running={"b": ANY}, cancelled={"a"})
 
-    scheduler.mark_failed("b")
+    scheduler.mark_failed("b", Exception())
 
     assert_scheduler_state(scheduler, failed={"b"}, blocked={"a"})
 
@@ -119,7 +119,7 @@ def test_scheduler_cancelled_does_not_become_ready():
 
     assert_scheduler_state(scheduler, running={"b": ANY}, cancelled={"a", "c"})
 
-    scheduler.mark_done("b")
+    scheduler.mark_success("b")
 
     assert_scheduler_state(scheduler, done={"b"}, cancelled={"a", "c"})
 
@@ -129,7 +129,7 @@ def test_scheduler_marks_as_blocked_recursively():
         {"a": ["b", "e"], "b": ["c", "d"], "c": [], "d": [], "e": []}
     ).get_scheduler()
     scheduler.mark_started("c")
-    scheduler.mark_failed("c")
+    scheduler.mark_failed("c", Exception())
 
     assert_scheduler_state(
         scheduler, ready=["d", "e"], failed={"c"}, blocked={"a", "b"}
@@ -137,8 +137,8 @@ def test_scheduler_marks_as_blocked_recursively():
 
     scheduler.mark_started("d")
     scheduler.mark_started("e")
-    scheduler.mark_done("d")
-    scheduler.mark_skipped("e")
+    scheduler.mark_success("d")
+    scheduler.mark_skipped("e", Exception())
 
     assert_scheduler_state(
         scheduler, failed={"c"}, blocked={"a", "b"}, done={"d"}, skipped={"e"}

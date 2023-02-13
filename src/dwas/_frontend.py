@@ -41,7 +41,7 @@ class StepSummary:
             f"["
             f"{len(self._scheduler.waiting)}/"
             f"{self._counter(len(self._scheduler.running), Fore.CYAN)}/"
-            f"{self._counter(len(self._scheduler.done), Fore.GREEN)}/"
+            f"{self._counter(len(self._scheduler.success), Fore.GREEN)}/"
             f"{self._counter(len(self._scheduler.failed), Fore.RED)}/"
             f"{self._counter(n_non_runnable, Fore.YELLOW)}"
             f"]{Fore.RESET} "
