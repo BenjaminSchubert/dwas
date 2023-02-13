@@ -27,13 +27,17 @@ class FailedPipelineException(BaseDwasException):
     def __init__(
         self, n_failed_jobs: int, n_blocked_jobs: int, n_cancelled_jobs: int
     ) -> None:
-        assert n_failed_jobs > 0
-        message = f"{self._pluralize(n_failed_jobs)} failed"
+        assert n_failed_jobs > 0 or n_blocked_jobs > 0 or n_cancelled_jobs > 0
+        message = []
+        if n_failed_jobs > 0:
+            message.append(f"{self._pluralize(n_failed_jobs)} failed")
         if n_blocked_jobs > 0:
-            message += f", {self._pluralize(n_blocked_jobs)} could not run"
+            message.append(f"{self._pluralize(n_blocked_jobs)} could not run")
         if n_cancelled_jobs > 0:
-            message += f", {self._pluralize(n_cancelled_jobs)} were cancelled"
-        super().__init__(message, 1)
+            message.append(
+                f"{self._pluralize(n_cancelled_jobs)} were cancelled"
+            )
+        super().__init__(", ".join(message), 1)
 
     def _pluralize(self, n_jobs: int) -> str:
         if n_jobs > 1:
