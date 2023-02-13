@@ -23,7 +23,11 @@ def pytest_collection_modifyitems(items):
     assert predefined_tests_path.exists()
 
     for item in items:
-        if item.path.is_relative_to(predefined_tests_path):
+        try:
+            item.path.relative_to(predefined_tests_path)
+        except ValueError:
+            continue
+        else:
             item.add_marker(pytest.mark.predefined)
 
 

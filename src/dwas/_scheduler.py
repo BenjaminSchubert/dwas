@@ -4,7 +4,17 @@ import logging
 import time
 from collections import deque
 from datetime import timedelta
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple
+from typing import (
+    Any,
+    Deque,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+)
 
 from ._exceptions import CyclicStepDependenciesException
 
@@ -169,7 +179,7 @@ class Resolver:
     def _build_weights(self) -> Dict[str, Tuple[int, int, str]]:
         weights: Dict[str, Tuple[int, int, str]] = {}
 
-        path: deque[str] = deque()
+        path: Deque[str] = deque()
         path_set = set()
 
         def _compute_weight(step: str) -> Tuple[int, int, str]:

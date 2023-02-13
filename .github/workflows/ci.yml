@@ -2,7 +2,7 @@
 name: Checks
 
 env:
-  DEFAULT_PYTHON: 3.9
+  DEFAULT_PYTHON: 3.8
   PACKAGES_PATH: .dwas/cache/package/
   COVERAGE_FILES_PATH: .dwas/cache/pytest-*/reports/coverage
   TERM: "xterm-256color"
@@ -86,6 +86,7 @@ jobs:
       fail-fast: false
       matrix:
         python:
+          - "3.8"
           - "3.9"
           - "3.10"
           - "3.11"

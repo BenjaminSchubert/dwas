@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import os
 import pty
@@ -119,7 +121,9 @@ class ProcessManager:
             for fd in [p_stdin, p_stdout, p_stderr]:
                 os.close(fd)
 
-            ret = subprocess.CompletedProcess[None](command, proc.returncode)
+            ret: subprocess.CompletedProcess[
+                None
+            ] = subprocess.CompletedProcess(command, proc.returncode)
             self._remove(proc)
             ret.check_returncode()
             return ret

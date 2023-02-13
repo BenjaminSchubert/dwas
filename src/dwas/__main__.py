@@ -5,8 +5,8 @@ import shlex
 import sys
 from argparse import (
     REMAINDER,
+    Action,
     ArgumentParser,
-    BooleanOptionalAction,
     Namespace,
     RawDescriptionHelpFormatter,
     _AppendAction,
@@ -40,6 +40,28 @@ class _SplitAppendAction(_AppendAction):
             self.dest,
             [*items, *[v.strip() for v in values.split(",")]],
         )
+
+
+class BooleanOptionalAction(Action):
+    # This is a simplified implementation of the BooleanOptionalAction from
+    # argparse.
+    # This can be replaced once we drop support for python3.8
+    def __call__(
+        self,
+        parser: ArgumentParser,
+        namespace: Namespace,
+        values: Any,
+        option_string: Optional[str] = None,
+    ) -> None:
+        assert option_string is not None
+
+        if option_string in self.option_strings:
+            setattr(
+                namespace, self.dest, not option_string.startswith("--no-")
+            )
+
+    def format_usage(self) -> str:
+        return " | ".join(self.option_strings)
 
 
 def _parse_args(args: Optional[List[str]] = None) -> Namespace:
@@ -131,7 +153,9 @@ Environment variables:
 
     parser.add_argument(
         "--colors",
+        "--no-colors",
         action=BooleanOptionalAction,
+        nargs=0,
         help=(
             "Force or prevent a colored output"
             " (default: true if stdin is a tty, false otherwise)"

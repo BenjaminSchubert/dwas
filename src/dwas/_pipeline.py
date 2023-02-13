@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import signal
 import time
@@ -426,7 +428,7 @@ class Pipeline:
                     )
 
                     future = cast(
-                        futures.Future[None],
+                        "futures.Future[None]",
                         executor.submit(
                             # XXX: mypy gets confused here, but the result is
                             #      sane

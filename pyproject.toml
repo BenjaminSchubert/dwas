@@ -10,7 +10,7 @@ name = "dwas"
 version = "0.0.2"
 description = "dwas is a command line tool to define and run your development workflows"
 readme = "README.rst"
-requires-python = ">= 3.9"
+requires-python = ">= 3.8"
 authors = [
     { name = "Benjamin Schubert", email = "contact@benschubert.me" }
 ]
@@ -20,6 +20,7 @@ classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
