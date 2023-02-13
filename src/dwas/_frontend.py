@@ -49,20 +49,29 @@ class StepSummary:
             f"{self._counter(n_non_runnable, Fore.YELLOW)}"
             f"]{Fore.RESET} "
         ).center(
-            # 90 comes from the number of color codes * 5, as this is what is added
+            # 86 comes from the number of color codes * 5, as this is what is added
             # to the real length of the array
             term_width + 86,
             "~",
         )
+
+        additional_info: List[str] = []
+        if self._scheduler.ready:
+            ready_line = (
+                f"[-:--:--] {Fore.YELLOW}{Style.BRIGHT}ready: "
+                + " ".join(self._scheduler.ready)
+            )
+            if len(ready_line) > term_width:
+                ready_line = ready_line[: term_width + 8 - 3] + "..."
+            ready_line += Fore.RESET + Style.NORMAL
+            additional_info.append(ready_line)
 
         if self._scheduler.waiting:
             waiting_line = f"[-:--:--] {Fore.YELLOW}waiting: {' '.join(self._scheduler.waiting)}"
             if len(waiting_line) > term_width:
                 waiting_line = waiting_line[: term_width + 5 - 3] + "..."
             waiting_line += Fore.RESET
-            waiting_info = [waiting_line]
-        else:
-            waiting_info = []
+            additional_info.append(waiting_line)
 
         return (
             [headline]
@@ -71,7 +80,7 @@ class StepSummary:
                 f" {Fore.CYAN}{step}: running{Fore.RESET}"
                 for step, since in self._scheduler.running.items()
             ]
-            + waiting_info
+            + additional_info
         )
 
 
