@@ -11,7 +11,7 @@ from contextlib import (
 )
 from contextvars import ContextVar
 from pathlib import Path
-from typing import Generator, Iterator, Optional, TextIO, Tuple
+from typing import Deque, Generator, Iterator, Optional, TextIO, Tuple
 
 STDOUT = ContextVar[TextIO]("STDOUT")
 STDERR = ContextVar[TextIO]("STDERR")
@@ -56,7 +56,7 @@ class PipePlexer:
         self.stderr = MemoryPipe(self)
         self.stdout = MemoryPipe(self)
 
-        self._buffer: deque[Tuple[MemoryPipe, str]] = deque()
+        self._buffer: Deque[Tuple[MemoryPipe, str]] = deque()
         self._write_on_flush = write_on_flush
 
     def write(self, stream: MemoryPipe, data: str) -> int:

@@ -7,8 +7,8 @@ REQUIREMENTS = "-rrequirements/requirements.txt"
 DOCS_REQUIREMENTS = "-rrequirements/requirements-docs.txt"
 TEST_REQUIREMENTS = "-rrequirements/requirements-test.txt"
 TYPES_REQUIREMENTS = "-rrequirements/requirements-types.txt"
-OLDEST_SUPPORTED_PYTHON = "3.9"
-SUPPORTED_PYTHONS = ["3.9", "3.10", "3.11"]
+SUPPORTED_PYTHONS = ["3.8", "3.9", "3.10", "3.11"]
+OLDEST_SUPPORTED_PYTHON = SUPPORTED_PYTHONS[0]
 PYTHON_FILES = [
     "docs/conf.py",
     "docs/_extensions",
