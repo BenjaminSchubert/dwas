@@ -52,9 +52,14 @@ class StepSummary:
             "~",
         )
 
-        waiting_line = f"[-:--:--] {Fore.YELLOW}waiting: {' '.join(self._scheduler.waiting)}"
-        if len(waiting_line) > term_width:
-            waiting_line = waiting_line[: term_width + 5 - 3] + "..."
+        if self._scheduler.waiting:
+            waiting_line = f"[-:--:--] {Fore.YELLOW}waiting: {' '.join(self._scheduler.waiting)}"
+            if len(waiting_line) > term_width:
+                waiting_line = waiting_line[: term_width + 5 - 3] + "..."
+            waiting_line += Fore.RESET
+            waiting_info = [waiting_line]
+        else:
+            waiting_info = []
 
         return (
             [headline]
@@ -63,7 +68,7 @@ class StepSummary:
                 f" {Fore.CYAN}{step}: running{Fore.RESET}"
                 for step, since in self._scheduler.running.items()
             ]
-            + [f"{waiting_line}{Fore.RESET}"]
+            + waiting_info
         )
 
 
