@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-import pty
 import signal
 import subprocess
 import sys
@@ -19,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 
 def _stream(source: int, dest: TextIO) -> None:
     with suppress(IOError):
-        while data := os.read(source, 2048):
+        while data := os.read(source, 4096):
             dest.write(data.decode())
 
 
@@ -84,32 +83,27 @@ class ProcessManager:
             raise KeyboardInterrupt()
 
         def _run() -> subprocess.CompletedProcess[None]:
-            p_stdin, c_stdin = pty.openpty()
-            p_stdout, c_stdout = pty.openpty()
-            p_stderr, c_stderr = pty.openpty()
-
             with subprocess.Popen(
                 command,
                 env=env,
                 text=True,
-                stdin=c_stdin,
-                stdout=c_stdout,
-                stderr=c_stderr,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 close_fds=True,
                 start_new_session=True,
             ) as proc:
                 self._add(proc)
 
-                for fd in [c_stdin, c_stdout, c_stderr]:
-                    os.close(fd)
+                assert proc.stdout is not None
+                assert proc.stderr is not None
 
                 stdout_reader = Thread(
                     target=copy_context().run,
-                    args=[_stream, p_stdout, sys.stdout],
+                    args=[_stream, proc.stdout.fileno(), sys.stdout],
                 )
                 stderr_reader = Thread(
                     target=copy_context().run,
-                    args=[_stream, p_stderr, sys.stderr],
+                    args=[_stream, proc.stderr.fileno(), sys.stderr],
                 )
 
                 stdout_reader.start()
@@ -117,9 +111,6 @@ class ProcessManager:
 
                 stdout_reader.join()
                 stderr_reader.join()
-
-            for fd in [p_stdin, p_stdout, p_stderr]:
-                os.close(fd)
 
             ret: subprocess.CompletedProcess[
                 None
