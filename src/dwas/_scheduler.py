@@ -1,12 +1,23 @@
 import copy
+import enum
 import logging
 import time
 from collections import deque
-from typing import Any, Dict, Iterable, List, Mapping, Set, Tuple
+from datetime import timedelta
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
 from ._exceptions import CyclicStepDependenciesException
 
 LOGGER = logging.getLogger(__name__)
+
+
+@enum.unique
+class JobResult(enum.Enum):
+    SUCCESS = "DONE"
+    FAILED = "FAILED"
+    BLOCKED = "BLOCKED"
+    CANCELLED = "CANCELLED"
+    SKIPPED = "SKIPPED"
 
 
 class Scheduler:
@@ -25,11 +36,15 @@ class Scheduler:
         self.waiting: Set[str] = set()
         self.ready: List[str] = []
         self.running: Dict[str, float] = {}
-        self.done: Set[str] = set()
+        self.success: Set[str] = set()
         self.failed: Set[str] = set()
         self.blocked: Set[str] = set()
         self.cancelled: Set[str] = set()
         self.skipped: Set[str] = set()
+
+        self.results: Dict[
+            str, Tuple[JobResult, timedelta, Optional[Exception]]
+        ] = {}
 
         # Enqueue all steps that are ready
         for step, dependencies in self._dependencies_graph.items():
@@ -44,19 +59,34 @@ class Scheduler:
         self.ready.remove(step)
         self.running[step] = time.monotonic()
 
-    def mark_failed(self, step: str) -> None:
-        del self.running[step]
+    def mark_failed(self, step: str, exc: Exception) -> None:
+        time_taken = self.running.pop(step)
         self.failed.add(step)
+        self.results[step] = (
+            JobResult.FAILED,
+            timedelta(seconds=time.monotonic() - time_taken),
+            exc,
+        )
         self._mark_dependents_blocked(step)
 
-    def mark_done(self, step: str) -> None:
-        del self.running[step]
-        self.done.add(step)
+    def mark_success(self, step: str) -> None:
+        time_taken = self.running.pop(step)
+        self.success.add(step)
+        self.results[step] = (
+            JobResult.SUCCESS,
+            timedelta(seconds=time.monotonic() - time_taken),
+            None,
+        )
         self._mark_dependents_ready(step)
 
-    def mark_skipped(self, step: str) -> None:
-        del self.running[step]
+    def mark_skipped(self, step: str, exc: Exception) -> None:
+        time_taken = self.running.pop(step)
         self.skipped.add(step)
+        self.results[step] = (
+            JobResult.FAILED,
+            timedelta(time.monotonic() - time_taken),
+            exc,
+        )
         self._mark_dependents_ready(step)
 
     def _mark_dependents_ready(self, step: str) -> None:
@@ -81,6 +111,7 @@ class Scheduler:
                 self.cancelled.remove(dependent)
 
             self.blocked.add(dependent)
+            self.results[dependent] = JobResult.BLOCKED, timedelta(), None
 
             dependencies = self._dependencies_graph[dependent]
             dependencies.remove(step)
@@ -98,10 +129,12 @@ class Scheduler:
         while self.ready:
             step = self.ready.pop()
             self.cancelled.add(step)
+            self.results[step] = JobResult.CANCELLED, timedelta(), None
 
         while self.waiting:
             step = self.waiting.pop()
             self.cancelled.add(step)
+            self.results[step] = JobResult.CANCELLED, timedelta(), None
 
     def __bool__(self) -> bool:
         return bool(self.ready or self.running)
@@ -180,6 +213,6 @@ class Resolver:
             next_step = next(iter(scheduler.ready))
             entries.append(next_step)
             scheduler.mark_started(next_step)
-            scheduler.mark_done(next_step)
+            scheduler.mark_success(next_step)
 
         return entries
