@@ -349,3 +349,7 @@ def main(sys_args: Optional[List[str]] = None) -> None:
             raise SystemExit(exc.exit_code) from exc
         finally:
             LOGGER.info("Logs can be found at %s", log_path)
+
+
+if __name__ == "__main__":
+    main()
