@@ -1,5 +1,3 @@
-import pytest
-
 from .mixins import BaseFormatterTest
 
 
@@ -24,23 +22,3 @@ import os
 import os
 from pathlib import Path
 """
-
-    @pytest.mark.parametrize(
-        "enable_colors",
-        [
-            True,
-            pytest.param(
-                False,
-                marks=pytest.mark.xfail(
-                    reason="isort adds a trailing RESET code at the end if colorama is installed",
-                ),
-            ),
-        ],
-        ids=["colors", "no-colors"],
-    )
-    def test_respects_color_settings(
-        self, cache_path, tmp_path, enable_colors
-    ):
-        super().test_respects_color_settings(
-            cache_path, tmp_path, enable_colors
-        )
