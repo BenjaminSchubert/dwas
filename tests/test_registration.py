@@ -1,4 +1,3 @@
-import sys
 from typing import Any, Dict, Optional
 
 import pytest
@@ -29,7 +28,8 @@ def _get_all_steps_from_pipeline(pipeline: Pipeline) -> Dict[str, Any]:
         parameters.pop("step")
 
         return {
-            "python": step.python,
+            # pylint: disable=protected-access
+            "python": step._venv_runner._installer._python_spec,
             "run_by_default": step.run_by_default,
             "requires": step.requires,
             "parameters": parameters,
@@ -47,8 +47,6 @@ def _expect_step(
     run_by_default: Optional[bool] = None,
     parameters: Dict[str, Any],
 ) -> Dict[str, Any]:
-    if python is None:
-        python = f"python{sys.version_info[0]}.{sys.version_info[1]}"
     if run_by_default is None:
         run_by_default = True
 
@@ -84,8 +82,6 @@ def test_can_register_step(pipeline, name, python, run_by_default):
 
     steps = _get_all_steps_from_pipeline(pipeline)
 
-    if python == "2.8":
-        python = "python2.8"
     if name is None:
         name = "noop"
 

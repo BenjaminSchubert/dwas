@@ -1,11 +1,18 @@
 from __future__ import annotations
 
 import logging
+import os
 import shutil
 import subprocess
+import sys
 from contextlib import suppress
-from typing import Dict, List, Optional
+from pathlib import Path
+from typing import Dict, List, Optional, cast
 
+from virtualenv import session_via_cli
+from virtualenv.run.session import Session
+
+from . import _io
 from ._config import Config
 from ._exceptions import (
     CommandNotFoundException,
@@ -17,43 +24,94 @@ from ._subproc import ProcessManager
 LOGGER = logging.getLogger(__name__)
 
 
+class _VirtualenvInstaller:
+    def __init__(self, path: Path, python_spec: Optional[str]) -> None:
+        self.environ = os.environ.copy()
+        self.environ["VIRTUALENV_CLEAR"] = "False"
+        if python_spec is not None:
+            self.environ["VIRTUALENV_PYTHON"] = python_spec
+
+        self._python_spec = python_spec
+        self._path = path
+
+        self._session_cache = None
+
+    @property
+    def python(self) -> str:
+        return str(self._session.creator.exe)
+
+    @property
+    def paths(self) -> List[str]:
+        creator = self._session.creator
+        if creator.bin_dir == creator.script_dir:
+            return [str(creator.bin_dir)]
+        return [str(creator.bin_dir), str(creator.script_dir)]
+
+    def resolve(self) -> None:
+        if self._session_cache is not None:
+            return
+
+        plexer = _io.PipePlexer()
+
+        try:
+            with _io.redirect_streams(plexer.stdout, plexer.stdout):
+                session = session_via_cli(
+                    [str(self._path)], setup_logging=False, env=self.environ
+                )
+        except RuntimeError as exc:
+            raise UnavailableInterpreterException(
+                cast(str, self._python_spec)
+            ) from exc
+
+        self._session_cache = session
+
+    @property
+    def _session(self) -> Session:
+        if self._session_cache is None:
+            self.resolve()
+        return self._session_cache
+
+
 class VenvRunner:
     def __init__(
         self,
         name: str,
-        python: str,
+        python_spec: Optional[str],
         config: Config,
         environ: Dict[str, str],
         proc_manager: ProcessManager,
     ) -> None:
-        self._original_python = python
         self._path = (config.venvs_path / name.replace(":", "-")).resolve()
-        self._python = str(self._path / "bin/python")
         self._config = config
         self._environ = environ
         self._proc_manager = proc_manager
+
+        self._installer = _VirtualenvInstaller(self._path, python_spec)
+
+    @property
+    def python(self) -> str:
+        return self._installer.python
 
     def clean(self) -> None:
         with suppress(FileNotFoundError):
             shutil.rmtree(self._path)
 
     def prepare(self) -> None:
-        if shutil.which(self._original_python) is None:
-            raise UnavailableInterpreterException(self._original_python)
-
         if self._path.exists():
             LOGGER.debug("venv already exists. Reusing")
             return
 
+        self._installer.resolve()
+
         self._proc_manager.run(
-            [self._original_python, "-m", "venv", str(self._path)],
-            env=self._config.environ,
+            [sys.executable, "-m", "virtualenv", str(self._path)],
+            env=self._installer.environ,
             silent_on_success=self._config.verbosity < 2,
         )
 
     def install(self, *packages: str) -> None:
         self.run(
-            [self._python, "-m", "pip", "install", *packages],
+            [self.python, "-m", "pip", "install", *packages],
             silent_on_success=self._config.verbosity < 2,
         )
 
@@ -81,7 +139,7 @@ class VenvRunner:
         env.update(
             {
                 "VIRTUAL_ENV": str(self._path),
-                "PATH": f"{self._path}/bin:{env['PATH']}",
+                "PATH": f"{':'.join(self._installer.paths)}:{env['PATH']}",
             }
         )
         if additional_env is not None:
@@ -96,7 +154,9 @@ class VenvRunner:
         if cmd is None:
             raise CommandNotFoundException(command, path=env["PATH"])
 
-        command_in_venv = cmd.startswith(str(self._path / "bin"))
+        command_in_venv = any(
+            cmd.startswith(path) for path in self._installer.paths
+        )
 
         if command_in_venv and external_command:
             LOGGER.warning(

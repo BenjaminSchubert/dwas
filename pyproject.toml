@@ -94,6 +94,10 @@ module = "tests.*"
 allow_untyped_defs = true
 allow_untyped_calls = true
 
+[[tool.mypy.overrides]]
+module = "virtualenv.*"
+ignore_missing_imports = true
+
 ##
 # Pylint
 [tool.pylint.main]

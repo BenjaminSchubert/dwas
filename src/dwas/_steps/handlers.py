@@ -4,10 +4,8 @@ import inspect
 import itertools
 import logging
 import os
-import re
 import shutil
 import subprocess
-import sys
 from abc import ABC, abstractmethod
 from contextlib import suppress
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
@@ -78,7 +76,7 @@ class StepHandler(BaseStepHandler):
         name: str,
         func: Step,
         pipeline: "Pipeline",
-        python: Optional[str],
+        python_spec: Optional[str],
         requires: Optional[List[str]] = None,
         run_by_default: Optional[bool] = None,
         description: Optional[str] = None,
@@ -89,21 +87,12 @@ class StepHandler(BaseStepHandler):
         super().__init__(name, pipeline, requires, run_by_default, description)
 
         self.name = name
-        if python is None:
-            # FIXME: this probably doesn't handle being installed with pypy/pyston
-            python = f"python{sys.version_info[0]}.{sys.version_info[1]}"
-        elif re.match(
-            r"\d+\.\d+", python
-        ):  # version specified, assume cpython
-            python = f"python{python}"
-
-        self.python = python
 
         self._func = func
         step_environment = self._resolve_environ(passenv, setenv)
         self._venv_runner = VenvRunner(
             self.name,
-            self.python,
+            python_spec,
             self.config,
             step_environment,
             proc_manager=self._pipeline.proc_manager,
@@ -131,6 +120,10 @@ class StepHandler(BaseStepHandler):
     @property
     def config(self) -> Config:
         return self._pipeline.config
+
+    @property
+    def python(self) -> str:
+        return self._venv_runner.python
 
     def set_user_args(self, args: List[str]) -> None:
         step_signature = inspect.signature(self._func)
