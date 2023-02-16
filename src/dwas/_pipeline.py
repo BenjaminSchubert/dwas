@@ -142,7 +142,7 @@ class Pipeline:
                 description=current_description,
                 func=func,
                 pipeline=self,
-                python=args.pop("python", None),
+                python_spec=args.pop("python", None),
                 requires=args.pop("requires", None),
                 run_by_default=current_run_by_default,
                 parameters=args,
