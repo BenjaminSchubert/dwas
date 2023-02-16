@@ -480,7 +480,12 @@ class Pipeline:
                 scheduler.mark_failed(name, exc)
                 # FIXME: allow another exception that can be thrown programatically
                 exc_info = (
-                    exc if not isinstance(exc, CalledProcessError) else None
+                    exc
+                    if not isinstance(
+                        exc,
+                        (CalledProcessError, UnavailableInterpreterException),
+                    )
+                    else None
                 )
                 LOGGER.error(
                     "Step %s failed: %s",
