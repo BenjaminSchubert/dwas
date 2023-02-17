@@ -158,25 +158,58 @@ class Config:
             sys.__stdout__.isatty() and sys.__stderr__.isatty()
         )
 
-        self.environ = {
-            # XXX: keep this list in sync with the above documentation
-            key: os.environ[key]
-            for key in [
-                "URL_CA_BUNDLE",
-                "PATH",
-                "LANG",
-                "LANGUAGE",
-                "LD_LIBRARY_PATH",
-                "PIP_INDEX_URL",
-                "PIP_EXTRA_INDEX_URL",
-                "PYTHONHASHSEED",
-                "REQUESTS_CA_BUNDLE",
-                "SSL_CERT_FILE",
-                "http_proxy",
-                "https_proxy",
-                "no_proxy",
-                "TMPDIR",
+        # XXX: keep this list in sync with the above documentation
+        passthrough_environment_variables = [
+            # System
+            "PATH",
+            "LANG",
+            "LANGUAGE",
+            "PYTHONHASHSEED",
+            "TMPDIR",
+            # Pip
+            "PIP_INDEX_URL",
+            "PIP_EXTRA_INDEX_URL",
+            # Proxies
+            "http_proxy",
+            "https_proxy",
+            "no_proxy",
+            # Certificates
+            "URL_CA_BUNDLE",
+            "REQUESTS_CA_BUNDLE",
+            "SSL_CERT_FILE",
+            # Compilation and such
+            "LD_LIBRARY_PATH",
+            "PKG_CONFIG",
+            "PKG_CONFIG_PATH",
+            "PKG_CONFIG_SYSROOT_DIR",
+        ]
+
+        # Windows needs a few more to work
+        if sys.platform == "win32":  # pragma: win32 cover
+            passthrough_environment_variables += [
+                # Needed to find VisualStudio for building wheels
+                "PROGRAMDATA",
+                "PROGRAMFILES(x86)",
+                "PROGRAMFILES",
+                # Required to be able to import c extensions (why?)
+                "SYSTEMDRIVE",
+                "SYSTEMROOT",
+                # Needed for the platform module to work
+                "PROCESSOR_ARCHITECTURE",
+                # Required by multiprocessing.cpu_count on windows
+                "NUMBER_OF_PROCESSORS",
+                # Temporary files directory
+                "TEMP",
+                "TMP",
+                # Needed for expanduser()
+                "USERPROFILE",
+                # Needed to discover executables
+                "PATHEXT",
             ]
+
+        self.environ = {
+            key: os.environ[key]
+            for key in passthrough_environment_variables
             if key in os.environ
         }
 

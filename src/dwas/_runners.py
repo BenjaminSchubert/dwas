@@ -123,7 +123,7 @@ class VenvRunner:
         silent_on_success: bool = False,
     ) -> subprocess.CompletedProcess[None]:
         env = self._merge_env(self._config, env)
-        self._validate_command(command[0], external_command, env)
+        command[0] = self._resolve_command(command[0], external_command, env)
 
         return self._proc_manager.run(
             command,
@@ -139,16 +139,16 @@ class VenvRunner:
         env.update(
             {
                 "VIRTUAL_ENV": str(self._path),
-                "PATH": f"{':'.join(self._installer.paths)}:{env['PATH']}",
+                "PATH": f"{os.pathsep.join(self._installer.paths)}{os.pathsep}{env['PATH']}",
             }
         )
         if additional_env is not None:
             env.update(additional_env)
         return env
 
-    def _validate_command(
+    def _resolve_command(
         self, command: str, external_command: bool, env: Dict[str, str]
-    ) -> None:
+    ) -> str:
         cmd = shutil.which(command, path=env["PATH"])
 
         if cmd is None:
@@ -166,3 +166,7 @@ class VenvRunner:
             )
         if not external_command and not command_in_venv:
             raise CommandNotInEnvironment(command)
+
+        # Return the resolved command, this is easier for Windows, as it will
+        # not always be able to find the command if not fully referenced.
+        return cmd

@@ -13,8 +13,16 @@ from . import _io
 from ._scheduler import Scheduler
 from ._timing import format_timedelta
 
-ANSI_SHOW_CURSOR = f"{ansi.CSI}?25h"
-ANSI_HIDE_CURSOR = f"{ansi.CSI}?25l"
+# XXX: If colorama adds support, we could probably enable this
+#      https://github.com/tartley/colorama/issues/272
+if sys.platform == "win32":
+    # Don't support ANSI cursor hiding on windows for now, it can't be done
+    # with ansi codes
+    ANSI_HIDE_CURSOR = ""
+    ANSI_SHOW_CURSOR = ""
+else:
+    ANSI_HIDE_CURSOR = f"{ansi.CSI}?25l"
+    ANSI_SHOW_CURSOR = f"{ansi.CSI}?25h"
 
 
 class StepSummary:
