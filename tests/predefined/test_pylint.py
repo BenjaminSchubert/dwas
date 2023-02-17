@@ -35,5 +35,9 @@ import os
         ],
         ids=["colors", "no-colors"],
     )
-    def test_respects_color_settings(self, cache_path, enable_colors):
-        super().test_respects_color_settings(cache_path, enable_colors)
+    def test_respects_color_settings(
+        self, cache_path, tmp_path, enable_colors
+    ):
+        super().test_respects_color_settings(
+            cache_path, tmp_path, enable_colors
+        )
