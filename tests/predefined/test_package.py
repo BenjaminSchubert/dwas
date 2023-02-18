@@ -1,4 +1,5 @@
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -22,3 +23,23 @@ class TestPackage(BaseStepTest):
             Path(artifacts["wheels"][0]).name
             == "test_package-0.0.0-py3-none-any.whl"
         )
+
+    @pytest.mark.parametrize(
+        "enable_colors",
+        [
+            pytest.param(
+                True,
+                marks=[
+                    pytest.mark.xfail(
+                        sys.platform == "win32",
+                        reason="colors are not supported on windows",
+                        strict=True,
+                    )
+                ],
+            ),
+            False,
+        ],
+        ids=["colors", "no-colors"],
+    )
+    def test_respects_color_settings(self, cache_path, enable_colors):
+        super().test_respects_color_settings(cache_path, enable_colors)
