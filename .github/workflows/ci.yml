@@ -94,7 +94,7 @@ jobs:
           - "pypy3.8"
         include:
           - os: windows-latest
-            python: "3.10"
+            python: "3.8"
 
     steps:
       - name: Check out repository
@@ -125,6 +125,26 @@ jobs:
           name: coverage-files-pytest-${{ matrix.python }}
           path: ${{ env.COVERAGE_FILES_PATH }}
           retention-days: 7
+
+  windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+
+      # FIXME: we should take dwas from pypi once it's published
+      - name: Install dwas
+        run: python -m pip install .[test]
+
+      - name: pytest
+        run: pytest
 
   coverage:
     runs-on: ubuntu-latest
