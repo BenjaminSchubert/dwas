@@ -94,7 +94,7 @@ jobs:
           - "pypy3.8"
         include:
           - os: windows-latest
-            python: "3.11"
+            python: "3.10"
 
     steps:
       - name: Check out repository
