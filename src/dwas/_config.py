@@ -211,7 +211,7 @@ class Config:
             key: os.environ[key]
             for key in passthrough_environment_variables
             if key in os.environ
-        }
+        }<<z
 
         if "PYTHONHASHSEED" in self.environ:
             LOGGER.info(
