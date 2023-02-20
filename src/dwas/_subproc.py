@@ -9,7 +9,7 @@ import time
 from contextlib import suppress
 from contextvars import copy_context
 from threading import Lock, Thread
-from typing import Any, Dict, List, Set, TextIO
+from typing import Any, Dict, List, Optional, Set, TextIO
 
 from . import _io
 
@@ -74,6 +74,9 @@ class ProcessManager:
         self,
         command: List[str],
         env: Dict[str, str],
+        cwd: Optional[
+            str | bytes | os.PathLike[str] | os.PathLike[bytes]
+        ] = None,
         *,
         silent_on_success: bool = False,
     ) -> subprocess.CompletedProcess[None]:
@@ -85,6 +88,7 @@ class ProcessManager:
         def _run() -> subprocess.CompletedProcess[None]:
             with subprocess.Popen(
                 command,
+                cwd=cwd,
                 env=env,
                 text=True,
                 stdout=subprocess.PIPE,

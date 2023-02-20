@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 from pathlib import Path
 from typing import (
@@ -516,6 +517,9 @@ class StepRunner:
         self,
         command: List[str],
         *,
+        cwd: Optional[
+            str | bytes | os.PathLike[str] | os.PathLike[bytes]
+        ] = None,
         env: Optional[Dict[str, str]] = None,
         external_command: bool = False,
         silent_on_success: bool = False,
@@ -536,6 +540,7 @@ class StepRunner:
         To add more values, use `env`.
 
         :param command: The command to run, as a list of arguments.
+        :param cwd: The working directory in which to run the command.
         :param env: Additional environment variables to pass to the process.
                     Those will be merged on top of the :py:attr:`Config.environ`
                     values and can override them, but not remove them.
@@ -551,6 +556,7 @@ class StepRunner:
         """
         return self._handler.run(
             command,
+            cwd=cwd,
             env=env,
             external_command=external_command,
             silent_on_success=silent_on_success,
