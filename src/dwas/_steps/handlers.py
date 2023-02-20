@@ -153,12 +153,16 @@ class StepHandler(BaseStepHandler):
         self,
         command: List[str],
         *,
+        cwd: Optional[
+            str | bytes | os.PathLike[str] | os.PathLike[bytes]
+        ] = None,
         env: Optional[Dict[str, str]] = None,
         external_command: bool = False,
         silent_on_success: bool = False,
     ) -> subprocess.CompletedProcess[None]:
         return self._venv_runner.run(
             command,
+            cwd=cwd,
             env=env,
             external_command=external_command,
             silent_on_success=silent_on_success,

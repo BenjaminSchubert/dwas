@@ -118,6 +118,9 @@ class VenvRunner:
     def run(
         self,
         command: List[str],
+        cwd: Optional[
+            str | bytes | os.PathLike[str] | os.PathLike[bytes]
+        ] = None,
         env: Optional[Dict[str, str]] = None,
         external_command: bool = False,
         silent_on_success: bool = False,
@@ -127,6 +130,7 @@ class VenvRunner:
 
         return self._proc_manager.run(
             command,
+            cwd=cwd,
             env=env,
             silent_on_success=silent_on_success,
         )
