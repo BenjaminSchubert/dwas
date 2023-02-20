@@ -79,19 +79,22 @@ jobs:
           retention-days: 7
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: package
 
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         python:
           - "3.8"
           - "3.9"
           - "3.10"
           - "3.11"
           - "pypy3.8"
-
+        include:
+        - os: macos-latest
+          python: "3.8"
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -115,10 +118,14 @@ jobs:
       - name: pytest[${{ matrix.python }}]
         run: dwas --verbose --only pytest[${{ matrix.python }}] -- --numprocesses auto
 
+      - name: Move the coverage to another place to avoid conflicts
+        if: runner.os != 'Linux'
+        run: mv .dwas/cache/pytest-* .dwas/cache/pytest-${{ matrix.os }}
+
       - name: Save coverage files
         uses: actions/upload-artifact@v3
         with:
-          name: coverage-files-pytest-${{ matrix.python }}
+          name: coverage-files-pytest-${{ matrix.os }}-${{ matrix.python }}
           path: ${{ env.COVERAGE_FILES_PATH }}
           retention-days: 7
 
