@@ -12,6 +12,7 @@ doctests
 dwas
 enqueuing
 formatters
+frontend
 isort
 linkchecks
 linters
@@ -24,6 +25,7 @@ parametrizing
 pipx
 pylint
 pypi
+pypy
 pytest
 readthedocs
 reusability

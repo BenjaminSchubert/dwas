@@ -1,6 +1,39 @@
 Changelog
 =========
 
+
+0.0.3
+-----
+
+This release focuses on compatibility and user experience.
+
+The highlights are:
+
+- A new interactive frontend for a nicer feedback when using ``dwas`` on the cli
+- Wider support for various python version. Added 3.8 support and other
+  interpreters
+- Support for MacOS
+
+Features
+^^^^^^^^
+
+- Store logs into files to allow inspecting after the run. Additionally, those
+  will always have debug information in them
+- Added support for python 3.8
+- Added support pypy and other python implementations
+- Added official support for MacOS
+- Support running ``dwas`` like ``python -m dwas``
+- Allow passing a ``cwd`` argument to ``step.run``
+
+Miscellaneous
+^^^^^^^^^^^^^
+
+- Stop showing times at the millisecond precision, it's too verbose
+- ``dwas`` now uses ``virtualenv`` instead of ``venv`` for creating the
+  environments, which broadens the support for various python interpreters.
+  If ``virtualenv`` supports it, ``dwas`` will
+
+
 0.0.2
 -----
 
