@@ -73,7 +73,7 @@ installed from there
 .. code-block:: shell
 
    # Here PYTHON_VERSION is the version for which you want to install ``dwas``.
-   # Remember that it needs at least python3.9. In a virtual environment, using
+   # Remember that it needs at least python3.8. In a virtual environment, using
    # `python` should be enough.
    python${PYTHON_VERSION} -m pip install dwas
 
