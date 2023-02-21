@@ -53,6 +53,9 @@ If ``dwas`` does not satisfy your use case, maybe one of those will?
 ⚠️ This project is currently in early development. Contributions and issues are
 very welcome but compatibility may be broken at any point.
 
+.. image:: https://user-images.githubusercontent.com/1672192/220475595-8d4cf327-abd9-4ef9-907d-f9f2df29e0e3.gif
+  :alt: An example run of dwas
+
 
 Getting Started
 ---------------
