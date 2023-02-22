@@ -62,7 +62,7 @@ Once the release is on the main branch, the release can be made:
    ``git checkout main && git pull && git tag -s v<version>``
 #. Push the commit: ``git push <upstream> v<version>``
 #. Build and publish the pypi wheels:
-   ``TWINE_USERNAME=__token__ TWINE_PASSWORD=<token> dwas --clean twine:publish``
+   ``TWINE_USERNAME=__token__ TWINE_PASSWORD=<token> dwas --clean twine:upload``
 
    Note that the release needs to be signed.
 
