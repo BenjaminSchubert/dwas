@@ -234,6 +234,12 @@ class Config:
     def _prepare_and_clean_log_path(self) -> None:
         self.log_path.mkdir(parents=True, exist_ok=True)
 
+        try:
+            self.log_path.relative_to(self.cache_path)
+        except ValueError:
+            LOGGER.debug("Not cleaning up log directory, it's not owned by us")
+            return
+
         for file in self.log_path.glob("*"):
             if file.is_dir():
                 shutil.rmtree(file)
