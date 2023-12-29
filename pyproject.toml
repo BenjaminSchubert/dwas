@@ -70,6 +70,7 @@ recursive = true
 make-summary-multi-line = true
 pre-summary-newline = true
 wrap-summaries = 89
+wrap-descriptions = 72
 
 ##
 # Isort

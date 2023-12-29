@@ -31,7 +31,10 @@ dwas.register_managed_step(
     description="Show which imports are unnecessary",
 )
 dwas.register_managed_step(dwas.predefined.isort(files=PYTHON_FILES))
-dwas.register_managed_step(dwas.predefined.docformatter(files=PYTHON_FILES))
+dwas.register_managed_step(
+    dwas.predefined.docformatter(files=PYTHON_FILES),
+    dependencies=["docformatter[tomli]<1.7.1"],
+)
 dwas.register_managed_step(dwas.predefined.black())
 dwas.register_step_group(
     "format-check", ["black", "docformatter", "isort", "unimport"]
@@ -61,6 +64,7 @@ dwas.register_managed_step(
     ),
     name="docformatter:fix",
     run_by_default=False,
+    dependencies=["docformatter[tomli]<1.7.1"],
     requires=["isort:fix"],
 )
 dwas.register_managed_step(

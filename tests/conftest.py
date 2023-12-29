@@ -62,12 +62,13 @@ def ensure_defaults_are_untouched(tmp_path_factory):
     """
     Ensure that the defaults values for predefined steps are not mutated.
 
-    The predefined steps set some defaults that might be mutable, e.g. lists.
-    We need to take special care to ensure we do not modify them at runtime so
-    that the steps are reusable.
+    The predefined steps set some defaults that might be mutable, e.g.
+    lists. We need to take special care to ensure we do not modify them
+    at runtime so that the steps are reusable.
 
-    This loads all the steps before anything runs, and deep copies the defaults.
-    It then validates that they did not change at the end of the run.
+    This loads all the steps before anything runs, and deep copies the
+    defaults. It then validates that they did not change at the end of
+    the run.
     """
     steps = {}
 
