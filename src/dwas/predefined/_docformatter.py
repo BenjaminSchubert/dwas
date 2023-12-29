@@ -1,8 +1,12 @@
+import logging
+import subprocess
 from typing import List, Optional, Sequence
 
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
 from .. import Step, StepRunner, build_parameters, set_defaults
+
+LOGGER = logging.getLogger(__name__)
 
 
 @set_defaults(
@@ -10,6 +14,7 @@ from .. import Step, StepRunner, build_parameters, set_defaults
         "dependencies": ["docformatter"],
         "additional_arguments": ["--recursive", "--check", "--diff"],
         "files": ["."],
+        "expected_status_codes": [0],
     }
 )
 class DocFormatter(Step):
@@ -20,15 +25,25 @@ class DocFormatter(Step):
         self,
         step: StepRunner,
         files: Sequence[str],
-        additional_arguments: List[str],
+        additional_arguments: Sequence[str],
+        expected_status_codes: Sequence[int],
     ) -> None:
-        step.run(["docformatter", *additional_arguments, *files])
+        try:
+            step.run(["docformatter", *additional_arguments, *files])
+        except subprocess.CalledProcessError as exc:
+            if exc.returncode not in expected_status_codes:
+                raise
+            LOGGER.debug(
+                "Ignoring error code %d from subprocess, as it is expected",
+                exc.returncode,
+            )
 
 
 def docformatter(
     *,
     files: Optional[Sequence[str]] = None,
     additional_arguments: Optional[List[str]] = None,
+    expected_status_codes: Optional[List[int]] = None,
 ) -> Step:
     """
     Run `docformatter`_ against your python source code.
@@ -41,6 +56,11 @@ def docformatter(
     :param additional_arguments: Additional arguments to pass to the ``docformatter``
                                  invocation.
                                  Defaults to :python:`["--recursive"]`.
+    :param expected_status_codes: Status codes that are acceptable from ``docformatter``.
+                                  Defaults to :python:`[0]`. When formatting in
+                                  place, you might want to set to :python:`[0, 3]`,
+                                  as ``docformatter`` always returns 3 if a file
+                                  was modified.
     :return: The step so that you can add additional parameters to it if needed.
 
     :Examples:
@@ -66,6 +86,7 @@ def docformatter(
                     #       code by ``:fix``
                     name="docformatter:fix",
                     additional_arguments=["--in-place"],
+                    expected_status_codes=[0, 3],
                     run_by_default=False,
                     files=["src,", "tests", "dwasfile.py", "setup.py"],
                 )
@@ -74,4 +95,5 @@ def docformatter(
     return build_parameters(
         files=files,
         additional_arguments=additional_arguments,
+        expected_status_codes=expected_status_codes,
     )(DocFormatter())

@@ -10,7 +10,10 @@ from dwas.predefined import docformatter
 
 register_managed_step(docformatter())
 register_managed_step(
-    docformatter(additional_arguments=["--recursive", "--in-place"]),
+    docformatter(
+        additional_arguments=["--recursive", "--in-place"],
+        expected_status_codes=[0, 3],
+    ),
     name="docformatter:fix",
     run_by_default=False,
 )
