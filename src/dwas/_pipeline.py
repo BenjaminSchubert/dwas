@@ -221,7 +221,7 @@ class Pipeline:
             def compute_replacement(requirements: List[str]) -> List[str]:
                 replacements = []
                 for requirement in requirements:
-                    if requirement in cast(List[str], steps):
+                    if requirement in steps:
                         replacements.append(requirement)
                     else:
                         if requirement not in except_replacements:
@@ -430,12 +430,10 @@ class Pipeline:
                     future = cast(
                         "futures.Future[None]",
                         executor.submit(
-                            # XXX: mypy gets confused here, but the result is
-                            #      sane
-                            copy_context().run,  # type: ignore[arg-type]
-                            self._run_step,  # type: ignore[arg-type]
-                            step,  # type: ignore[arg-type]
-                            pipe_plexer,  # type: ignore[arg-type]
+                            copy_context().run,
+                            self._run_step,
+                            step,
+                            pipe_plexer,
                         ),
                     )
                     running_futures[future] = step, pipe_plexer

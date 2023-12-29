@@ -14,13 +14,13 @@ fg_colors = bg_colors = {
 }
 
 
-class AnsiMonokaiStyle(monokai.MonokaiStyle):  # type: ignore
+class AnsiMonokaiStyle(monokai.MonokaiStyle):
     styles = dict(monokai.MonokaiStyle.styles)
     styles.update(color_tokens(fg_colors, bg_colors))
     styles[pygments.token.Token.Color.Faint.Cyan] = "#0867AC"
 
 
-class AnsiDefaultStyle(default.DefaultStyle):  # type: ignore
+class AnsiDefaultStyle(default.DefaultStyle):
     styles = dict(default.DefaultStyle.styles)
     styles.update(color_tokens(fg_colors, bg_colors))
     styles[pygments.token.Token.Color.Faint.Cyan] = "#0867AC"
