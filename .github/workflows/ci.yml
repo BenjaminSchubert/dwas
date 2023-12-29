@@ -81,6 +81,7 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     needs: package
+    timeout-minutes: 15
 
     strategy:
       fail-fast: false
@@ -116,7 +117,7 @@ jobs:
           path: ${{ env.PACKAGES_PATH }}
 
       - name: pytest[${{ matrix.python }}]
-        run: dwas --verbose --only pytest[${{ matrix.python }}] -- --numprocesses auto
+        run: dwas --verbose --only pytest[${{ matrix.python }}] -- ${{ !startsWith(matrix.python, 'pypy') && '--numprocesses 2' || '' }}
 
       - name: Move the coverage to another place to avoid conflicts
         if: runner.os != 'Linux'
