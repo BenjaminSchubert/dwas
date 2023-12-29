@@ -37,10 +37,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           cache: pip
@@ -56,10 +56,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           cache: pip
@@ -72,7 +72,7 @@ jobs:
         run: dwas --verbose --only package
 
       - name: Save packaged dist
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist
           path: ${{ env.PACKAGES_PATH }}/*
@@ -99,10 +99,10 @@ jobs:
           python: "3.8"
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
           cache: pip
@@ -112,7 +112,7 @@ jobs:
         run: python -m pip install .
 
       - name: Download packaged dist
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: dist
           path: ${{ env.PACKAGES_PATH }}
@@ -125,7 +125,7 @@ jobs:
         run: mv .dwas/cache/pytest-* .dwas/cache/pytest-${{ matrix.os }}
 
       - name: Save coverage files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-files-pytest-${{ matrix.os }}-${{ matrix.python }}
           path: ${{ env.COVERAGE_FILES_PATH }}
@@ -137,10 +137,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           cache: pip
@@ -152,7 +152,7 @@ jobs:
       # This will download add artifacts that were generated before, which is not ideal
       # as we only need some of them, but it's simpler than having to repeat them one by one
       - name: Download generated coverage files
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: _cache
 
@@ -170,7 +170,7 @@ jobs:
           verbose: true
 
       - name: Save coverage report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage [html]
           path: _artifacts/coverage/html
@@ -182,16 +182,16 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           cache: pip
 
       - name: Download packaged dist
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: dist
           path: ${{ env.PACKAGES_PATH }}
