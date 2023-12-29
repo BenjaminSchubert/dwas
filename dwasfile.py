@@ -57,6 +57,7 @@ dwas.register_managed_step(
     dwas.predefined.docformatter(
         additional_arguments=["--recursive", "--diff", "--in-place"],
         files=PYTHON_FILES,
+        expected_status_codes=[0, 3],
     ),
     name="docformatter:fix",
     run_by_default=False,

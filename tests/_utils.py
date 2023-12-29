@@ -93,7 +93,9 @@ def execute(args: List[str], expected_status: int = 0) -> Result:
         print(out)
         print(err, file=sys.stderr)
 
-    assert exit_code == expected_status
+    assert (
+        exit_code == expected_status
+    ), f"Unexpected return code {exit_code} != {expected_status} for 'dwas {' '.join(args)}'."
     return Result(exc=exception, stdout=out, stderr=err)
 
 
