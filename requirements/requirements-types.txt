@@ -1,3 +1,4 @@
 types-colorama
 types-docutils
 types-Pygments
+types-tabulate

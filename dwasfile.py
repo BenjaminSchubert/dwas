@@ -16,6 +16,7 @@ PYTHON_FILES = [
     "tests/",
     "setup.py",
     "dwasfile.py",
+    ".github/scripts/summary.py",
 ]
 
 ROOT_PATH = Path(__file__).parent
@@ -101,6 +102,7 @@ dwas.register_managed_step(
         DOCS_REQUIREMENTS,
         TEST_REQUIREMENTS,
         "pylint",
+        "tabulate",
     ],
     python=OLDEST_SUPPORTED_PYTHON,
 )
