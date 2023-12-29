@@ -126,7 +126,7 @@ rst_epilog = """
 .. _submit an issue: https://github.com/BenjaminSchubert/dwas/issues/new
 .. _the Black formatter: https://black.readthedocs.io/en/stable/
 .. _the isort formatter: https://pycqa.github.io/isort/
-.. _coverage.py: https://coverage.readthedocs.io/en/stable/
+.. _coverage.py: https://coverage.readthedocs.io/en/latest/
 .. _docformatter: https://github.com/PyCQA/docformatter/
 .. _mypy: https://mypy.readthedocs.io/en/stable/
 .. _pylint: https://pylint.pycqa.org/en/latest/
@@ -136,7 +136,7 @@ rst_epilog = """
 .. _the Unimport formatter: https://unimport.hakancelik.dev/
 .. _the manylinux project: https://github.com/pypa/manylinux
 .. _github actions: https://github.com/features/actions
-.. _pipx: https://pypa.github.io/pipx/
+.. _pipx: https://pipx.pypa.io/stable/
 .. _PyPI: https://pypi.org/project/dwas/
 .. _tox: https://tox.wiki/
 .. _nox: https://nox.thea.codes/
