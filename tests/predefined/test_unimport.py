@@ -1,7 +1,7 @@
-from .mixins import BaseFormatterTest
+from .mixins import BaseLinterWithAutofixTest
 
 
-class TestUnimport(BaseFormatterTest):
+class TestUnimport(BaseLinterWithAutofixTest):
     dwasfile = """\
 from dwas import register_managed_step
 from dwas.predefined import unimport

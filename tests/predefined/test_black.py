@@ -1,7 +1,7 @@
-from .mixins import BaseFormatterTest
+from .mixins import BaseLinterWithAutofixTest
 
 
-class TestBlack(BaseFormatterTest):
+class TestBlack(BaseLinterWithAutofixTest):
     dwasfile = """\
 from dwas import register_managed_step
 from dwas.predefined import black

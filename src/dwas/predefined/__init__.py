@@ -22,6 +22,7 @@ from ._mypy import mypy
 from ._package import package
 from ._pylint import pylint
 from ._pytest import pytest
+from ._ruff import ruff
 from ._sphinx import sphinx
 from ._twine import twine
 from ._unimport import unimport
@@ -35,6 +36,7 @@ __all__ = [
     "package",
     "pylint",
     "pytest",
+    "ruff",
     "sphinx",
     "twine",
     "unimport",

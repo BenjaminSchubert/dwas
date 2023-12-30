@@ -14,7 +14,7 @@ from dwas._pipeline import Pipeline, set_pipeline
 # pylint: disable=wrong-import-position
 pytest.register_assert_rewrite("tests.predefined.mixins", "tests._utils")
 
-from ._utils import isolated_context
+from ._utils import isolated_context  # noqa: E402
 
 
 def pytest_collection_modifyitems(items):

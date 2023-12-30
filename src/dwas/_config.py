@@ -195,6 +195,7 @@ class Config:
         if self.colors:
             self.environ["PY_COLORS"] = "1"
             self.environ["FORCE_COLOR"] = "1"
+            self.environ["CLICOLOR_FORCE"] = "1"
         else:
             self.environ["PY_COLORS"] = "0"
             self.environ["NO_COLOR"] = "0"

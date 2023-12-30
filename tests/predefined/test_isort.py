@@ -1,7 +1,7 @@
-from .mixins import BaseFormatterTest
+from .mixins import BaseLinterWithAutofixTest
 
 
-class TestIsort(BaseFormatterTest):
+class TestIsort(BaseLinterWithAutofixTest):
     dwasfile = """\
 from dwas import register_managed_step
 from dwas.predefined import isort

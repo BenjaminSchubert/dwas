@@ -74,10 +74,27 @@ dwas.register_managed_step(
     requires=["isort:fix", "docformatter:fix"],
     run_by_default=False,
 )
+dwas.register_managed_step(
+    dwas.predefined.ruff(
+        files=PYTHON_FILES,
+        additional_arguments=["check", "--fix", "--show-fixes", "--fix-only"],
+    ),
+    dependencies=["ruff"],
+    python=OLDEST_SUPPORTED_PYTHON,
+    name="ruff:fix",
+    requires=["black:fix"],
+    run_by_default=False,
+)
 dwas.register_step_group(
     name="fix",
     description="Fix all auto-fixable issues on the project",
-    requires=["unimport:fix", "isort:fix", "docformatter:fix", "black:fix"],
+    requires=[
+        "unimport:fix",
+        "isort:fix",
+        "docformatter:fix",
+        "black:fix",
+        "ruff:fix",
+    ],
     run_by_default=False,
 )
 
@@ -106,7 +123,12 @@ dwas.register_managed_step(
     ],
     python=OLDEST_SUPPORTED_PYTHON,
 )
-dwas.register_step_group("lint", ["mypy", "pylint"])
+dwas.register_managed_step(
+    dwas.predefined.ruff(files=PYTHON_FILES),
+    dependencies=["ruff"],
+    python=OLDEST_SUPPORTED_PYTHON,
+)
+dwas.register_step_group("lint", ["mypy", "pylint", "ruff"])
 
 ##
 # Packaging

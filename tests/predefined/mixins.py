@@ -96,7 +96,7 @@ class BaseLinterTest(ABC):
             assert not COLOR_ESCAPE_CODE.search(result.stdout)
 
 
-class BaseFormatterTest(BaseLinterTest):
+class BaseLinterWithAutofixTest(BaseLinterTest):
     @property
     @abstractmethod
     def autofix_step(self) -> str:
