@@ -1,7 +1,7 @@
 import argparse
 import logging
 from dataclasses import InitVar, dataclass, field
-from typing import Any, List, cast
+from typing import Any, List, Literal, Optional
 from xml.etree import ElementTree
 
 from tabulate import tabulate
@@ -14,6 +14,37 @@ class TestCase:
     classname: str
     name: str
     time: float
+    state: Literal["success", "failure", "error", "skipped"]
+    summary: Optional[str]
+
+    @classmethod
+    def from_junit(cls, tree: ElementTree.Element) -> "TestCase":
+        children = tree.getchildren()
+        assert len(children) <= 1
+
+        state: Literal["success", "failure", "error", "skipped"] = "success"
+        summary = None
+
+        if children:
+            child = children[0]
+            if child.tag == "error":
+                state = "error"
+            elif child.tag == "failure":
+                state = "failure"
+            elif child.tag == "skipped":
+                state = "skipped"
+            else:
+                assert False, f"unexpected tag: {child.tag}"
+
+            summary = child.attrib["message"].replace("\n", "<br />")
+
+        return TestCase(
+            tree.attrib["classname"],
+            tree.attrib["name"],
+            float(tree.attrib["time"]),
+            state=state,
+            summary=summary,
+        )
 
     def __lt__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
@@ -45,12 +76,7 @@ class TestSuite:
         attrs = tree.attrib
 
         tests = [
-            TestCase(
-                test.attrib["classname"],
-                test.attrib["name"],
-                float(test.attrib["time"]),
-            )
-            for test in tree.findall("testcase")
+            TestCase.from_junit(test) for test in tree.findall("testcase")
         ]
 
         return cls(
@@ -68,6 +94,33 @@ class TestSuite:
             return NotImplemented
 
         return (self.time, self.name) < (other.time, other.name)
+
+
+def get_failures_and_errors(testsuites: List[TestSuite]) -> str:
+    reports = []
+
+    for testsuite in testsuites:
+        failing_tests = [
+            t
+            for t in testsuite.tests
+            if t.state in ["error", "failure", "skipped"]
+        ]
+
+        if failing_tests:
+            report = tabulate(
+                [
+                    (t.classname, t.name, t.state, t.summary)
+                    for t in failing_tests
+                ],
+                headers=("Class name", "Name", "State", "Summary"),
+                tablefmt="github",
+            )
+            reports.append(f"### {testsuite.name}\n\n{report}")
+
+    if not reports:
+        return ""
+
+    return "## Error summary\n\n{}".format("\n\n".join(reports))
 
 
 def main() -> None:
@@ -105,10 +158,15 @@ def main() -> None:
 
     slowest_suite = max(testsuites)
     slowest_tests = tabulate(
-        cast(Any, sorted(slowest_suite.tests, reverse=True)[:10]),
-        headers="keys",
+        [
+            (t.classname, t.name, t.time)
+            for t in sorted(slowest_suite.tests, reverse=True)[:10]
+        ],
+        headers=("Class name", "Name", "time"),
         tablefmt="github",
     )
+
+    errors = get_failures_and_errors(testsuites)
 
     print(
         f"""\
@@ -119,6 +177,8 @@ def main() -> None:
 ## Slowest tests for {slowest_suite.name}
 
 {slowest_tests}
+
+{errors}
 """
     )
 
