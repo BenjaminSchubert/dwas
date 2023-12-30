@@ -125,7 +125,7 @@ class Frontend:
         previous_summary_last_line_length = 0
         previous_line_length = None
 
-        def refresh(skip_summary: bool = False) -> None:
+        def refresh(*, skip_summary: bool = False) -> None:
             nonlocal previous_summary_height
             nonlocal previous_summary_last_line_length
             nonlocal previous_line_length
@@ -183,4 +183,4 @@ class Frontend:
             self._stop.wait(0.5)
             refresh()
 
-        refresh(True)
+        refresh(skip_summary=True)

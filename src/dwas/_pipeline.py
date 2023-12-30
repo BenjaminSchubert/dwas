@@ -9,17 +9,21 @@ from contextlib import ExitStack
 from contextvars import ContextVar, copy_context
 from datetime import timedelta
 from subprocess import CalledProcessError
-from types import FrameType
-from typing import Callable, Dict, Generator, List, Optional, Set, Tuple, cast
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    cast,
+)
 
 from colorama import Fore, Style
 
-from dwas._steps.handlers import BaseStepHandler, StepGroupHandler, StepHandler
-from dwas._steps.parametrize import extract_parameters
-from dwas._steps.steps import Step
-
 from . import _io
-from ._config import Config
 from ._exceptions import (
     DuplicateStepException,
     FailedPipelineException,
@@ -28,8 +32,17 @@ from ._exceptions import (
 )
 from ._frontend import Frontend, StepSummary
 from ._scheduler import JobResult, Resolver, Scheduler
+from ._steps.handlers import BaseStepHandler, StepGroupHandler, StepHandler
+from ._steps.parametrize import extract_parameters
 from ._subproc import ProcessManager
 from ._timing import format_timedelta, get_timedelta_since
+
+if TYPE_CHECKING:
+    from types import FrameType
+
+    from ._config import Config
+    from ._steps.steps import Step
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -155,10 +168,11 @@ class Pipeline:
                 name, self, all_created, all_run_by_default, description
             )
 
-    def _build_graph(
+    def _build_graph(  # noqa: C901
         self,
         steps: Optional[List[str]] = None,
         except_steps: Optional[List[str]] = None,
+        *,
         only_selected_steps: bool = False,
     ) -> Dict[str, List[str]]:
         # we should refactor at some point
@@ -180,10 +194,9 @@ class Pipeline:
 
             return expanded
 
-        if except_steps is None:
-            except_steps_set = set()
-        else:
-            except_steps_set = expand(except_steps)
+        except_steps_set = (
+            set() if except_steps is None else expand(except_steps)
+        )
 
         if steps is None:
             steps = [
@@ -233,11 +246,12 @@ class Pipeline:
                 return replacements
 
             for step in except_steps_set:
-                if step not in except_replacements:
-                    # The step might not be in the graph, if it is not depended
-                    # upon by anything else
-                    if deps := graph.get(step):
-                        except_replacements[step] = compute_replacement(deps)
+                # The step might not be in the graph, if it is not depended
+                # upon by anything else
+                if step not in except_replacements and (
+                    deps := graph.get(step)
+                ):
+                    except_replacements[step] = compute_replacement(deps)
 
             graph = {
                 key: [
@@ -269,7 +283,7 @@ class Pipeline:
 
                 return replacements
 
-            for step in graph.keys():
+            for step in graph:
                 if step not in only_replacements:
                     only_replacements[step] = compute_only_replacement(
                         step, graph[step]
@@ -287,13 +301,16 @@ class Pipeline:
         self,
         steps: Optional[List[str]],
         except_steps: Optional[List[str]],
+        *,
         only_selected_steps: bool,
         clean: bool,
     ) -> None:
         # pylint: disable=too-many-locals
         start_time = time.monotonic()
 
-        graph = self._build_graph(steps, except_steps, only_selected_steps)
+        graph = self._build_graph(
+            steps, except_steps, only_selected_steps=only_selected_steps
+        )
         resolver = Resolver(graph)
         scheduler = resolver.get_scheduler()
         steps_in_order = resolver.order()
@@ -343,6 +360,7 @@ class Pipeline:
         self,
         steps: Optional[List[str]] = None,
         except_steps: Optional[List[str]] = None,
+        *,
         only_selected_steps: bool = False,
         show_dependencies: bool = False,
     ) -> None:
@@ -351,7 +369,9 @@ class Pipeline:
             self._build_graph(list(self.steps.keys()))
         ).order()
         selected_steps = Resolver(
-            self._build_graph(steps, except_steps, only_selected_steps)
+            self._build_graph(
+                steps, except_steps, only_selected_steps=only_selected_steps
+            )
         ).order()
 
         step_infos = []
@@ -385,9 +405,9 @@ class Pipeline:
                 indicator = "-"
 
             if self.config.verbosity > 0 and description:
-                description = f"\t[{Fore.BLUE}{Style.NORMAL}{description}{Style.RESET_ALL}{style}]"
+                desc = f"\t[{Fore.BLUE}{Style.NORMAL}{description}{Style.RESET_ALL}{style}]"
             else:
-                description = ""
+                desc = ""
 
             LOGGER.info(
                 "\t%s%s %-*s%-*s%s",
@@ -397,7 +417,7 @@ class Pipeline:
                 step,
                 max_dependencies_length,
                 dependencies,
-                description,
+                desc,
             )
 
     def _execute(
@@ -461,7 +481,7 @@ class Pipeline:
     ) -> None:
         try:
             result.result()
-        except Exception as exc:  # pylint: disable=broad-exception-caught
+        except Exception as exc:  # noqa:BLE001
             if (
                 isinstance(exc, UnavailableInterpreterException)
                 and self.config.skip_missing_interpreters
@@ -485,7 +505,7 @@ class Pipeline:
                     )
                     else None
                 )
-                LOGGER.error(
+                LOGGER.error(  # noqa: TRY400, we want more control than .exception
                     "Step %s failed: %s",
                     name,
                     self._format_exception(exc),
@@ -630,7 +650,7 @@ class Pipeline:
         total_slowest_time = timedelta()
 
         # Use the graph here, to display them in topological order
-        for step in graph.keys():
+        for step in graph:
             if step not in total_time_per_step:
                 continue
 
@@ -678,7 +698,7 @@ class Pipeline:
 
             return total_time_per_step[step]
 
-        for step in results.keys():
+        for step in results:
             compute_chain(step)
 
         return total_time_per_step

@@ -3,23 +3,28 @@ from __future__ import annotations
 import logging
 import os
 import shutil
-import subprocess
 import sys
 from contextlib import suppress
-from pathlib import Path
-from typing import Dict, List, Optional, cast
+from typing import TYPE_CHECKING, Dict, List, Optional, cast
 
 from virtualenv import session_via_cli
-from virtualenv.run.session import Session
 
 from . import _io
-from ._config import Config
 from ._exceptions import (
     CommandNotFoundException,
     CommandNotInEnvironment,
     UnavailableInterpreterException,
 )
-from ._subproc import ProcessManager
+
+if TYPE_CHECKING:
+    import subprocess
+    from pathlib import Path
+
+    from virtualenv.run.session import Session
+
+    from ._config import Config
+    from ._subproc import ProcessManager
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -122,11 +127,14 @@ class VenvRunner:
             str | bytes | os.PathLike[str] | os.PathLike[bytes]
         ] = None,
         env: Optional[Dict[str, str]] = None,
+        *,
         external_command: bool = False,
         silent_on_success: bool = False,
     ) -> subprocess.CompletedProcess[None]:
         env = self._merge_env(self._config, env)
-        self._validate_command(command[0], external_command, env)
+        self._validate_command(
+            command[0], env, external_command=external_command
+        )
 
         return self._proc_manager.run(
             command,
@@ -151,7 +159,7 @@ class VenvRunner:
         return env
 
     def _validate_command(
-        self, command: str, external_command: bool, env: Dict[str, str]
+        self, command: str, env: Dict[str, str], *, external_command: bool
     ) -> None:
         cmd = shutil.which(command, path=env["PATH"])
 

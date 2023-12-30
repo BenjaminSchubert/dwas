@@ -27,7 +27,7 @@ project = _project_metadata["Name"]
 release = _project_metadata["Version"]
 author = _project_metadata["Author-email"]
 # pylint: disable=redefined-builtin
-copyright = "2022, Benjamin Schubert"
+copyright = "2022, Benjamin Schubert"  # noqa: A001
 
 html_context = {
     "github_user": "BenjaminSchubert",

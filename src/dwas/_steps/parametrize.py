@@ -68,14 +68,15 @@ class Parameter:
     # pylint: disable=protected-access
     @classmethod
     def merge(cls, param1: "Parameter", param2: "Parameter") -> "Parameter":
+        # ruff: noqa: SLF001
         if param1.id == "":
             id_ = param2.id
         elif param2.id == "":
             id_ = param1.id
         else:
-            id_ = ",".join([param1.id, param2.id])
+            id_ = f"{param1.id},{param2.id}"
 
-        for key in param2._parameters.keys():
+        for key in param2._parameters:
             if key in param1._parameters:
                 raise ValueError(key)
 
@@ -84,7 +85,7 @@ class Parameter:
 
         return cls(id_, joined_parameters)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
         return self.id == other.id and self._parameters == other._parameters
@@ -223,8 +224,8 @@ def parametrize(
             ids = [None] * len(args_values)
 
         current_parameters = [
-            Parameter(id, dict(zip(arg_names, args_values)))
-            for id, args_values in zip(ids, args_values)
+            Parameter(id_, dict(zip(arg_names, args_values)))
+            for id_, args_values in zip(ids, args_values)
         ]
 
         old_parameters = getattr(func, _PARAMETERS, [])

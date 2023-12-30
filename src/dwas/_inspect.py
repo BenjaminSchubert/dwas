@@ -15,6 +15,6 @@ def get_location(obj: Any) -> str:
 def get_name(func: Callable[..., Any]) -> str:
     if inspect.isfunction(func):
         return func.__name__
-    actual_func = getattr(func, "__call__")
+    actual_func = func.__call__  # type: ignore[operator]
     func_name = actual_func.__name__
     return f"{func.__class__.__name__}.{func_name}"

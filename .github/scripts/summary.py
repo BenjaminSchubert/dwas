@@ -1,3 +1,4 @@
+# ruff: noqa:D100,D101,D102,D103,D105
 import argparse
 import logging
 from dataclasses import InitVar, dataclass, field
@@ -34,7 +35,7 @@ class TestCase:
             elif child.tag == "skipped":
                 state = "skipped"
             else:
-                assert False, f"unexpected tag: {child.tag}"
+                raise AssertionError(f"unexpected tag: {child.tag}")
 
             summary = child.attrib["message"].replace("\n", "<br />")
 
@@ -136,7 +137,9 @@ def main() -> None:
     testsuites = [
         TestSuite.from_junit(testsuite)
         for file in files
-        for testsuite in ElementTree.parse(file).findall("testsuite")
+        for testsuite in ElementTree.parse(file).findall(  # noqa: S314
+            "testsuite"
+        )
     ]
 
     summary = tabulate(
@@ -168,7 +171,7 @@ def main() -> None:
 
     errors = get_failures_and_errors(testsuites)
 
-    print(
+    print(  # noqa: T201
         f"""\
 ## Test suites
 

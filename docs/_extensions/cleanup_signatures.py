@@ -4,6 +4,7 @@ from sphinx.application import Sphinx
 from sphinx.ext.autodoc import Options
 
 
+# ruff: noqa: ARG001
 def cleanup_signatures(  # pylint: disable=unused-argument
     app: Sphinx,
     what: str,

@@ -25,7 +25,7 @@ def pytest_collection_modifyitems(items):
     for item in items:
         try:
             item.path.relative_to(predefined_tests_path)
-        except ValueError:
+        except ValueError:  # noqa:PERF203
             continue
         else:
             item.add_marker(pytest.mark.predefined)

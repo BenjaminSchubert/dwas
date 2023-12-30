@@ -206,7 +206,7 @@ def register_managed_step(
     def install(step: StepRunner, dependencies: str) -> None:
         step.install(*dependencies)
 
-    setattr(func, "setup", install)
+    func.setup = install  # type: ignore[attr-defined]
     if dependencies is not None:
         func = parametrize("dependencies", [dependencies])(func)
 

@@ -1,3 +1,5 @@
+# This tests some internals
+# ruff: noqa:SLF001
 from datetime import timedelta
 
 import pytest
@@ -199,7 +201,12 @@ def test_graph_computation_is_correct(
     pipeline.register_step("step-1-3-1", None, func())
 
     # pylint: disable=protected-access
-    assert pipeline._build_graph(steps, except_steps, only_selected) == result
+    assert (
+        pipeline._build_graph(
+            steps, except_steps, only_selected_steps=only_selected
+        )
+        == result
+    )
 
 
 def test_only_keeps_dependency_information(pipeline):
@@ -209,10 +216,9 @@ def test_only_keeps_dependency_information(pipeline):
     pipeline.register_step("4", None, func())
 
     # pylint: disable=protected-access
-    assert pipeline._build_graph(["1", "4"], None, True) == {
-        "1": ["4"],
-        "4": [],
-    }
+    assert pipeline._build_graph(
+        ["1", "4"], None, only_selected_steps=True
+    ) == {"1": ["4"], "4": []}
 
 
 def test_exclude_keeps_dependency_information(pipeline):
@@ -222,13 +228,12 @@ def test_exclude_keeps_dependency_information(pipeline):
     pipeline.register_step("4", None, func())
 
     # pylint: disable=protected-access
-    assert pipeline._build_graph(None, ["2", "3"], False) == {
-        "1": ["4"],
-        "4": [],
-    }
+    assert pipeline._build_graph(
+        None, ["2", "3"], only_selected_steps=False
+    ) == {"1": ["4"], "4": []}
 
 
-@pytest.mark.parametrize("step_type", ["normal", "group"])
+@pytest.mark.parametrize("step_type", ("normal", "group"))
 def test_cannot_register_two_step_with_same_name(pipeline, step_type):
     pipeline.register_step("step", None, func())
     if step_type == "group":

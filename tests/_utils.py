@@ -51,8 +51,7 @@ def isolated_logging() -> Iterator[None]:
 def using_project(project: str) -> Callable[[_T], _T]:
     def wrapper(func):
         func = pytest.mark.project(TESTS_PATH / project)(func)
-        func = pytest.mark.usefixtures("project")(func)
-        return func
+        return pytest.mark.usefixtures("project")(func)
 
     return wrapper
 
@@ -67,7 +66,7 @@ class Result:
 @isolated_context
 def execute(args: List[str], expected_status: int = 0) -> Result:
     """
-    Runs dwas in an isolated context and returns the result from the run.
+    Run dwas in an isolated context and returns the result from the run.
 
     In most cases, you'll want to use the below `cli` instead, which
     will take care of building the cli correctly for you.
