@@ -14,7 +14,6 @@ PYTHON_FILES = [
     "docs/_extensions",
     "src/",
     "tests/",
-    "setup.py",
     "dwasfile.py",
     ".github/scripts/summary.py",
 ]
