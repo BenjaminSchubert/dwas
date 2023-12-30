@@ -1,3 +1,5 @@
+# This tests some internals
+# ruff: noqa:SLF001
 from typing import Any, Dict, Optional
 
 import pytest
@@ -132,7 +134,7 @@ def test_handles_step_with_no_name(pipeline):
 
 
 @pytest.mark.parametrize(
-    "from_parameters", [True, False], ids=["from_parameters", "direct"]
+    "from_parameters", (True, False), ids=["from_parameters", "direct"]
 )
 @isolated_context
 def test_can_register_managed_step(pipeline, from_parameters):

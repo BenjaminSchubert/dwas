@@ -124,6 +124,8 @@ disable = [
     "missing-class-docstring",
     "missing-function-docstring",
     "missing-module-docstring",
+    # Taken care of by ruff
+    "broad-exception-caught",
 ]
 
 [tool.pylint.variables]
@@ -133,7 +135,77 @@ disable = [
 # Ruff
 [tool.ruff]
 target-version = "py38"
+select = ["ALL"]
+ignore = [
+    ##
+    # Typing
+    "ANN101",  # Don't annotate 'self'
+    "ANN102",  # Don't annotate 'cls'
+    "ANN401",  # Allow typing with ANY
+    ##
+    # Format
+    "COM812",  # Don't put trailing commas everywhere
+    "E501",  # line length is handled by black
+    ##
+    # Docs
+    "D200",
+    "D203",
+    "D212",
+    "D404",
+    ##
+    # Stylistic decisions
+    "PLR0911",  # pylint too many return statements
+    "PLR0912",  # pylint too many branches
+    "PLR0913",  # pylint too many arguments
+    "PLR0915",  # pylint too many statements
+    "N818",  # we name exception as Exception not Error
+    "FIX",  # We want to put fixmes longterm
+    "TD",  # We want to be able to add todos without issu links
+    "INP001",  # Not every .py file is part of a package
+    "PT004",  # Don't add `_` in front of fixtures returning nothing
+    "S101",  # Allow asserts
+    "TID252",  # We want relative imports
+    "PLR2004",  # Disable magic numbers check
+    # Exception handling
+    "EM101",
+    "EM102",
+    "RSE102",
+    "TRY002",
+    "TRY003",
+    # We are not doing cryptographic stuff
+    "S311",
+    # This is buggy and doesnt' say how to validate
+    "S603",
+    # We want to be able tor rely on PATH and not hardcode binaries
+    "S607",
 
+    # FIXME: re-enable future annotations
+    "FA100",
+    # FIXME: re-enable upgrade rules
+    "UP",
+]
+
+flake8-pytest-style.parametrize-values-type = "tuple"
+flake8-pytest-style.parametrize-values-row-type = "tuple"
+flake8-pytest-style.fixture-parentheses = false
+lint.isort.known-first-party = ["dwas"]
+
+[tool.ruff.lint.per-file-ignores]
+"docs/*" = ["D"]
+"tests/*" = [
+    # No need to type annotate tests
+    "ANN",
+    # No need to document tests
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    # too many arguments, acceptable for tests
+    "PLR0913",
+    # Allow prints in tests
+    "T201",
+]
 
 
 ##

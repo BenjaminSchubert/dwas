@@ -61,7 +61,7 @@ class Package(StepWithDependentSetup):
             silent_on_success=current_step.config.verbosity < 2,
         )
 
-    def __call__(self, step: StepRunner, isolate: bool) -> None:
+    def __call__(self, step: StepRunner, *, isolate: bool) -> None:
         with suppress(FileNotFoundError):
             shutil.rmtree(step.cache_path)
 

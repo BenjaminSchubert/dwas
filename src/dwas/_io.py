@@ -24,7 +24,7 @@ class NoOpWriter(io.TextIOWrapper):
     def __init__(self) -> None:
         pass
 
-    def read(self, size: Optional[int] = None) -> str:
+    def read(self, size: Optional[int] = None) -> str:  # noqa: ARG002
         raise io.UnsupportedOperation("Can't read from a noopwriter")
 
     def write(self, data: str) -> int:
@@ -41,7 +41,7 @@ class MemoryPipe(io.TextIOWrapper):
     ) -> None:
         self._writer = writer
 
-    def read(self, size: Optional[int] = None) -> str:
+    def read(self, size: Optional[int] = None) -> str:  # noqa: ARG002
         raise io.UnsupportedOperation("can't read from a memorypipe")
 
     def write(self, data: str) -> int:
@@ -52,7 +52,7 @@ class MemoryPipe(io.TextIOWrapper):
 
 
 class PipePlexer:
-    def __init__(self, write_on_flush: bool = True) -> None:
+    def __init__(self, *, write_on_flush: bool = True) -> None:
         self.stderr = MemoryPipe(self)
         self.stdout = MemoryPipe(self)
 
@@ -63,7 +63,9 @@ class PipePlexer:
         self._buffer.append((stream, data))
         return len(data)
 
-    def flush(self, force_write: bool = False) -> Optional[int]:
+    def flush(
+        self, force_write: bool = False  # noqa:FBT001,FBT002
+    ) -> Optional[int]:
         line = None
 
         if self._write_on_flush or force_write:
@@ -94,7 +96,7 @@ class StreamHandler(io.TextIOWrapper):
         self._var = var
         self._log_var = log_var
 
-    def read(self, size: Optional[int] = None) -> str:
+    def read(self, size: Optional[int] = None) -> str:  # noqa: ARG002
         raise io.UnsupportedOperation("can't read from a memorypipe")
 
     def write(self, data: str) -> int:

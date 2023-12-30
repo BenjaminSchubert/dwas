@@ -30,6 +30,7 @@ class Sphinx(Step):
         builder: str,
         sourcedir: Union[Path, str],
         output: Optional[Union[Path, str]],
+        *,
         warning_as_error: bool,
     ) -> None:
         if step.config.verbosity == -2:

@@ -1,3 +1,4 @@
+# ruff: noqa:D100,D101,D102,D103
 import importlib.util
 import logging
 import os
@@ -27,10 +28,10 @@ LOGGER = logging.getLogger(__name__)
 class _SplitAppendAction(_AppendAction):
     def __call__(
         self,
-        parser: ArgumentParser,
+        parser: ArgumentParser,  # noqa:ARG002
         namespace: Namespace,
         values: Any,
-        option_string: Optional[str] = None,
+        option_string: Optional[str] = None,  # noqa:ARG002
     ) -> None:
         items = getattr(namespace, self.dest, None)
         if items is None:
@@ -48,9 +49,9 @@ class BooleanOptionalAction(Action):
     # This can be replaced once we drop support for python3.8
     def __call__(
         self,
-        parser: ArgumentParser,
+        parser: ArgumentParser,  # noqa:ARG002
         namespace: Namespace,
-        values: Any,
+        values: Any,  # noqa:ARG002
         option_string: Optional[str] = None,
     ) -> None:
         assert option_string is not None
@@ -275,8 +276,9 @@ def _execute_pipeline(
     config: Config,
     pipeline_config: str,
     steps_parameters: List[str],
-    only_selected_step: bool,
     except_steps: Optional[List[str]],
+    *,
+    only_selected_step: bool,
     clean: bool,
     list_only: bool,
     list_dependencies: bool,
@@ -296,11 +298,19 @@ def _execute_pipeline(
 
     if list_only or list_dependencies:
         pipeline.list_all_steps(
-            steps, except_steps, only_selected_step, list_dependencies
+            steps,
+            except_steps,
+            only_selected_steps=only_selected_step,
+            show_dependencies=list_dependencies,
         )
         return
 
-    pipeline.execute(steps, except_steps, only_selected_step, clean=clean)
+    pipeline.execute(
+        steps,
+        except_steps,
+        only_selected_steps=only_selected_step,
+        clean=clean,
+    )
 
 
 @_io.instrument_streams()
@@ -318,13 +328,16 @@ def main(sys_args: Optional[List[str]] = None) -> None:
         verbosity,
         args.colors,
         args.jobs,
-        args.skip_missing_interpreters,
-        args.no_setup,
-        args.setup_only,
-        args.fail_fast,
+        skip_missing_interpreters=args.skip_missing_interpreters,
+        skip_setup=args.no_setup,
+        skip_run=args.setup_only,
+        fail_fast=args.fail_fast,
     )
     setup_logging(
-        logging.INFO - 10 * verbosity, config.colors, _io.STDERR, _io.LOG_FILE
+        logging.INFO - 10 * verbosity,
+        _io.STDERR,
+        _io.LOG_FILE,
+        colors=config.colors,
     )
 
     log_path = config.log_path / "main.log"
@@ -334,18 +347,18 @@ def main(sys_args: Optional[List[str]] = None) -> None:
                 config,
                 args.config,
                 args.steps_parameters,
-                args.only_steps,
                 args.except_steps,
-                args.clean,
-                args.list_only,
-                args.list_dependencies,
+                only_selected_step=args.only_steps,
+                clean=args.clean,
+                list_only=args.list_only,
+                list_dependencies=args.list_dependencies,
             )
         except BaseDwasException as exc:
             if config.verbosity >= 1 and not isinstance(
                 exc, FailedPipelineException
             ):
                 LOGGER.debug(exc, exc_info=exc)
-            LOGGER.error("%s", exc)
+            LOGGER.error("%s", exc)  # noqa: TRY400 we don't want the traceback
             raise SystemExit(exc.exit_code) from exc
         finally:
             LOGGER.info("Logs can be found at %s", log_path)

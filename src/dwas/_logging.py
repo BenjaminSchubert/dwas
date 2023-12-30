@@ -1,6 +1,6 @@
 import logging
 from contextvars import ContextVar
-from types import TracebackType
+from types import MappingProxyType, TracebackType
 from typing import Any, Optional, TextIO, Tuple, Type, Union, cast
 
 from colorama import Back, Fore, Style, init
@@ -9,13 +9,18 @@ from ._io import ANSI_ESCAPE_CODE_RE
 
 
 class ColorFormatter(logging.Formatter):
-    COLOR_MAPPING = {
-        logging.DEBUG: Fore.CYAN,
-        logging.INFO: "",
-        logging.WARN: Fore.YELLOW,
-        logging.ERROR: Fore.RED + Style.BRIGHT,
-        logging.FATAL: Back.RED + Fore.WHITE + Style.BRIGHT,
-    }
+    # We need to follow camel case style
+    # ruff: noqa: N802
+
+    COLOR_MAPPING = MappingProxyType(
+        {
+            logging.DEBUG: Fore.CYAN,
+            logging.INFO: "",
+            logging.WARN: Fore.YELLOW,
+            logging.ERROR: Fore.RED + Style.BRIGHT,
+            logging.FATAL: Back.RED + Fore.WHITE + Style.BRIGHT,
+        }
+    )
 
     def formatMessage(self, record: logging.LogRecord) -> str:
         cast(Any, record).level_color = self.COLOR_MAPPING[record.levelno]
@@ -29,10 +34,7 @@ class ColorFormatter(logging.Formatter):
         ],
     ) -> str:
         output = super().formatException(ei)
-        output = f"{Fore.CYAN}\ndwas > " + "\ndwas > ".join(
-            output.splitlines()
-        )
-        return output
+        return f"{Fore.CYAN}\ndwas > " + "\ndwas > ".join(output.splitlines())
 
 
 class NoColorFormatter(logging.Formatter):
@@ -55,9 +57,10 @@ class ContextStreamHandler(logging.StreamHandler):  # type: ignore[type-arg]
 
 def setup_logging(
     level: int,
-    colors: bool,
     tty_output: ContextVar[TextIO],
     log_file: ContextVar[TextIO],
+    *,
+    colors: bool,
 ) -> None:
     nocolor_formatter = NoColorFormatter(
         fmt="dwas > [%(levelname)s] %(message)s"

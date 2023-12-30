@@ -5,12 +5,10 @@ import itertools
 import logging
 import os
 import shutil
-import subprocess
 from abc import ABC, abstractmethod
 from contextlib import suppress
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from .._config import Config
 from .._dependency_injection import call_with_parameters
 from .._exceptions import BaseDwasException
 from .._runners import VenvRunner
@@ -24,6 +22,9 @@ from .steps import (
 )
 
 if TYPE_CHECKING:
+    import subprocess
+
+    from .._config import Config
     from .._pipeline import Pipeline
 
 
@@ -140,7 +141,9 @@ class StepHandler(BaseStepHandler):
                 [
                     # Pylint check here is wrong, it's still an instance of our class
                     # pylint: disable=protected-access
-                    self._pipeline.get_step(requirement)._get_artifacts(key)
+                    self._pipeline.get_step(  # noqa: SLF001
+                        requirement
+                    )._get_artifacts(key)
                     for requirement in self.requires
                 ]
             )
@@ -184,7 +187,9 @@ class StepHandler(BaseStepHandler):
         for requirement in self.requires:
             # Pylint check here is wrong, it's still an instance of our class
             # pylint: disable=protected-access
-            self._pipeline.get_step(requirement)._execute_dependent_setup(self)
+            self._pipeline.get_step(  # noqa: SLF001
+                requirement
+            )._execute_dependent_setup(self)
 
         call_with_parameters(self._func, self.parameters.copy())
 
@@ -208,7 +213,7 @@ class StepHandler(BaseStepHandler):
                 self._step_runner,
                 # Pylint check here is wrong, it's still an instance of our class
                 # pylint: disable=protected-access
-                current_step._step_runner,
+                current_step._step_runner,  # noqa: SLF001
             )
 
     def _get_artifacts(self, key: str) -> List[Any]:
@@ -276,9 +281,9 @@ class StepGroupHandler(BaseStepHandler):
         for requirement in self.requires:
             # Pylint check here is wrong, it's still an instance of our class
             # pylint: disable=protected-access
-            self._pipeline.get_step(requirement)._execute_dependent_setup(
-                current_step
-            )
+            self._pipeline.get_step(  # noqa: SLF001
+                requirement
+            )._execute_dependent_setup(current_step)
 
     def _get_artifacts(self, key: str) -> List[Any]:
         return list(
@@ -286,7 +291,9 @@ class StepGroupHandler(BaseStepHandler):
                 [
                     # Pylint check here is wrong, it's still an instance of our class
                     # pylint: disable=protected-access
-                    self._pipeline.get_step(requirement)._get_artifacts(key)
+                    self._pipeline.get_step(  # noqa: SLF001
+                        requirement
+                    )._get_artifacts(key)
                     for requirement in self.requires
                 ]
             )

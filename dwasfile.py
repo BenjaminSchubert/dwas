@@ -1,3 +1,6 @@
+"""
+Contains the dwas configuration for this project.
+"""
 from pathlib import Path
 
 import dwas
@@ -226,5 +229,5 @@ dwas.register_step_group(
     "ci",
     ["docs", "format-check", "lint", "coverage", "twine:check"],
     "Run all checks that are run on CI",
-    False,
+    run_by_default=False,
 )

@@ -3,9 +3,7 @@
 
 from __future__ import annotations
 
-import os
-import subprocess
-from pathlib import Path
+from pathlib import Path  # noqa: TCH003  required for Sphinx
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -17,9 +15,11 @@ from typing import (
     runtime_checkable,
 )
 
-from .._config import Config
-
 if TYPE_CHECKING:
+    import os
+    import subprocess
+
+    from .._config import Config
     from .handlers import StepHandler
 
 
@@ -94,7 +94,7 @@ class Step(Protocol):
 
             For passing other arguments, see :py:func:`dwas.parametrize` and
             :py:func:`dwas.set_defaults`.
-        """
+        """  # noqa: D401
 
 
 @runtime_checkable

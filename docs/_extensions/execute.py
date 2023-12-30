@@ -11,7 +11,7 @@ from sphinx.application import Sphinx
 from sphinx.errors import ExtensionError
 
 
-class execute(nodes.Element):  # pylint: disable=invalid-name
+class execute(nodes.Element):  # pylint: disable=invalid-name  # noqa: N801
     pass
 
 
@@ -20,7 +20,10 @@ class ExecuteDirective(rst.Directive):
     final_argument_whitespace = True
     required_arguments = 1
 
-    option_spec = {"returncode": nonnegative_int, "cwd": unchanged}
+    option_spec = {  # noqa: RUF012
+        "returncode": nonnegative_int,
+        "cwd": unchanged,
+    }
 
     def run(self) -> List[nodes.Element]:
         env = self.state.document.settings.env
@@ -40,7 +43,8 @@ class ExecuteDirective(rst.Directive):
 
 
 def run_programs(
-    app: Sphinx, doctree: document  # pylint: disable=unused-argument
+    app: Sphinx,  # pylint: disable=unused-argument  # noqa: ARG001
+    doctree: document,
 ) -> None:
     env = os.environ.copy()
     # Ensure we always have colors set for the output

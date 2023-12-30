@@ -27,7 +27,7 @@ class Pylint(Step):
         if step.config.colors and not [
             p
             for p in additional_arguments
-            if p.startswith("--output-format") or p.startswith("-f")
+            if p.startswith(("--output-format", "-f"))
         ]:
             additional_arguments.append("--output-format=colorized")
 

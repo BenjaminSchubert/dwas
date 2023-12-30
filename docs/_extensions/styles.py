@@ -15,12 +15,12 @@ fg_colors = bg_colors = {
 
 
 class AnsiMonokaiStyle(monokai.MonokaiStyle):
-    styles = dict(monokai.MonokaiStyle.styles)
+    styles = dict(monokai.MonokaiStyle.styles)  # noqa: RUF012
     styles.update(color_tokens(fg_colors, bg_colors))
     styles[pygments.token.Token.Color.Faint.Cyan] = "#0867AC"
 
 
 class AnsiDefaultStyle(default.DefaultStyle):
-    styles = dict(default.DefaultStyle.styles)
+    styles = dict(default.DefaultStyle.styles)  # noqa: RUF012
     styles.update(color_tokens(fg_colors, bg_colors))
     styles[pygments.token.Token.Color.Faint.Cyan] = "#0867AC"

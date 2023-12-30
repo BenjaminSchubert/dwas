@@ -1,6 +1,5 @@
 """
-This module contains predefined steps that are provided in order to help reduce
-duplication.
+This module contains common predefined steps to help reduce duplication.
 
 .. note::
 

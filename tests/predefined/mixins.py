@@ -10,6 +10,12 @@ COLOR_ESCAPE_CODE = re.compile(r"\x1b\[\d+m")
 
 
 class BaseStepTest(ABC):
+    @abstractmethod
+    def expected_output(self) -> str:
+        """
+        Get part of the expected output for the run.
+        """
+
     @pytest.fixture(scope="module")
     def cache_path(self, tmp_path_factory):
         return tmp_path_factory.mktemp("cache")
@@ -20,7 +26,7 @@ class BaseStepTest(ABC):
         assert expected_output in result.stdout
 
     @pytest.mark.parametrize(
-        "enable_colors", [True, False], ids=["colors", "no-colors"]
+        "enable_colors", (True, False), ids=["colors", "no-colors"]
     )
     @pytest.mark.usefixtures("project")
     def test_respects_color_settings(self, cache_path, enable_colors):
@@ -61,7 +67,7 @@ class BaseLinterTest(ABC):
     def cache_path(self, tmp_path_factory):
         return tmp_path_factory.mktemp("cache")
 
-    def _make_project(self, path: Path, valid: bool = True) -> None:
+    def _make_project(self, path: Path, *, valid: bool = True) -> None:
         path.joinpath("dwasfile.py").write_text(self.dwasfile)
 
         token_file = path.joinpath("src/token.py")
@@ -72,14 +78,14 @@ class BaseLinterTest(ABC):
             token_file.write_text(self.invalid_file)
 
     @pytest.mark.parametrize(
-        "valid", [True, False], ids=["valid-project", "invalid-project"]
+        "valid", (True, False), ids=["valid-project", "invalid-project"]
     )
     def test_simple_behavior(self, cache_path, tmp_path, valid):
         self._make_project(tmp_path, valid=valid)
         cli(cache_path=cache_path, expected_status=0 if valid else 1)
 
     @pytest.mark.parametrize(
-        "enable_colors", [True, False], ids=["colors", "no-colors"]
+        "enable_colors", (True, False), ids=["colors", "no-colors"]
     )
     def test_respects_color_settings(
         self, cache_path, tmp_path, enable_colors
