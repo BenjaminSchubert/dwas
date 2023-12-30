@@ -131,6 +131,7 @@ rst_epilog = """
 .. _mypy: https://mypy.readthedocs.io/en/stable/
 .. _pylint: https://pylint.pycqa.org/en/latest/
 .. _pytest: https://docs.pytest.org/en/stable/
+.. _ruff: https://docs.astral.sh/ruff/
 .. _sphinx:  https://www.sphinx-doc.org/
 .. _twine: https://twine.readthedocs.io/en/stable/
 .. _the Unimport formatter: https://unimport.hakancelik.dev/

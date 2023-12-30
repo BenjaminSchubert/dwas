@@ -129,6 +129,12 @@ disable = [
 [tool.pylint.variables]
 "init-import" = true
 
+##
+# Ruff
+[tool.ruff]
+target-version = "py38"
+
+
 
 ##
 # Testing
