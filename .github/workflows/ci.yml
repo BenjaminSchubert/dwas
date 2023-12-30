@@ -141,49 +141,6 @@ jobs:
           path: ${{ env.JUNIT_REPORT_PATH }}/junit-${{ matrix.os }}-${{ matrix.python }}.xml
           retention-days: 7
 
-  coverage:
-    runs-on: ubuntu-latest
-    needs: test
-    if: always()
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          cache: pip
-
-      # FIXME: we should take dwas from pypi once it's published
-      - name: Install dwas
-        run: python -m pip install .
-
-      - name: Download generated coverage files
-        uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-          pattern: coverage-*
-          path: .dwas/cache
-
-      - name: Generate coverage report
-        run: dwas --verbose --only coverage
-
-      - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./_artifacts/coverage/coverage.xml
-          fail_ci_if_error: true
-          verbose: true
-
-      - name: Save coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage [html]
-          path: _artifacts/coverage/html
-          retention-days: 7
-
   report:
     runs-on: ubuntu-latest
     needs: test
@@ -210,6 +167,57 @@ jobs:
 
       - name: Generate summary
         run: python .github/scripts/summary.py reports/*.xml > "${GITHUB_STEP_SUMMARY}"
+
+  coverage:
+    runs-on: ubuntu-latest
+    needs: test
+    if: always()
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          cache: pip
+
+      - name: Install coverage
+        run: python -m pip install coverage[toml]
+
+      - name: Download generated coverage files
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          pattern: coverage-*
+          path: reports/
+
+      - name: Combine coverage files
+        run: coverage combine reports/*/*/coverage
+
+      - name: Generate coverage summary
+        run: coverage report --format=markdown --show-missing | tee "${GITHUB_STEP_SUMMARY}"
+
+      - name: Generate xml coverage
+        run: coverage xml -o _artifacts/coverage.xml
+
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./_artifacts/coverage.xml
+          fail_ci_if_error: true
+          verbose: true
+
+      - name: Generate html coverage
+        run: coverage html --directory _artifacts/coverage/html
+
+      - name: Save coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage [html]
+          path: _artifacts/coverage/html
+          retention-days: 7
 
   twine:
     runs-on: ubuntu-latest
