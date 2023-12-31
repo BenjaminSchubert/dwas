@@ -1,10 +1,14 @@
-from typing import Callable, Dict, List, Optional, Sequence
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Sequence
 
 from .._exceptions import BaseDwasException
 from .._inspect import get_location
 from .._pipeline import get_pipeline
 from .parametrize import build_parameters, parametrize
-from .steps import Step, StepRunner
+
+if TYPE_CHECKING:
+    from .steps import Step, StepRunner
 
 
 def register_step(

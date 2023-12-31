@@ -179,8 +179,6 @@ ignore = [
     # We want to be able tor rely on PATH and not hardcode binaries
     "S607",
 
-    # FIXME: re-enable future annotations
-    "FA100",
     # FIXME: re-enable upgrade rules
     "UP",
 ]

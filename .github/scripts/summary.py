@@ -1,4 +1,6 @@
 # ruff: noqa:D100,D101,D102,D103,D105
+from __future__ import annotations
+
 import argparse
 import logging
 from dataclasses import InitVar, dataclass, field

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import List, Optional, Sequence
 
 # XXX: All imports here should be done from the top level. If we need it,

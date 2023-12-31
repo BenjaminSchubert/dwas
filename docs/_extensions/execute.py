@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 import os
 import shlex
 import subprocess
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from docutils import nodes
 from docutils.parsers import rst
 from docutils.parsers.rst.directives import nonnegative_int, unchanged
-from sphinx.addnodes import document
-from sphinx.application import Sphinx
 from sphinx.errors import ExtensionError
+
+if TYPE_CHECKING:
+    from sphinx.addnodes import document
+    from sphinx.application import Sphinx
 
 
 class execute(nodes.Element):  # pylint: disable=invalid-name  # noqa: N801

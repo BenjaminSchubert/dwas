@@ -1,11 +1,24 @@
+from __future__ import annotations
+
 import logging
-from contextvars import ContextVar
 from types import MappingProxyType, TracebackType
-from typing import Any, Optional, TextIO, Tuple, Type, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Optional,
+    TextIO,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 from colorama import Back, Fore, Style, init
 
 from ._io import ANSI_ESCAPE_CODE_RE
+
+if TYPE_CHECKING:
+    from contextvars import ContextVar
 
 
 class ColorFormatter(logging.Formatter):
