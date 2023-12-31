@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 import logging
 import re
@@ -5,14 +7,25 @@ import sys
 from contextlib import contextmanager
 from contextvars import Context
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Callable, Iterator, List, Optional, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Iterator,
+    List,
+    Optional,
+    TypeVar,
+    Union,
+)
 
 import pytest
 from _pytest.capture import FDCapture, MultiCapture
 
 from dwas.__main__ import main
 from tests import TESTS_PATH
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 _T = TypeVar("_T")
 ANSI_COLOR_CODES_RE = re.compile(r"\x1B\[\dm")

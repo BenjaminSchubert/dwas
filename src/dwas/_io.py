@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import io
 import re
 import sys
@@ -10,8 +12,18 @@ from contextlib import (
     suppress,
 )
 from contextvars import ContextVar
-from pathlib import Path
-from typing import Deque, Generator, Iterator, Optional, TextIO, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Deque,
+    Generator,
+    Iterator,
+    Optional,
+    TextIO,
+    Tuple,
+)
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 STDOUT = ContextVar[TextIO]("STDOUT")
 STDERR = ContextVar[TextIO]("STDERR")

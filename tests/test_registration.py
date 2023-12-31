@@ -1,5 +1,7 @@
 # This tests some internals
 # ruff: noqa:SLF001
+from __future__ import annotations
+
 from typing import Any, Dict, Optional
 
 import pytest

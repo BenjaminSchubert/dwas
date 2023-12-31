@@ -1,4 +1,6 @@
 # ruff: noqa:D100,D101,D102,D103
+from __future__ import annotations
+
 import importlib.util
 import logging
 import os
@@ -14,13 +16,15 @@ from argparse import (
 )
 from contextvars import copy_context
 from importlib.metadata import version
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from . import _io, _pipeline
 from ._config import Config
 from ._exceptions import BaseDwasException, FailedPipelineException
 from ._logging import setup_logging
-from ._steps.handlers import BaseStepHandler
+
+if TYPE_CHECKING:
+    from ._steps.handlers import BaseStepHandler
 
 LOGGER = logging.getLogger(__name__)
 

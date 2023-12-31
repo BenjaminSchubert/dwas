@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import shutil
 from contextlib import suppress
-from pathlib import Path
+from pathlib import Path  # noqa: TCH003 required for sphinx documentation
 from typing import Optional, Union
 
 from .. import Step, StepRunner, build_parameters, set_defaults

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import shutil
 import sys
 import time
@@ -5,13 +7,15 @@ from contextlib import contextmanager
 from contextvars import copy_context
 from datetime import timedelta
 from threading import Event, Thread
-from typing import Iterator, List
+from typing import TYPE_CHECKING, Iterator, List
 
 from colorama import Cursor, Fore, Style, ansi
 
 from . import _io
-from ._scheduler import Scheduler
 from ._timing import format_timedelta
+
+if TYPE_CHECKING:
+    from ._scheduler import Scheduler
 
 ANSI_SHOW_CURSOR = f"{ansi.CSI}?25h"
 ANSI_HIDE_CURSOR = f"{ansi.CSI}?25l"
