@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import shlex
 import subprocess
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 from docutils import nodes
 from docutils.parsers import rst
@@ -29,7 +29,7 @@ class ExecuteDirective(rst.Directive):
         "cwd": unchanged,
     }
 
-    def run(self) -> List[nodes.Element]:
+    def run(self) -> list[nodes.Element]:
         env = self.state.document.settings.env
 
         node = execute()
@@ -81,7 +81,7 @@ def run_programs(
         node.replace_self(new_node)
 
 
-def setup(app: Sphinx) -> Dict[str, Any]:
+def setup(app: Sphinx) -> dict[str, Any]:
     app.add_directive("command-output", ExecuteDirective)
     app.connect("doctree-read", run_programs)
     return {"parallel_read_safe": True}

@@ -16,7 +16,7 @@ from argparse import (
 )
 from contextvars import copy_context
 from importlib.metadata import version
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from . import _io, _pipeline
 from ._config import Config
@@ -35,7 +35,7 @@ class _SplitAppendAction(_AppendAction):
         parser: ArgumentParser,  # noqa:ARG002
         namespace: Namespace,
         values: Any,
-        option_string: Optional[str] = None,  # noqa:ARG002
+        option_string: str | None = None,  # noqa:ARG002
     ) -> None:
         items = getattr(namespace, self.dest, None)
         if items is None:
@@ -56,7 +56,7 @@ class BooleanOptionalAction(Action):
         parser: ArgumentParser,  # noqa:ARG002
         namespace: Namespace,
         values: Any,  # noqa:ARG002
-        option_string: Optional[str] = None,
+        option_string: str | None = None,
     ) -> None:
         assert option_string is not None
 
@@ -69,7 +69,7 @@ class BooleanOptionalAction(Action):
         return " | ".join(self.option_strings)
 
 
-def _parse_args(args: Optional[List[str]] = None) -> Namespace:
+def _parse_args(args: list[str] | None = None) -> Namespace:
     parser = ArgumentParser(
         formatter_class=RawDescriptionHelpFormatter,
         epilog="""\
@@ -199,8 +199,8 @@ Environment variables:
 
 
 def _parse_steps(
-    args: List[str], known_steps: Dict[str, BaseStepHandler]
-) -> Optional[List[str]]:
+    args: list[str], known_steps: dict[str, BaseStepHandler]
+) -> list[str] | None:
     if not args:
         return None
 
@@ -279,8 +279,8 @@ def _load_user_config(
 def _execute_pipeline(
     config: Config,
     pipeline_config: str,
-    steps_parameters: List[str],
-    except_steps: Optional[List[str]],
+    steps_parameters: list[str],
+    except_steps: list[str] | None,
     *,
     only_selected_step: bool,
     clean: bool,
@@ -318,7 +318,7 @@ def _execute_pipeline(
 
 
 @_io.instrument_streams()
-def main(sys_args: Optional[List[str]] = None) -> None:
+def main(sys_args: list[str] | None = None) -> None:
     if sys_args is None:
         sys_args = sys.argv[1:]
     if env_args := os.environ.get("DWAS_ADDOPTS"):

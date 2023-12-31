@@ -4,16 +4,7 @@
 from __future__ import annotations
 
 from pathlib import Path  # noqa: TCH003  required for Sphinx
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Protocol,
-    runtime_checkable,
-)
+from typing import TYPE_CHECKING, Any, Callable, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     import os
@@ -260,8 +251,8 @@ class StepWithDependentSetup(Step, Protocol):
 
     def setup_dependent(
         self,
-        original_step: "StepRunner",
-        current_step: "StepRunner",
+        original_step: StepRunner,
+        current_step: StepRunner,
     ) -> None:
         """
         Run some logic into a dependent step.
@@ -356,7 +347,7 @@ class StepWithArtifacts(Step, Protocol):
         .. tip:: The :py:func:`dwas.predefined.coverage` step does roughly this.
     """
 
-    def gather_artifacts(self, step: "StepRunner") -> Dict[str, List[Any]]:
+    def gather_artifacts(self, step: StepRunner) -> dict[str, list[Any]]:
         """
         Gather all artifacts exposed by this step.
 
@@ -433,7 +424,7 @@ class StepRunner:
     standardized environment.
     """
 
-    def __init__(self, handler: "StepHandler") -> None:
+    def __init__(self, handler: StepHandler) -> None:
         self._handler = handler
 
     @property
@@ -483,7 +474,7 @@ class StepRunner:
 
         return self.config.cache_path / "cache" / name
 
-    def get_artifacts(self, key: str) -> List[Any]:
+    def get_artifacts(self, key: str) -> list[Any]:
         """
         Get the artifacts exported by previous steps for the given key.
 
@@ -520,12 +511,10 @@ class StepRunner:
 
     def run(
         self,
-        command: List[str],
+        command: list[str],
         *,
-        cwd: Optional[
-            str | bytes | os.PathLike[str] | os.PathLike[bytes]
-        ] = None,
-        env: Optional[Dict[str, str]] = None,
+        cwd: str | bytes | os.PathLike[str] | os.PathLike[bytes] | None = None,
+        env: dict[str, str] | None = None,
         external_command: bool = False,
         silent_on_success: bool = False,
     ) -> subprocess.CompletedProcess[None]:

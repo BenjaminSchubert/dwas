@@ -9,7 +9,7 @@ import time
 from contextlib import suppress
 from contextvars import copy_context
 from threading import Lock, Thread
-from typing import Any, Dict, List, Optional, Set, TextIO
+from typing import Any, TextIO
 
 from . import _io
 
@@ -24,7 +24,7 @@ def _stream(source: int, dest: TextIO) -> None:
 
 class ProcessManager:
     def __init__(self) -> None:
-        self.processes: Set[subprocess.Popen[Any]] = set()
+        self.processes: set[subprocess.Popen[Any]] = set()
         self._lock = Lock()
 
         self._was_killed = False
@@ -72,11 +72,9 @@ class ProcessManager:
 
     def run(
         self,
-        command: List[str],
-        env: Dict[str, str],
-        cwd: Optional[
-            str | bytes | os.PathLike[str] | os.PathLike[bytes]
-        ] = None,
+        command: list[str],
+        env: dict[str, str],
+        cwd: str | bytes | os.PathLike[str] | os.PathLike[bytes] | None = None,
         *,
         silent_on_success: bool = False,
     ) -> subprocess.CompletedProcess[None]:

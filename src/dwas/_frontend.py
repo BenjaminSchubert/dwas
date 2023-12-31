@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from contextvars import copy_context
 from datetime import timedelta
 from threading import Event, Thread
-from typing import TYPE_CHECKING, Iterator, List
+from typing import TYPE_CHECKING, Iterator
 
 from colorama import Cursor, Fore, Style, ansi
 
@@ -29,7 +29,7 @@ class StepSummary:
     def _counter(self, value: int, color: str) -> str:
         return f"{color}{Style.BRIGHT}{value}{Style.NORMAL}{Fore.YELLOW}"
 
-    def lines(self) -> List[str]:
+    def lines(self) -> list[str]:
         update_at = time.monotonic()
 
         term_width = shutil.get_terminal_size().columns
@@ -59,7 +59,7 @@ class StepSummary:
             "~",
         )
 
-        additional_info: List[str] = []
+        additional_info: list[str] = []
         if self._scheduler.ready:
             ready_line = (
                 f"[-:--:--] {Fore.YELLOW}{Style.BRIGHT}ready: "

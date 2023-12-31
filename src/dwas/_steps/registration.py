@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Sequence
+from typing import TYPE_CHECKING, Callable, Sequence
 
 from .._exceptions import BaseDwasException
 from .._inspect import get_location
@@ -14,13 +14,13 @@ if TYPE_CHECKING:
 def register_step(
     func: Step,
     *,
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    python: Optional[str] = None,
-    requires: Optional[List[str]] = None,
-    run_by_default: Optional[bool] = None,
-    passenv: Optional[List[str]] = None,
-    setenv: Optional[Dict[str, str]] = None,
+    name: str | None = None,
+    description: str | None = None,
+    python: str | None = None,
+    requires: list[str] | None = None,
+    run_by_default: bool | None = None,
+    passenv: list[str] | None = None,
+    setenv: dict[str, str] | None = None,
 ) -> Step:
     """
     Register the provided :term:`step`.
@@ -159,15 +159,15 @@ def register_step(
 
 def register_managed_step(
     func: Step,
-    dependencies: Optional[Sequence[str]] = None,
+    dependencies: Sequence[str] | None = None,
     *,
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    python: Optional[str] = None,
-    requires: Optional[List[str]] = None,
-    run_by_default: Optional[bool] = None,
-    passenv: Optional[List[str]] = None,
-    setenv: Optional[Dict[str, str]] = None,
+    name: str | None = None,
+    description: str | None = None,
+    python: str | None = None,
+    requires: list[str] | None = None,
+    run_by_default: bool | None = None,
+    passenv: list[str] | None = None,
+    setenv: dict[str, str] | None = None,
 ) -> Step:
     """
     Register the provided :term:`step`, and handle installing its dependencies.
@@ -228,9 +228,9 @@ def register_managed_step(
 
 def register_step_group(
     name: str,
-    requires: List[str],
-    description: Optional[str] = None,
-    run_by_default: Optional[bool] = None,
+    requires: list[str],
+    description: str | None = None,
+    run_by_default: bool | None = None,
 ) -> None:
     """
     Register a :term:`step group`.
@@ -255,13 +255,13 @@ def register_step_group(
 
 def step(
     *,
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    python: Optional[str] = None,
-    requires: Optional[List[str]] = None,
-    run_by_default: Optional[bool] = None,
-    passenv: Optional[List[str]] = None,
-    setenv: Optional[Dict[str, str]] = None,
+    name: str | None = None,
+    description: str | None = None,
+    python: str | None = None,
+    requires: list[str] | None = None,
+    run_by_default: bool | None = None,
+    passenv: list[str] | None = None,
+    setenv: dict[str, str] | None = None,
 ) -> Callable[[Step], Step]:
     """
     Register the decorated :term:`step` and make it available to the pipeline.
@@ -298,13 +298,13 @@ def step(
 def managed_step(
     dependencies: Sequence[str],
     *,
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    python: Optional[str] = None,
-    requires: Optional[List[str]] = None,
-    run_by_default: Optional[bool] = None,
-    passenv: Optional[List[str]] = None,
-    setenv: Optional[Dict[str, str]] = None,
+    name: str | None = None,
+    description: str | None = None,
+    python: str | None = None,
+    requires: list[str] | None = None,
+    run_by_default: bool | None = None,
+    passenv: list[str] | None = None,
+    setenv: dict[str, str] | None = None,
 ) -> Callable[[Step], Step]:
     """
     Register the decorated :term:`step`, and handle installing its dependencies.

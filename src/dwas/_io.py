@@ -12,15 +12,7 @@ from contextlib import (
     suppress,
 )
 from contextvars import ContextVar
-from typing import (
-    TYPE_CHECKING,
-    Deque,
-    Generator,
-    Iterator,
-    Optional,
-    TextIO,
-    Tuple,
-)
+from typing import TYPE_CHECKING, Generator, Iterator, TextIO
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -36,7 +28,7 @@ class NoOpWriter(io.TextIOWrapper):
     def __init__(self) -> None:
         pass
 
-    def read(self, size: Optional[int] = None) -> str:  # noqa: ARG002
+    def read(self, size: int | None = None) -> str:  # noqa: ARG002
         raise io.UnsupportedOperation("Can't read from a noopwriter")
 
     def write(self, data: str) -> int:
@@ -49,11 +41,11 @@ class NoOpWriter(io.TextIOWrapper):
 class MemoryPipe(io.TextIOWrapper):
     def __init__(
         self,
-        writer: "PipePlexer",
+        writer: PipePlexer,
     ) -> None:
         self._writer = writer
 
-    def read(self, size: Optional[int] = None) -> str:  # noqa: ARG002
+    def read(self, size: int | None = None) -> str:  # noqa: ARG002
         raise io.UnsupportedOperation("can't read from a memorypipe")
 
     def write(self, data: str) -> int:
@@ -68,7 +60,7 @@ class PipePlexer:
         self.stderr = MemoryPipe(self)
         self.stdout = MemoryPipe(self)
 
-        self._buffer: Deque[Tuple[MemoryPipe, str]] = deque()
+        self._buffer: deque[tuple[MemoryPipe, str]] = deque()
         self._write_on_flush = write_on_flush
 
     def write(self, stream: MemoryPipe, data: str) -> int:
@@ -77,7 +69,7 @@ class PipePlexer:
 
     def flush(
         self, force_write: bool = False  # noqa:FBT001,FBT002
-    ) -> Optional[int]:
+    ) -> int | None:
         line = None
 
         if self._write_on_flush or force_write:
@@ -108,7 +100,7 @@ class StreamHandler(io.TextIOWrapper):
         self._var = var
         self._log_var = log_var
 
-    def read(self, size: Optional[int] = None) -> str:  # noqa: ARG002
+    def read(self, size: int | None = None) -> str:  # noqa: ARG002
         raise io.UnsupportedOperation("can't read from a memorypipe")
 
     def write(self, data: str) -> int:
@@ -151,7 +143,7 @@ def redirect_streams(stdout: TextIO, stderr: TextIO) -> Iterator[None]:
 
 
 @contextmanager
-def log_file(path: Optional[Path]) -> Iterator[None]:
+def log_file(path: Path | None) -> Iterator[None]:
     with ExitStack() as stack:
         if path is None:
             fd: TextIO = NoOpWriter()

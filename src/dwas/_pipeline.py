@@ -9,17 +9,7 @@ from contextlib import ExitStack
 from contextvars import ContextVar, copy_context
 from datetime import timedelta
 from subprocess import CalledProcessError
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    Dict,
-    Generator,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    cast,
-)
+from typing import TYPE_CHECKING, Callable, Generator, cast
 
 from colorama import Fore, Style
 
@@ -49,11 +39,11 @@ LOGGER = logging.getLogger(__name__)
 _PIPELINE = ContextVar["Pipeline"]("pipeline")
 
 
-def get_pipeline() -> "Pipeline":
+def get_pipeline() -> Pipeline:
     return _PIPELINE.get()
 
 
-def set_pipeline(pipeline: "Pipeline") -> None:
+def set_pipeline(pipeline: Pipeline) -> None:
     _PIPELINE.set(pipeline)
 
 
@@ -71,35 +61,35 @@ class Pipeline:
         self.config = config
         self.proc_manager = ProcessManager()
 
-        self._registered_steps: List[Tuple[str, Step, Optional[str]]] = []
-        self._registered_step_groups: List[
-            Tuple[str, List[str], Optional[str], Optional[bool]]
+        self._registered_steps: list[tuple[str, Step, str | None]] = []
+        self._registered_step_groups: list[
+            tuple[str, list[str], str | None, bool | None]
         ] = []
-        self._steps_cache: Optional[Dict[str, BaseStepHandler]] = None
+        self._steps_cache: dict[str, BaseStepHandler] | None = None
 
     @property
-    def steps(self) -> Dict[str, BaseStepHandler]:
+    def steps(self) -> dict[str, BaseStepHandler]:
         if self._steps_cache is None:
             self._steps_cache = self._resolve_steps()
         return self._steps_cache
 
     def register_step(
-        self, name: str, description: Optional[str], step: "Step"
+        self, name: str, description: str | None, step: Step
     ) -> None:
         self._registered_steps.append((name, step, description))
 
     def register_step_group(
         self,
         name: str,
-        requires: List[str],
-        description: Optional[str] = None,
-        run_by_default: Optional[bool] = None,
+        requires: list[str],
+        description: str | None = None,
+        run_by_default: bool | None = None,
     ) -> None:
         self._registered_step_groups.append(
             (name, requires, description, run_by_default)
         )
 
-    def _resolve_steps(self) -> Dict[str, BaseStepHandler]:
+    def _resolve_steps(self) -> dict[str, BaseStepHandler]:
         steps = {}
 
         for name, func, description in self._registered_steps:
@@ -125,7 +115,7 @@ class Pipeline:
         return steps
 
     def _resolve_parameters(
-        self, name: str, func: Step, description: Optional[str]
+        self, name: str, func: Step, description: str | None
     ) -> Generator[BaseStepHandler, None, None]:
         parameters = extract_parameters(func)
         all_run_by_default = True
@@ -170,17 +160,17 @@ class Pipeline:
 
     def _build_graph(  # noqa: C901
         self,
-        steps: Optional[List[str]] = None,
-        except_steps: Optional[List[str]] = None,
+        steps: list[str] | None = None,
+        except_steps: list[str] | None = None,
         *,
         only_selected_steps: bool = False,
-    ) -> Dict[str, List[str]]:
+    ) -> dict[str, list[str]]:
         # we should refactor at some point
         # pylint: disable=too-many-branches,too-many-locals,too-many-statements
 
         # First build the whole graph, without ignoring edges. This is necessary
         # to ensure we keep all dependency relations
-        def expand(steps: List[str]) -> Set[str]:
+        def expand(steps: list[str]) -> set[str]:
             expanded = set()
             to_process = deque(steps)
             while to_process:
@@ -228,10 +218,10 @@ class Pipeline:
             raise UnknownStepsException(unknown_steps)
 
         if except_steps_set:
-            except_replacements: Dict[str, List[str]] = {}
+            except_replacements: dict[str, list[str]] = {}
 
             # FIXME: ensure we handle cycles
-            def compute_replacement(requirements: List[str]) -> List[str]:
+            def compute_replacement(requirements: list[str]) -> list[str]:
                 replacements = []
                 for requirement in requirements:
                     if requirement in steps:
@@ -266,8 +256,8 @@ class Pipeline:
             only_replacements = {}
 
             def compute_only_replacement(
-                step: str, requirements: List[str]
-            ) -> List[str]:
+                step: str, requirements: list[str]
+            ) -> list[str]:
                 if step in only:
                     return [step]
 
@@ -299,8 +289,8 @@ class Pipeline:
 
     def execute(
         self,
-        steps: Optional[List[str]],
-        except_steps: Optional[List[str]],
+        steps: list[str] | None,
+        except_steps: list[str] | None,
         *,
         only_selected_steps: bool,
         clean: bool,
@@ -324,7 +314,7 @@ class Pipeline:
 
         should_stop = False
 
-        def request_stop(_signum: int, _frame: Optional[FrameType]) -> None:
+        def request_stop(_signum: int, _frame: FrameType | None) -> None:
             nonlocal should_stop
 
             if not should_stop:
@@ -358,8 +348,8 @@ class Pipeline:
 
     def list_all_steps(
         self,
-        steps: Optional[List[str]] = None,
-        except_steps: Optional[List[str]] = None,
+        steps: list[str] | None = None,
+        except_steps: list[str] | None = None,
         *,
         only_selected_steps: bool = False,
         show_dependencies: bool = False,
@@ -425,8 +415,8 @@ class Pipeline:
         scheduler: Scheduler,
         should_stop: Callable[[], bool],
     ) -> None:
-        running_futures: Dict[
-            futures.Future[None], Tuple[str, Optional[_io.PipePlexer]]
+        running_futures: dict[
+            futures.Future[None], tuple[str, _io.PipePlexer | None]
         ] = {}
 
         with futures.ThreadPoolExecutor(self.config.n_jobs) as executor:
@@ -527,8 +517,8 @@ class Pipeline:
     def _log_summary(
         self,
         scheduler: Scheduler,
-        steps_order: List[str],
-        graph: Dict[str, List[str]],
+        steps_order: list[str],
+        graph: dict[str, list[str]],
         start_time: float,
     ) -> None:
         LOGGER.info("%s*** Steps summary ***", Style.BRIGHT)
@@ -607,7 +597,7 @@ class Pipeline:
     def _run_step(
         self,
         name: str,
-        pipe_plexer: Optional[_io.PipePlexer],
+        pipe_plexer: _io.PipePlexer | None,
     ) -> None:
         with ExitStack() as stack:
             if pipe_plexer is not None:
@@ -634,8 +624,8 @@ class Pipeline:
 
     def _display_slowest_dependency_chain(
         self,
-        graph: Dict[str, List[str]],
-        results: Dict[str, Tuple[JobResult, timedelta, Optional[Exception]]],
+        graph: dict[str, list[str]],
+        results: dict[str, tuple[JobResult, timedelta, Exception | None]],
     ) -> None:
         if len(graph) <= 1:
             # If there's a single entry in the whole graph, no need to show
@@ -669,12 +659,12 @@ class Pipeline:
 
     def _compute_slowest_chains(
         self,
-        graph: Dict[str, List[str]],
-        results: Dict[str, Tuple[JobResult, timedelta, Optional[Exception]]],
-    ) -> Dict[str, Tuple[List[str], timedelta]]:
-        total_time_per_step: Dict[str, Tuple[List[str], timedelta]] = {}
+        graph: dict[str, list[str]],
+        results: dict[str, tuple[JobResult, timedelta, Exception | None]],
+    ) -> dict[str, tuple[list[str], timedelta]]:
+        total_time_per_step: dict[str, tuple[list[str], timedelta]] = {}
 
-        def compute_chain(step: str) -> Tuple[List[str], timedelta]:
+        def compute_chain(step: str) -> tuple[list[str], timedelta]:
             precomputed_result = total_time_per_step.get(step, None)
             if precomputed_result is not None:
                 return precomputed_result
