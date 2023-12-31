@@ -1,18 +1,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    TypeVar,
-    Union,
-    overload,
-)
+from typing import Any, Callable, Sequence, TypeVar, overload
 
 from .._exceptions import BaseDwasException
 
@@ -58,18 +47,18 @@ class MismatchedNumberOfParametersException(BaseDwasException):
 
 
 class Parameter:
-    def __init__(self, id_: Optional[str], parameters: Dict[str, Any]) -> None:
+    def __init__(self, id_: str | None, parameters: dict[str, Any]) -> None:
         self._parameters = parameters
         if id_ is None:
             id_ = ",".join(str(v) for v in parameters.values())
         self.id = id_
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         return self._parameters.copy()
 
     # pylint: disable=protected-access
     @classmethod
-    def merge(cls, param1: "Parameter", param2: "Parameter") -> "Parameter":
+    def merge(cls, param1: Parameter, param2: Parameter) -> Parameter:
         # ruff: noqa: SLF001
         if param1.id == "":
             id_ = param2.id
@@ -100,7 +89,7 @@ class Parameter:
 def parametrize(
     arg_names: str,
     args_values: Sequence[Any],
-    ids: Optional[Sequence[Optional[str]]] = None,
+    ids: Sequence[str | None] | None = None,
 ) -> Callable[[T], T]:
     ...
 
@@ -109,15 +98,15 @@ def parametrize(
 def parametrize(
     arg_names: Sequence[str],
     args_values: Sequence[Sequence[Any]],
-    ids: Optional[Sequence[Optional[str]]] = None,
+    ids: Sequence[str | None] | None = None,
 ) -> Callable[[T], T]:
     ...
 
 
 def parametrize(
-    arg_names: Union[str, Sequence[str]],
-    args_values: Union[Sequence[Any], Sequence[Sequence[Any]]],
-    ids: Optional[Sequence[Optional[str]]] = None,
+    arg_names: str | Sequence[str],
+    args_values: Sequence[Any] | Sequence[Sequence[Any]],
+    ids: Sequence[str | None] | None = None,
 ) -> Callable[[T], T]:
     """
     Parametrize the decorated :term:`step` with the provided values.
@@ -248,7 +237,7 @@ def parametrize(
     return _apply
 
 
-def set_defaults(values: Dict[str, Any]) -> Callable[[T], T]:
+def set_defaults(values: dict[str, Any]) -> Callable[[T], T]:
     """
     Set default values for parameters on the given :term:`step`.
 
@@ -316,10 +305,10 @@ def build_parameters(**kwargs: Any) -> Callable[[T], T]:
 
 def extract_parameters(
     func: Callable[..., Any]
-) -> List[Tuple[str, Dict[str, Any]]]:
+) -> list[tuple[str, dict[str, Any]]]:
     defaults = getattr(func, _DEFAULTS, {})
 
-    def _merge(parameter: Parameter) -> Dict[str, Any]:
+    def _merge(parameter: Parameter) -> dict[str, Any]:
         params = defaults.copy()
         params.update(parameter.as_dict())
         return params

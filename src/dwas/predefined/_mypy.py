@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import List, Optional, Sequence
+from typing import Sequence
 
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
@@ -22,7 +22,7 @@ class Mypy(Step):
         self,
         step: StepRunner,
         files: Sequence[str],
-        additional_arguments: List[str],
+        additional_arguments: list[str],
     ) -> None:
         env = {}
         if step.config.colors:
@@ -42,8 +42,8 @@ class Mypy(Step):
 
 def mypy(
     *,
-    files: Optional[Sequence[str]] = None,
-    additional_arguments: Optional[List[str]] = None,
+    files: Sequence[str] | None = None,
+    additional_arguments: list[str] | None = None,
 ) -> Step:
     """
     Run `mypy`_ against your python source code.

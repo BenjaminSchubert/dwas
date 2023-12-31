@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Set
 from unittest.mock import ANY
 
 import pytest
@@ -11,14 +10,14 @@ from dwas._scheduler import Resolver, Scheduler
 
 def assert_scheduler_state(
     scheduler: Scheduler,
-    waiting: Optional[Set[str]] = None,
-    ready: Optional[List[str]] = None,
-    running: Optional[Dict[str, float]] = None,
-    done: Optional[Set[str]] = None,
-    failed: Optional[Set[str]] = None,
-    blocked: Optional[Set[str]] = None,
-    cancelled: Optional[Set[str]] = None,
-    skipped: Optional[Set[str]] = None,
+    waiting: set[str] | None = None,
+    ready: list[str] | None = None,
+    running: dict[str, float] | None = None,
+    done: set[str] | None = None,
+    failed: set[str] | None = None,
+    blocked: set[str] | None = None,
+    cancelled: set[str] | None = None,
+    skipped: set[str] | None = None,
 ) -> None:
     assert {
         "waiting": scheduler.waiting,

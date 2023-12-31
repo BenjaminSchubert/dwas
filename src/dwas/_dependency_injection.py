@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 import logging
-from typing import Any, Callable, Dict, TypeVar
+from typing import Any, Callable, TypeVar
 
 from ._exceptions import BaseDwasException
 from ._inspect import get_location, get_name
@@ -12,7 +12,7 @@ T = TypeVar("T")
 
 
 def call_with_parameters(
-    func: Callable[..., T], parameters: Dict[str, Any]
+    func: Callable[..., T], parameters: dict[str, Any]
 ) -> T:
     signature = inspect.signature(func)
     kwargs = {}

@@ -7,7 +7,7 @@ import os
 import shutil
 from abc import ABC, abstractmethod
 from contextlib import suppress
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from .._dependency_injection import call_with_parameters
 from .._exceptions import BaseDwasException
@@ -35,10 +35,10 @@ class BaseStepHandler(ABC):
     def __init__(
         self,
         name: str,
-        pipeline: "Pipeline",
-        requires: Optional[List[str]] = None,
-        run_by_default: Optional[bool] = None,
-        description: Optional[str] = None,
+        pipeline: Pipeline,
+        requires: list[str] | None = None,
+        run_by_default: bool | None = None,
+        description: str | None = None,
     ) -> None:
         self.name = name
         self.description = description
@@ -57,17 +57,15 @@ class BaseStepHandler(ABC):
         pass
 
     @abstractmethod
-    def set_user_args(self, args: List[str]) -> None:
+    def set_user_args(self, args: list[str]) -> None:
         pass
 
     @abstractmethod
-    def _execute_dependent_setup(
-        self, current_step: "BaseStepHandler"
-    ) -> None:
+    def _execute_dependent_setup(self, current_step: BaseStepHandler) -> None:
         pass
 
     @abstractmethod
-    def _get_artifacts(self, key: str) -> List[Any]:
+    def _get_artifacts(self, key: str) -> list[Any]:
         pass
 
 
@@ -76,14 +74,14 @@ class StepHandler(BaseStepHandler):
         self,
         name: str,
         func: Step,
-        pipeline: "Pipeline",
-        python_spec: Optional[str],
-        requires: Optional[List[str]] = None,
-        run_by_default: Optional[bool] = None,
-        description: Optional[str] = None,
-        parameters: Optional[Dict[str, Any]] = None,
-        passenv: Optional[List[str]] = None,
-        setenv: Optional[Dict[str, str]] = None,
+        pipeline: Pipeline,
+        python_spec: str | None,
+        requires: list[str] | None = None,
+        run_by_default: bool | None = None,
+        description: str | None = None,
+        parameters: dict[str, Any] | None = None,
+        passenv: list[str] | None = None,
+        setenv: dict[str, str] | None = None,
     ) -> None:
         super().__init__(name, pipeline, requires, run_by_default, description)
 
@@ -101,7 +99,7 @@ class StepHandler(BaseStepHandler):
         self._step_runner = StepRunner(self)
 
         if parameters is None:
-            self.parameters: Dict[str, Any] = {
+            self.parameters: dict[str, Any] = {
                 "step": self._step_runner,
                 "user_args": None,
             }
@@ -126,7 +124,7 @@ class StepHandler(BaseStepHandler):
     def python(self) -> str:
         return self._venv_runner.python
 
-    def set_user_args(self, args: List[str]) -> None:
+    def set_user_args(self, args: list[str]) -> None:
         step_signature = inspect.signature(self._func)
         if "user_args" not in step_signature.parameters:
             LOGGER.warning(
@@ -135,7 +133,7 @@ class StepHandler(BaseStepHandler):
             )
         self.parameters["user_args"] = args
 
-    def get_artifacts(self, key: str) -> List[Any]:
+    def get_artifacts(self, key: str) -> list[Any]:
         return list(
             itertools.chain.from_iterable(
                 [
@@ -154,12 +152,10 @@ class StepHandler(BaseStepHandler):
 
     def run(
         self,
-        command: List[str],
+        command: list[str],
         *,
-        cwd: Optional[
-            str | bytes | os.PathLike[str] | os.PathLike[bytes]
-        ] = None,
-        env: Optional[Dict[str, str]] = None,
+        cwd: str | bytes | os.PathLike[str] | os.PathLike[bytes] | None = None,
+        env: dict[str, str] | None = None,
         external_command: bool = False,
         silent_on_success: bool = False,
     ) -> subprocess.CompletedProcess[None]:
@@ -202,9 +198,7 @@ class StepHandler(BaseStepHandler):
         with suppress(FileNotFoundError):
             shutil.rmtree(self._step_runner.cache_path)
 
-    def _execute_dependent_setup(
-        self, current_step: "BaseStepHandler"
-    ) -> None:
+    def _execute_dependent_setup(self, current_step: BaseStepHandler) -> None:
         assert isinstance(current_step, StepHandler)
 
         if isinstance(self._func, StepWithDependentSetup):
@@ -216,7 +210,7 @@ class StepHandler(BaseStepHandler):
                 current_step._step_runner,  # noqa: SLF001
             )
 
-    def _get_artifacts(self, key: str) -> List[Any]:
+    def _get_artifacts(self, key: str) -> list[Any]:
         if isinstance(self._func, StepWithArtifacts):
             all_artifacts = self._func.gather_artifacts(self._step_runner)
         else:
@@ -233,8 +227,8 @@ class StepHandler(BaseStepHandler):
         return artifacts
 
     def _resolve_environ(
-        self, passenv: Optional[List[str]], setenv: Optional[Dict[str, str]]
-    ) -> Dict[str, str]:
+        self, passenv: list[str] | None, setenv: dict[str, str] | None
+    ) -> dict[str, str]:
         base_env = {}
         if setenv:
             base_env.update(setenv)
@@ -271,13 +265,11 @@ class StepGroupHandler(BaseStepHandler):
     def execute(self) -> None:
         LOGGER.debug("Step %s is a meta step. Nothing to do", self.name)
 
-    def set_user_args(self, args: List[str]) -> None:
+    def set_user_args(self, args: list[str]) -> None:
         for requirement in self.requires:
             self._pipeline.get_step(requirement).set_user_args(args)
 
-    def _execute_dependent_setup(
-        self, current_step: "BaseStepHandler"
-    ) -> None:
+    def _execute_dependent_setup(self, current_step: BaseStepHandler) -> None:
         for requirement in self.requires:
             # Pylint check here is wrong, it's still an instance of our class
             # pylint: disable=protected-access
@@ -285,7 +277,7 @@ class StepGroupHandler(BaseStepHandler):
                 requirement
             )._execute_dependent_setup(current_step)
 
-    def _get_artifacts(self, key: str) -> List[Any]:
+    def _get_artifacts(self, key: str) -> list[Any]:
         return list(
             itertools.chain.from_iterable(
                 [

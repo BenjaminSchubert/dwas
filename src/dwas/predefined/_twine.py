@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
 
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
@@ -21,7 +20,7 @@ class Twine(Step):
         self.__name__ = "twine"
 
     def __call__(
-        self, step: StepRunner, additional_arguments: List[str]
+        self, step: StepRunner, additional_arguments: list[str]
     ) -> None:
         sdists = step.get_artifacts("sdists")
         wheels = step.get_artifacts("wheels")
@@ -38,7 +37,7 @@ class Twine(Step):
         step.run(["twine", *additional_arguments, *sdists, *wheels])
 
 
-def twine(*, additional_arguments: Optional[List[str]] = None) -> Step:
+def twine(*, additional_arguments: list[str] | None = None) -> Step:
     """
     Run `twine`_ against the provided packages.
 

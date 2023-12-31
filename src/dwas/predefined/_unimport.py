@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional, Sequence
+from typing import Sequence
 
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
@@ -22,7 +22,7 @@ class Unimport(Step):
         self,
         step: StepRunner,
         files: Sequence[str],
-        additional_arguments: List[str],
+        additional_arguments: list[str],
     ) -> None:
         additional_arguments = additional_arguments.copy()
 
@@ -37,8 +37,8 @@ class Unimport(Step):
 
 def unimport(
     *,
-    files: Optional[Sequence[str]] = None,
-    additional_arguments: Optional[List[str]] = None,
+    files: Sequence[str] | None = None,
+    additional_arguments: list[str] | None = None,
 ) -> Step:
     """
     Run `the Unimport formatter`_ against your python source code.

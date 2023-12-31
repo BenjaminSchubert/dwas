@@ -6,17 +6,7 @@ import logging
 import time
 from collections import deque
 from datetime import timedelta
-from typing import (
-    Any,
-    Deque,
-    Dict,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Set,
-    Tuple,
-)
+from typing import Any, Iterable, Mapping
 
 from ._exceptions import CyclicStepDependenciesException
 
@@ -36,26 +26,26 @@ class Scheduler:
     # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
-        dependencies_graph: Dict[str, Set[str]],
-        dependents_graph: Dict[str, Set[str]],
-        weights: Dict[str, Any],
+        dependencies_graph: dict[str, set[str]],
+        dependents_graph: dict[str, set[str]],
+        weights: dict[str, Any],
     ) -> None:
         self._dependencies_graph = copy.deepcopy(dependencies_graph)
         self._dependents_graph = copy.deepcopy(dependents_graph)
         self._weights = weights
         self._stopped = False
 
-        self.waiting: Set[str] = set()
-        self.ready: List[str] = []
-        self.running: Dict[str, float] = {}
-        self.success: Set[str] = set()
-        self.failed: Set[str] = set()
-        self.blocked: Set[str] = set()
-        self.cancelled: Set[str] = set()
-        self.skipped: Set[str] = set()
+        self.waiting: set[str] = set()
+        self.ready: list[str] = []
+        self.running: dict[str, float] = {}
+        self.success: set[str] = set()
+        self.failed: set[str] = set()
+        self.blocked: set[str] = set()
+        self.cancelled: set[str] = set()
+        self.skipped: set[str] = set()
 
-        self.results: Dict[
-            str, Tuple[JobResult, timedelta, Optional[Exception]]
+        self.results: dict[
+            str, tuple[JobResult, timedelta, Exception | None]
         ] = {}
 
         # Enqueue all steps that are ready
@@ -167,8 +157,8 @@ class Resolver:
         # as a way to sort.
         self._weights = self._build_weights()
 
-    def _make_dependent_graph(self) -> Dict[str, Set[str]]:
-        graph: Dict[str, Set[str]] = {
+    def _make_dependent_graph(self) -> dict[str, set[str]]:
+        graph: dict[str, set[str]] = {
             key: set() for key in self._dependencies_graph
         }
 
@@ -178,13 +168,13 @@ class Resolver:
 
         return graph
 
-    def _build_weights(self) -> Dict[str, Tuple[int, int, str]]:
-        weights: Dict[str, Tuple[int, int, str]] = {}
+    def _build_weights(self) -> dict[str, tuple[int, int, str]]:
+        weights: dict[str, tuple[int, int, str]] = {}
 
-        path: Deque[str] = deque()
+        path: deque[str] = deque()
         path_set = set()
 
-        def _compute_weight(step: str) -> Tuple[int, int, str]:
+        def _compute_weight(step: str) -> tuple[int, int, str]:
             if step in weights:
                 return weights[step]
 
@@ -216,7 +206,7 @@ class Resolver:
             self._dependencies_graph, self._dependents_graph, self._weights
         )
 
-    def order(self) -> List[str]:
+    def order(self) -> list[str]:
         entries = []
 
         scheduler = self.get_scheduler()

@@ -7,7 +7,6 @@ import random
 import shutil
 import sys
 from pathlib import Path
-from typing import Dict, Optional
 
 from ._exceptions import BaseDwasException
 
@@ -58,7 +57,7 @@ class Config:
     - Finally, it will look if this is attached to a tty and enable colors if so.
     """
 
-    environ: Dict[str, str]
+    environ: dict[str, str]
     """
     The environment to use when running commands.
 
@@ -125,9 +124,9 @@ class Config:
     def __init__(
         self,
         cache_path: str,
-        log_path: Optional[str],
+        log_path: str | None,
         verbosity: int,
-        colors: Optional[bool],
+        colors: bool | None,
         n_jobs: int,
         *,
         skip_missing_interpreters: bool,
@@ -203,7 +202,7 @@ class Config:
             self.environ["PY_COLORS"] = "0"
             self.environ["NO_COLOR"] = "0"
 
-    def _get_color_setting(self, colors: Optional[bool]) -> bool:
+    def _get_color_setting(self, colors: bool | None) -> bool:
         # pylint: disable=too-many-return-statements
         if colors is not None:
             return colors

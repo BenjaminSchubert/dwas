@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import shutil
 from contextlib import suppress
-from typing import Any, Dict, List
+from typing import Any
 
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
@@ -23,7 +23,7 @@ class Package(StepWithDependentSetup):
     def __init__(self) -> None:
         self.__name__ = "package"
 
-    def gather_artifacts(self, step: StepRunner) -> Dict[str, List[Any]]:
+    def gather_artifacts(self, step: StepRunner) -> dict[str, list[Any]]:
         artifacts = {}
         sdists = [str(p) for p in step.cache_path.glob("*.tar.gz")]
         if sdists:

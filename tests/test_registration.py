@@ -2,7 +2,7 @@
 # ruff: noqa:SLF001
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 import pytest
 
@@ -15,8 +15,8 @@ from dwas._steps.registration import register_managed_step
 from ._utils import isolated_context
 
 
-def _get_all_steps_from_pipeline(pipeline: Pipeline) -> Dict[str, Any]:
-    def _format_step(step: BaseStepHandler) -> Dict[str, Any]:
+def _get_all_steps_from_pipeline(pipeline: Pipeline) -> dict[str, Any]:
+    def _format_step(step: BaseStepHandler) -> dict[str, Any]:
         if isinstance(step, StepGroupHandler):
             return {
                 "type": "group",
@@ -47,10 +47,10 @@ def _get_all_steps_from_pipeline(pipeline: Pipeline) -> Dict[str, Any]:
 
 def _expect_step(
     *,
-    python: Optional[str] = None,
-    run_by_default: Optional[bool] = None,
-    parameters: Dict[str, Any],
-) -> Dict[str, Any]:
+    python: str | None = None,
+    run_by_default: bool | None = None,
+    parameters: dict[str, Any],
+) -> dict[str, Any]:
     if run_by_default is None:
         run_by_default = True
 
@@ -147,7 +147,7 @@ def test_can_register_managed_step(pipeline, from_parameters):
 
     if from_parameters:
         noop = parametrize("dependencies", [["one"]])(noop)
-        kwargs: Dict[str, Any] = {}
+        kwargs: dict[str, Any] = {}
     else:
         kwargs = {"dependencies": ["one"]}
 

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional
-
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
 from .. import Step, StepRunner, parametrize, set_defaults
@@ -22,7 +20,7 @@ class Coverage(Step):
     def __call__(
         self,
         step: StepRunner,
-        reports: List[List[str]],
+        reports: list[list[str]],
     ) -> None:
         env = {"COVERAGE_FILE": str(step.cache_path / "coverage")}
 
@@ -37,7 +35,7 @@ class Coverage(Step):
             step.run(["coverage", *report], env=env)
 
 
-def coverage(*, reports: Optional[List[List[str]]] = None) -> Step:
+def coverage(*, reports: list[list[str]] | None = None) -> Step:
     """
     Run `coverage.py`_ to generate coverage reports.
 

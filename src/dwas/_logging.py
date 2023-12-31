@@ -2,16 +2,7 @@ from __future__ import annotations
 
 import logging
 from types import MappingProxyType, TracebackType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Optional,
-    TextIO,
-    Tuple,
-    Type,
-    Union,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, TextIO, cast
 
 from colorama import Back, Fore, Style, init
 
@@ -41,10 +32,8 @@ class ColorFormatter(logging.Formatter):
 
     def formatException(
         self,
-        ei: Union[
-            Tuple[Type[BaseException], BaseException, Optional[TracebackType]],
-            Tuple[None, None, None],
-        ],
+        ei: tuple[type[BaseException], BaseException, TracebackType | None]
+        | tuple[None, None, None],
     ) -> str:
         output = super().formatException(ei)
         return f"{Fore.CYAN}\ndwas > " + "\ndwas > ".join(output.splitlines())

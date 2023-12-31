@@ -7,16 +7,7 @@ import sys
 from contextlib import contextmanager
 from contextvars import Context
 from dataclasses import dataclass
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Iterator,
-    List,
-    Optional,
-    TypeVar,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Callable, Iterator, TypeVar
 
 import pytest
 from _pytest.capture import FDCapture, MultiCapture
@@ -71,13 +62,13 @@ def using_project(project: str) -> Callable[[_T], _T]:
 
 @dataclass(frozen=True)
 class Result:
-    exc: Optional[SystemExit]
+    exc: SystemExit | None
     stdout: str
     stderr: str
 
 
 @isolated_context
-def execute(args: List[str], expected_status: int = 0) -> Result:
+def execute(args: list[str], expected_status: int = 0) -> Result:
     """
     Run dwas in an isolated context and returns the result from the run.
 
@@ -89,7 +80,7 @@ def execute(args: List[str], expected_status: int = 0) -> Result:
 
     exception = None
     # See https://github.com/python/typeshed/issues/8513#issue-1333671093
-    exit_code: Union[str, int, None] = 0
+    exit_code: str | int | None = 0
 
     try:
         with isolated_logging():
@@ -113,10 +104,10 @@ def execute(args: List[str], expected_status: int = 0) -> Result:
 
 def cli(
     *,
-    steps: Optional[List[str]] = None,
+    steps: list[str] | None = None,
     cache_path: Path,
-    colors: Optional[bool] = None,
-    except_steps: Optional[List[str]] = None,
+    colors: bool | None = None,
+    except_steps: list[str] | None = None,
     expected_status: int = 0,
 ) -> Result:
     args = ["--verbose"]

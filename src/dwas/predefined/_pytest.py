@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Sequence
 
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
@@ -18,7 +18,7 @@ class Pytest(Step):
     def __init__(self) -> None:
         self.__name__ = "pytest"
 
-    def gather_artifacts(self, step: StepRunner) -> Dict[str, List[Any]]:
+    def gather_artifacts(self, step: StepRunner) -> dict[str, list[Any]]:
         coverage_file = self._get_coverage_file(step)
         if coverage_file is None or not coverage_file.exists():
             return {}
@@ -29,7 +29,7 @@ class Pytest(Step):
         self,
         step: StepRunner,
         args: Sequence[str],
-        user_args: Optional[Sequence[str]],
+        user_args: Sequence[str] | None,
     ) -> None:
         if user_args is None:
             user_args = []
@@ -43,7 +43,7 @@ class Pytest(Step):
         return step.cache_path / "reports" / "coverage"
 
 
-def pytest(*, args: Optional[Sequence[str]] = None) -> Step:
+def pytest(*, args: Sequence[str] | None = None) -> Step:
     """
     Run `pytest`_.
 

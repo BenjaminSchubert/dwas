@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import logging
 from dataclasses import InitVar, dataclass, field
-from typing import Any, List, Literal, Optional
+from typing import Any, Literal
 from xml.etree import ElementTree
 
 from tabulate import tabulate
@@ -18,10 +18,10 @@ class TestCase:
     name: str
     time: float
     state: Literal["success", "failure", "error", "skipped"]
-    summary: Optional[str]
+    summary: str | None
 
     @classmethod
-    def from_junit(cls, tree: ElementTree.Element) -> "TestCase":
+    def from_junit(cls, tree: ElementTree.Element) -> TestCase:
         children = tree.getchildren()
         assert len(children) <= 1
 
@@ -69,13 +69,13 @@ class TestSuite:
     failures: int
     skipped: int
     time: float
-    tests: List[TestCase]
+    tests: list[TestCase]
 
     def __post_init__(self, total: int) -> None:
         self.successes = total - self.errors - self.failures - self.skipped
 
     @classmethod
-    def from_junit(cls, tree: ElementTree.Element) -> "TestSuite":
+    def from_junit(cls, tree: ElementTree.Element) -> TestSuite:
         attrs = tree.attrib
 
         tests = [
@@ -99,7 +99,7 @@ class TestSuite:
         return (self.time, self.name) < (other.time, other.name)
 
 
-def get_failures_and_errors(testsuites: List[TestSuite]) -> str:
+def get_failures_and_errors(testsuites: list[TestSuite]) -> str:
     reports = []
 
     for testsuite in testsuites:

@@ -3,7 +3,6 @@ from __future__ import annotations
 import shutil
 from contextlib import suppress
 from pathlib import Path  # noqa: TCH003 required for sphinx documentation
-from typing import Optional, Union
 
 from .. import Step, StepRunner, build_parameters, set_defaults
 
@@ -21,7 +20,7 @@ class Sphinx(Step):
     def __init__(self) -> None:
         self.__name__ = "sphinx"
 
-    def clean(self, output: Optional[Union[Path, str]]) -> None:
+    def clean(self, output: Path | str | None) -> None:
         if output is not None:
             with suppress(FileNotFoundError):
                 shutil.rmtree(output)
@@ -30,8 +29,8 @@ class Sphinx(Step):
         self,
         step: StepRunner,
         builder: str,
-        sourcedir: Union[Path, str],
-        output: Optional[Union[Path, str]],
+        sourcedir: Path | str,
+        output: Path | str | None,
         *,
         warning_as_error: bool,
     ) -> None:
@@ -65,10 +64,10 @@ class Sphinx(Step):
 
 def sphinx(
     *,
-    builder: Optional[str] = None,
-    sourcedir: Optional[Union[Path, str]] = None,
-    output: Optional[Union[Path, str]] = None,
-    warning_as_error: Optional[bool] = None,
+    builder: str | None = None,
+    sourcedir: Path | str | None = None,
+    output: Path | str | None = None,
+    warning_as_error: bool | None = None,
 ) -> Step:
     """
     Run `sphinx`_.

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import subprocess
-from typing import List, Optional, Sequence
+from typing import Sequence
 
 # XXX: All imports here should be done from the top level. If we need it,
 #      users might need it
@@ -43,9 +43,9 @@ class DocFormatter(Step):
 
 def docformatter(
     *,
-    files: Optional[Sequence[str]] = None,
-    additional_arguments: Optional[List[str]] = None,
-    expected_status_codes: Optional[List[int]] = None,
+    files: Sequence[str] | None = None,
+    additional_arguments: list[str] | None = None,
+    expected_status_codes: list[int] | None = None,
 ) -> Step:
     """
     Run `docformatter`_ against your python source code.

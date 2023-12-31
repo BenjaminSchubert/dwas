@@ -5,7 +5,7 @@ import os
 import shutil
 import sys
 from contextlib import suppress
-from typing import TYPE_CHECKING, Dict, List, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 from virtualenv import session_via_cli
 
@@ -30,7 +30,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class _VirtualenvInstaller:
-    def __init__(self, path: Path, python_spec: Optional[str]) -> None:
+    def __init__(self, path: Path, python_spec: str | None) -> None:
         self.environ = os.environ.copy()
         self.environ["VIRTUALENV_CLEAR"] = "False"
         if python_spec is not None:
@@ -46,7 +46,7 @@ class _VirtualenvInstaller:
         return str(self._session.creator.exe)
 
     @property
-    def paths(self) -> List[str]:
+    def paths(self) -> list[str]:
         creator = self._session.creator
         if creator.bin_dir == creator.script_dir:
             return [str(creator.bin_dir)]
@@ -81,9 +81,9 @@ class VenvRunner:
     def __init__(
         self,
         name: str,
-        python_spec: Optional[str],
+        python_spec: str | None,
         config: Config,
-        environ: Dict[str, str],
+        environ: dict[str, str],
         proc_manager: ProcessManager,
     ) -> None:
         self._path = (config.venvs_path / name.replace(":", "-")).resolve()
@@ -122,11 +122,9 @@ class VenvRunner:
 
     def run(
         self,
-        command: List[str],
-        cwd: Optional[
-            str | bytes | os.PathLike[str] | os.PathLike[bytes]
-        ] = None,
-        env: Optional[Dict[str, str]] = None,
+        command: list[str],
+        cwd: str | bytes | os.PathLike[str] | os.PathLike[bytes] | None = None,
+        env: dict[str, str] | None = None,
         *,
         external_command: bool = False,
         silent_on_success: bool = False,
@@ -144,8 +142,8 @@ class VenvRunner:
         )
 
     def _merge_env(
-        self, config: Config, additional_env: Optional[Dict[str, str]] = None
-    ) -> Dict[str, str]:
+        self, config: Config, additional_env: dict[str, str] | None = None
+    ) -> dict[str, str]:
         env = config.environ.copy()
         env.update(self._environ)
         env.update(
@@ -159,7 +157,7 @@ class VenvRunner:
         return env
 
     def _validate_command(
-        self, command: str, env: Dict[str, str], *, external_command: bool
+        self, command: str, env: dict[str, str], *, external_command: bool
     ) -> None:
         cmd = shutil.which(command, path=env["PATH"])
 

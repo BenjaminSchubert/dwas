@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List
-
 
 class BaseDwasException(Exception):
     """
@@ -48,13 +46,13 @@ class FailedPipelineException(BaseDwasException):
 
 
 class UnknownStepsException(BaseDwasException):
-    def __init__(self, steps: List[str]) -> None:
+    def __init__(self, steps: list[str]) -> None:
         message = f"Unknown steps: {', '.join(steps)}"
         super().__init__(message)
 
 
 class CyclicStepDependenciesException(BaseDwasException):
-    def __init__(self, cycle: List[str]) -> None:
+    def __init__(self, cycle: list[str]) -> None:
         message = f"Cyclic dependencies between steps: {' --> '.join(cycle)}"
         super().__init__(message)
         self.cycle = cycle
