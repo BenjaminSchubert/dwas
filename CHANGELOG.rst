@@ -2,6 +2,25 @@ Changelog
 =========
 
 
+0.0.4
+-----
+
+Features
+^^^^^^^^
+
+- Official support python3.12
+- Provide a `ruff` predefined step
+
+
+Bug fixes
+^^^^^^^^^
+
+- The logs directory will not be removed automatically if it's been specified.
+  This is to avoid removing user directories which might contain other files.
+- Now support newer docformatter versions which return non-zero exit codes when
+  files are changed.
+
+
 0.0.3
 -----
 
