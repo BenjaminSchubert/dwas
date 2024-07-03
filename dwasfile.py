@@ -1,6 +1,7 @@
 """
 Contains the dwas configuration for this project.
 """
+
 from pathlib import Path
 
 import dwas

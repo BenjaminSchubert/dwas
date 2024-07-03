@@ -17,7 +17,7 @@ class TestPackage(BaseStepTest):
         cli(cache_path=cache_path, steps=["output_artifacts"])
         artifacts = json.loads(Path("artifacts.json").read_text("utf-8"))
         assert list(artifacts.keys()) == ["sdists", "wheels"]
-        assert Path(artifacts["sdists"][0]).name == "test-package-0.0.0.tar.gz"
+        assert Path(artifacts["sdists"][0]).name == "test_package-0.0.0.tar.gz"
         assert (
             Path(artifacts["wheels"][0]).name
             == "test_package-0.0.0-py3-none-any.whl"

@@ -20,7 +20,7 @@ class ColorFormatter(logging.Formatter):
         {
             logging.DEBUG: Fore.CYAN,
             logging.INFO: "",
-            logging.WARN: Fore.YELLOW,
+            logging.WARNING: Fore.YELLOW,
             logging.ERROR: Fore.RED + Style.BRIGHT,
             logging.FATAL: Back.RED + Fore.WHITE + Style.BRIGHT,
         }
@@ -32,8 +32,10 @@ class ColorFormatter(logging.Formatter):
 
     def formatException(
         self,
-        ei: tuple[type[BaseException], BaseException, TracebackType | None]
-        | tuple[None, None, None],
+        ei: (
+            tuple[type[BaseException], BaseException, TracebackType | None]
+            | tuple[None, None, None]
+        ),
     ) -> str:
         output = super().formatException(ei)
         return f"{Fore.CYAN}\ndwas > " + "\ndwas > ".join(output.splitlines())

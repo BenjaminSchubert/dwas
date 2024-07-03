@@ -90,8 +90,7 @@ def parametrize(
     arg_names: str,
     args_values: Sequence[Any],
     ids: Sequence[str | None] | None = None,
-) -> Callable[[T], T]:
-    ...
+) -> Callable[[T], T]: ...
 
 
 @overload
@@ -99,8 +98,7 @@ def parametrize(
     arg_names: Sequence[str],
     args_values: Sequence[Sequence[Any]],
     ids: Sequence[str | None] | None = None,
-) -> Callable[[T], T]:
-    ...
+) -> Callable[[T], T]: ...
 
 
 def parametrize(

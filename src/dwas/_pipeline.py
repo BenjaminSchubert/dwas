@@ -228,9 +228,9 @@ class Pipeline:
                         replacements.append(requirement)
                     else:
                         if requirement not in except_replacements:
-                            except_replacements[
-                                requirement
-                            ] = compute_replacement(graph[requirement])
+                            except_replacements[requirement] = (
+                                compute_replacement(graph[requirement])
+                            )
                         replacements.extend(except_replacements[requirement])
 
                 return replacements
@@ -264,10 +264,10 @@ class Pipeline:
                 replacements = []
                 for requirement in requirements:
                     if requirement not in only_replacements:
-                        only_replacements[
-                            requirement
-                        ] = compute_only_replacement(
-                            requirement, graph[requirement]
+                        only_replacements[requirement] = (
+                            compute_only_replacement(
+                                requirement, graph[requirement]
+                            )
                         )
                     replacements.extend(only_replacements[requirement])
 
@@ -665,7 +665,7 @@ class Pipeline:
         total_time_per_step: dict[str, tuple[list[str], timedelta]] = {}
 
         def compute_chain(step: str) -> tuple[list[str], timedelta]:
-            precomputed_result = total_time_per_step.get(step, None)
+            precomputed_result = total_time_per_step.get(step)
             if precomputed_result is not None:
                 return precomputed_result
 

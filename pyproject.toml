@@ -135,6 +135,8 @@ disable = [
 # Ruff
 [tool.ruff]
 target-version = "py38"
+
+[tool.ruff.lint]
 select = ["ALL"]
 ignore = [
     ##
@@ -183,7 +185,7 @@ ignore = [
 flake8-pytest-style.parametrize-values-type = "tuple"
 flake8-pytest-style.parametrize-values-row-type = "tuple"
 flake8-pytest-style.fixture-parentheses = false
-lint.isort.known-first-party = ["dwas"]
+isort.known-first-party = ["dwas"]
 
 [tool.ruff.lint.per-file-ignores]
 "docs/*" = ["D"]
