@@ -157,7 +157,10 @@ class Config:
         self.n_jobs = n_jobs
 
         self.is_interactive = (
-            sys.__stdout__.isatty() and sys.__stderr__.isatty()
+            sys.__stdout__ is not None
+            and sys.__stdout__.isatty()
+            and sys.__stderr__ is not None
+            and sys.__stderr__.isatty()
         )
 
         self.environ = {

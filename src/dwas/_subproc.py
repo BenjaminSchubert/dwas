@@ -114,9 +114,9 @@ class ProcessManager:
                 stdout_reader.join()
                 stderr_reader.join()
 
-            ret: subprocess.CompletedProcess[
-                None
-            ] = subprocess.CompletedProcess(command, proc.returncode)
+            ret: subprocess.CompletedProcess[None] = (
+                subprocess.CompletedProcess(command, proc.returncode)
+            )
             self._remove(proc)
             ret.check_returncode()
             return ret

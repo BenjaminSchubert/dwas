@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path  # noqa: TCH003  required for Sphinx
+from pathlib import Path  # noqa: TC003  required for Sphinx
 from typing import TYPE_CHECKING, Any, Callable, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
