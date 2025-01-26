@@ -2,6 +2,13 @@ Changelog
 =========
 
 
+0.0.5
+-----
+
+- Official support for python 3.13
+- Automatically detect and enable colors on GitLab CI
+
+
 0.0.4
 -----
 
