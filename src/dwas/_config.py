@@ -232,8 +232,9 @@ class Config:
         # Check for CIs that were asked for, and enable colors by default
         # when it's possible. Do this towards the end to ensure other config
         # can override
-        if "GITHUB_ACTION" in os.environ:
-            return True
+        for ci_var in ["GITHUB_ACTION", "GITLAB_CI"]:
+            if ci_var in os.environ:
+                return True
 
         return self.is_interactive
 
