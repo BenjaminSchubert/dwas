@@ -5,7 +5,7 @@ import argparse
 import logging
 from dataclasses import InitVar, dataclass, field
 from typing import Any, Literal
-from xml.etree import ElementTree
+from xml.etree import ElementTree as ET
 
 from tabulate import tabulate
 
@@ -21,7 +21,7 @@ class TestCase:
     summary: str | None
 
     @classmethod
-    def from_junit(cls, tree: ElementTree.Element) -> TestCase:
+    def from_junit(cls, tree: ET.Element) -> TestCase:
         children = tree.getchildren()
         assert len(children) <= 1
 
@@ -75,7 +75,7 @@ class TestSuite:
         self.successes = total - self.errors - self.failures - self.skipped
 
     @classmethod
-    def from_junit(cls, tree: ElementTree.Element) -> TestSuite:
+    def from_junit(cls, tree: ET.Element) -> TestSuite:
         attrs = tree.attrib
 
         tests = [
@@ -139,9 +139,7 @@ def main() -> None:
     testsuites = [
         TestSuite.from_junit(testsuite)
         for file in files
-        for testsuite in ElementTree.parse(file).findall(  # noqa: S314
-            "testsuite"
-        )
+        for testsuite in ET.parse(file).findall("testsuite")  # noqa: S314
     ]
 
     summary = tabulate(

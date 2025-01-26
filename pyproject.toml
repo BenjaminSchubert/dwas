@@ -135,12 +135,12 @@ disable = [
 # Ruff
 [tool.ruff]
 target-version = "py38"
+
+[tool.ruff.lint]
 select = ["ALL"]
 ignore = [
     ##
     # Typing
-    "ANN101",  # Don't annotate 'self'
-    "ANN102",  # Don't annotate 'cls'
     "ANN401",  # Allow typing with ANY
     ##
     # Format
@@ -162,7 +162,6 @@ ignore = [
     "FIX",  # We want to put fixmes longterm
     "TD",  # We want to be able to add todos without issu links
     "INP001",  # Not every .py file is part of a package
-    "PT004",  # Don't add `_` in front of fixtures returning nothing
     "S101",  # Allow asserts
     "TID252",  # We want relative imports
     "PLR2004",  # Disable magic numbers check
@@ -183,7 +182,7 @@ ignore = [
 flake8-pytest-style.parametrize-values-type = "tuple"
 flake8-pytest-style.parametrize-values-row-type = "tuple"
 flake8-pytest-style.fixture-parentheses = false
-lint.isort.known-first-party = ["dwas"]
+isort.known-first-party = ["dwas"]
 
 [tool.ruff.lint.per-file-ignores]
 "docs/*" = ["D"]

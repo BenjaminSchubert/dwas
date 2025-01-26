@@ -1,6 +1,7 @@
 """
 Contains the dwas configuration for this project.
 """
+
 from pathlib import Path
 
 import dwas
@@ -10,7 +11,7 @@ REQUIREMENTS = "-rrequirements/requirements.txt"
 DOCS_REQUIREMENTS = "-rrequirements/requirements-docs.txt"
 TEST_REQUIREMENTS = "-rrequirements/requirements-test.txt"
 TYPES_REQUIREMENTS = "-rrequirements/requirements-types.txt"
-SUPPORTED_PYTHONS = ["3.8", "3.9", "3.10", "3.11", "3.12", "pypy3.8"]
+SUPPORTED_PYTHONS = ["3.8", "3.9", "3.10", "3.11", "3.12", "pypy3.10"]
 OLDEST_SUPPORTED_PYTHON = SUPPORTED_PYTHONS[0]
 PYTHON_FILES = [
     "docs/conf.py",

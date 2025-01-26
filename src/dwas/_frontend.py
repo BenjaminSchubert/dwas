@@ -93,6 +93,9 @@ class Frontend:
         self._summary = summary
 
         def _refresh_in_context() -> None:
+            assert sys.__stdout__ is not None
+            assert sys.__stderr__ is not None
+
             with _io.redirect_streams(
                 sys.__stdout__, sys.__stderr__
             ), _io.log_file(None):

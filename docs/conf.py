@@ -79,6 +79,14 @@ nitpick_ignore = [
     ("py:class", "dwas._steps.parametrize.T"),
     ("py:class", "dwas._steps.handlers.StepHandler"),
 ]
+suppress_warnings = [
+    # See https://github.com/sphinx-doc/sphinx/issues/12589
+    "autosummary.import_cycle",
+]
+
+linkcheck_ignore = [
+    "https://pypi.org/project/dwas/#history",
+]
 
 # Theme options
 html_theme = "furo"
