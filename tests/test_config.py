@@ -90,7 +90,7 @@ def test_can_enable_colors_with_force_color(monkeypatch, kwargs):
     assert conf.colors
 
 
-@pytest.mark.parametrize("ci_env_var", ("GITHUB_ACTION",))
+@pytest.mark.parametrize("ci_env_var", ("GITHUB_ACTION", "GITLAB_CI"))
 def test_enables_colors_on_cis_by_default(ci_env_var, kwargs, monkeypatch):
     monkeypatch.setenv(ci_env_var, "1")
 
