@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from types import MappingProxyType, TracebackType
-from typing import TYPE_CHECKING, Any, TextIO, cast
+from typing import TYPE_CHECKING, cast
 
 from colorama import Back, Fore, Style, init
 
@@ -10,6 +10,7 @@ from ._io import ANSI_ESCAPE_CODE_RE
 
 if TYPE_CHECKING:
     from contextvars import ContextVar
+    from typing import Any, TextIO
 
 
 class ColorFormatter(logging.Formatter):
@@ -27,7 +28,7 @@ class ColorFormatter(logging.Formatter):
     )
 
     def formatMessage(self, record: logging.LogRecord) -> str:
-        cast(Any, record).level_color = self.COLOR_MAPPING[record.levelno]
+        cast("Any", record).level_color = self.COLOR_MAPPING[record.levelno]
         return super().formatMessage(record)
 
     def formatException(

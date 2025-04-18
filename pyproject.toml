@@ -33,6 +33,9 @@ classifiers = [
 ]
 dynamic = ["dependencies", "optional-dependencies"]
 
+[project.scripts]
+dwas = "dwas.__main__:main"
+
 [project.urls]
 homepage = "https://github.com/BenjaminSchubert/dwas"
 repository = "https://github.com/BenjaminSchubert/dwas"
@@ -40,8 +43,6 @@ tracker = "https://github.com/BenjaminSchubert/dwas/issues"
 documentation = "https://dwas.readthedocs.io/en/latest/"
 changelog = "https://github.com/BenjaminSchubert/dwas/CHANGELOG.rst"
 
-[project.entry-points.console_scripts]
-dwas = "dwas.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -94,8 +95,8 @@ warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
 module = "tests.*"
-allow_untyped_defs = true
-allow_untyped_calls = true
+disallow_untyped_defs = false
+disallow_untyped_calls = false
 
 [[tool.mypy.overrides]]
 module = "virtualenv.*"

@@ -65,7 +65,7 @@ class _VirtualenvInstaller:
                 )
         except RuntimeError as exc:
             raise UnavailableInterpreterException(
-                cast(str, self._python_spec)
+                cast("str", self._python_spec)
             ) from exc
 
         self._session_cache = session
