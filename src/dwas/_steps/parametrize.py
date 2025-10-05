@@ -304,7 +304,7 @@ def build_parameters(**kwargs: Any) -> Callable[[T], T]:
 
 
 def extract_parameters(
-    func: Callable[..., Any]
+    func: Callable[..., Any],
 ) -> list[tuple[str, dict[str, Any]]]:
     defaults = getattr(func, _DEFAULTS, {})
 

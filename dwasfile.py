@@ -11,7 +11,16 @@ REQUIREMENTS = "-rrequirements/requirements.txt"
 DOCS_REQUIREMENTS = "-rrequirements/requirements-docs.txt"
 TEST_REQUIREMENTS = "-rrequirements/requirements-test.txt"
 TYPES_REQUIREMENTS = "-rrequirements/requirements-types.txt"
-SUPPORTED_PYTHONS = ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "pypy3.10"]
+SUPPORTED_PYTHONS = [
+    "3.8",
+    "3.9",
+    "3.10",
+    "3.11",
+    "3.12",
+    "3.13",
+    "3.14",
+    "pypy3.10",
+]
 OLDEST_SUPPORTED_PYTHON = SUPPORTED_PYTHONS[0]
 PYTHON_FILES = [
     "docs/conf.py",
@@ -31,13 +40,13 @@ ARTIFACTS_PATH = ROOT_PATH / "_artifacts"
 # Formatting
 ##
 dwas.register_managed_step(
-    dwas.predefined.unimport(),
+    dwas.predefined.unimport(files=PYTHON_FILES),
     description="Show which imports are unnecessary",
 )
 dwas.register_managed_step(dwas.predefined.isort(files=PYTHON_FILES))
 dwas.register_managed_step(
     dwas.predefined.docformatter(files=PYTHON_FILES),
-    dependencies=["docformatter[tomli]<1.7.1"],
+    dependencies=["docformatter[tomli]"],
 )
 dwas.register_managed_step(dwas.predefined.black())
 dwas.register_step_group(
@@ -47,6 +56,7 @@ dwas.register_step_group(
 # With auto fix
 dwas.register_managed_step(
     dwas.predefined.unimport(
+        files=PYTHON_FILES,
         additional_arguments=["--diff", "--remove", "--check", "--gitignore"],
     ),
     name="unimport:fix",
@@ -68,7 +78,7 @@ dwas.register_managed_step(
     ),
     name="docformatter:fix",
     run_by_default=False,
-    dependencies=["docformatter[tomli]<1.7.1"],
+    dependencies=["docformatter[tomli]"],
     requires=["isort:fix"],
 )
 dwas.register_managed_step(
@@ -83,7 +93,6 @@ dwas.register_managed_step(
         additional_arguments=["check", "--fix", "--show-fixes", "--fix-only"],
     ),
     dependencies=["ruff"],
-    python=OLDEST_SUPPORTED_PYTHON,
     name="ruff:fix",
     requires=["black:fix"],
     run_by_default=False,

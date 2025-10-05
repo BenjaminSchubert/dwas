@@ -258,11 +258,9 @@ class StepWithDependentSetup(Step, Protocol):
         Run some logic into a dependent step.
 
         :param original_step: The original step handler that was used
-                              when the step defining this method was
-                              called.
+            when the step defining this method was called.
         :param current_step: The current step handler, that contains the
-                             context of the step that is going to be
-                             executed.
+            context of the step that is going to be executed.
         """
 
 
@@ -352,11 +350,10 @@ class StepWithArtifacts(Step, Protocol):
         Gather all artifacts exposed by this step.
 
         :param step: The step handler that was used when running the
-                     step.
+            step.
         :return: A dictionary of artifact key to a list of arbitrary
-                 data. This **must** return a list, as they are merged
-                 with other steps' artifacts into a single list per
-                 artifact key.
+            data. This **must** return a list, as they are merged with
+            other steps' artifacts into a single list per artifact key.
         """
 
 
