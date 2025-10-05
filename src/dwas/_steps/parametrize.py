@@ -59,7 +59,6 @@ class Parameter:
     # pylint: disable=protected-access
     @classmethod
     def merge(cls, param1: Parameter, param2: Parameter) -> Parameter:
-        # ruff: noqa: SLF001
         if param1.id == "":
             id_ = param2.id
         elif param2.id == "":
@@ -80,6 +79,9 @@ class Parameter:
         if not isinstance(other, type(self)):
             return NotImplemented
         return self.id == other.id and self._parameters == other._parameters
+
+    def __hash__(self) -> int:
+        return hash((self.__class__, self.id, self._parameters))
 
     def __repr__(self) -> str:
         return f"Parameter<{self.id}>({self.as_dict()})"

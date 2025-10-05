@@ -83,6 +83,7 @@ class Pipeline:
         name: str,
         requires: list[str],
         description: str | None = None,
+        *,
         run_by_default: bool | None = None,
     ) -> None:
         self._registered_step_groups.append(
@@ -109,7 +110,11 @@ class Pipeline:
                 raise DuplicateStepException(name)
 
             steps[name] = StepGroupHandler(
-                name, self, requires, run_by_default, description
+                name,
+                self,
+                requires,
+                description,
+                run_by_default=run_by_default,
             )
 
         return steps
@@ -155,7 +160,11 @@ class Pipeline:
 
         if len(parameters) > 1:
             yield StepGroupHandler(
-                name, self, all_created, all_run_by_default, description
+                name,
+                self,
+                all_created,
+                description,
+                run_by_default=all_run_by_default,
             )
 
     def _build_graph(  # noqa: C901

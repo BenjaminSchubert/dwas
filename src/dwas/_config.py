@@ -125,10 +125,10 @@ class Config:
         self,
         cache_path: str,
         log_path: str | None,
+        *,
         verbosity: int,
         colors: bool | None,
         n_jobs: int,
-        *,
         skip_missing_interpreters: bool,
         skip_setup: bool,
         skip_run: bool,
@@ -196,7 +196,7 @@ class Config:
                 "Setting PYTHONHASHSEED=%s", self.environ["PYTHONHASHSEED"]
             )
 
-        self.colors = self._get_color_setting(colors)
+        self.colors = self._get_color_setting(colors=colors)
         if self.colors:
             self.environ["PY_COLORS"] = "1"
             self.environ["FORCE_COLOR"] = "1"
@@ -205,7 +205,7 @@ class Config:
             self.environ["PY_COLORS"] = "0"
             self.environ["NO_COLOR"] = "0"
 
-    def _get_color_setting(self, colors: bool | None) -> bool:
+    def _get_color_setting(self, *, colors: bool | None) -> bool:
         # pylint: disable=too-many-return-statements
         if colors is not None:
             return colors
