@@ -15,7 +15,7 @@ authors = [
     { name = "Benjamin Schubert", email = "contact@benschubert.me" }
 ]
 keywords = ["workflows", "virtual", "environments", "isolated", "testing"]
-license = {text = "MIT"}
+license = { file = "LICENSE"}
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Developers",
