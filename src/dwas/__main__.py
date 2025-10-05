@@ -329,9 +329,9 @@ def main(sys_args: list[str] | None = None) -> None:
     config = Config(
         args.cache_path,
         args.log_path,
-        verbosity,
-        args.colors,
-        args.jobs,
+        verbosity=verbosity,
+        colors=args.colors,
+        n_jobs=args.jobs,
         skip_missing_interpreters=args.skip_missing_interpreters,
         skip_setup=args.no_setup,
         skip_run=args.setup_only,

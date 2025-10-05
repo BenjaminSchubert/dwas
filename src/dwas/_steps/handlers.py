@@ -37,8 +37,9 @@ class BaseStepHandler(ABC):
         name: str,
         pipeline: Pipeline,
         requires: list[str] | None = None,
-        run_by_default: bool | None = None,
         description: str | None = None,
+        *,
+        run_by_default: bool | None = None,
     ) -> None:
         self.name = name
         self.description = description
@@ -74,16 +75,23 @@ class StepHandler(BaseStepHandler):
         self,
         name: str,
         func: Step,
+        *,
         pipeline: Pipeline,
         python_spec: str | None,
         requires: list[str] | None = None,
-        run_by_default: bool | None = None,
         description: str | None = None,
+        run_by_default: bool | None = None,
         parameters: dict[str, Any] | None = None,
         passenv: list[str] | None = None,
         setenv: dict[str, str] | None = None,
     ) -> None:
-        super().__init__(name, pipeline, requires, run_by_default, description)
+        super().__init__(
+            name,
+            pipeline,
+            requires,
+            description,
+            run_by_default=run_by_default,
+        )
 
         self.name = name
 

@@ -230,6 +230,7 @@ def register_step_group(
     name: str,
     requires: list[str],
     description: str | None = None,
+    *,
     run_by_default: bool | None = None,
 ) -> None:
     """
@@ -250,7 +251,9 @@ def register_step_group(
     :param run_by_default: Whether to run this step by default or not
     """
     pipeline = get_pipeline()
-    pipeline.register_step_group(name, requires, description, run_by_default)
+    pipeline.register_step_group(
+        name, requires, description, run_by_default=run_by_default
+    )
 
 
 def step(
