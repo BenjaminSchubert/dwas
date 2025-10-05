@@ -124,11 +124,11 @@ jobs:
         run: dwas --verbose --only pytest[${{ matrix.python }}] -- --junitxml=${{ env.JUNIT_REPORT_PATH }}/junit-${{ matrix.os}}-${{ matrix.python }}.xml --override-ini junit_suite_name="${{ matrix.os }}-${{ matrix.python }}"  ${{ !startsWith(matrix.python, 'pypy') && '--numprocesses 2' || '' }}
 
       - name: Move the coverage to another place to avoid conflicts
-        if: always() && runner.os != 'Linux'
+        if: ${{ !cancelled() && runner.os != 'Linux' }}
         run: mv .dwas/cache/pytest-* .dwas/cache/pytest-${{ matrix.os }}
 
       - name: Save coverage files
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage-files-pytest-${{ matrix.os }}-${{ matrix.python }}
@@ -136,17 +136,24 @@ jobs:
           retention-days: 7
 
       - name: Save junit report
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: junit-${{ matrix.os }}-${{ matrix.python }}
           path: ${{ env.JUNIT_REPORT_PATH }}/junit-${{ matrix.os }}-${{ matrix.python }}.xml
           retention-days: 7
 
+      - name: Upload junit report to codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.os }} ${{ matrix.python }}
+
   report:
     runs-on: ubuntu-latest
     needs: test
-    if: "!cancelled()"
+    if: ${{ !cancelled() }}
 
     steps:
       - name: Check out repository
@@ -180,7 +187,7 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     needs: test
-    if: always()
+    if: ${{ !cancelled() }}
 
     steps:
       - name: Check out repository
