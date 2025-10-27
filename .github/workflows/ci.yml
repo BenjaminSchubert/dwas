@@ -74,7 +74,7 @@ jobs:
         run: dwas --verbose --only package
 
       - name: Save packaged dist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: dist
           path: ${{ env.PACKAGES_PATH }}/*
@@ -115,7 +115,7 @@ jobs:
         run: python -m pip install .
 
       - name: Download packaged dist
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: dist
           path: ${{ env.PACKAGES_PATH }}
@@ -129,7 +129,7 @@ jobs:
 
       - name: Save coverage files
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-files-pytest-${{ matrix.os }}-${{ matrix.python }}
           path: ${{ env.COVERAGE_FILES_PATH }}
@@ -137,7 +137,7 @@ jobs:
 
       - name: Save junit report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: junit-${{ matrix.os }}-${{ matrix.python }}
           path: ${{ env.JUNIT_REPORT_PATH }}/junit-${{ matrix.os }}-${{ matrix.python }}.xml
@@ -168,7 +168,7 @@ jobs:
         run: pip install tabulate
 
       - name: Download junit reports
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           merge-multiple: true
           pattern: junit-*
@@ -203,7 +203,7 @@ jobs:
         run: python -m pip install coverage[toml]
 
       - name: Download generated coverage files
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           merge-multiple: true
           pattern: coverage-*
@@ -230,7 +230,7 @@ jobs:
         run: coverage html --directory _artifacts/coverage/html
 
       - name: Save coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage [html]
           path: _artifacts/coverage/html
@@ -251,7 +251,7 @@ jobs:
           cache: pip
 
       - name: Download packaged dist
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: dist
           path: ${{ env.PACKAGES_PATH }}
