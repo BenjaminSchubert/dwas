@@ -19,7 +19,7 @@ SUPPORTED_PYTHONS = [
     "3.12",
     "3.13",
     "3.14",
-    "pypy3.10",
+    "pypy3.11",
 ]
 OLDEST_SUPPORTED_PYTHON = SUPPORTED_PYTHONS[0]
 PYTHON_FILES = [
