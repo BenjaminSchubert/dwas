@@ -95,10 +95,14 @@ class PipePlexer:
 
 class StreamHandler(io.TextIOWrapper):
     def __init__(
-        self, var: ContextVar[TextIO], log_var: ContextVar[TextIO]
+        self,
+        var: ContextVar[TextIO],
+        log_var: ContextVar[TextIO],
+        fileno: int,
     ) -> None:
         self._var = var
         self._log_var = log_var
+        self._fileno = fileno
 
     def read(self, size: int | None = None) -> str:  # noqa: ARG002
         raise io.UnsupportedOperation("can't read from a memorypipe")
@@ -117,6 +121,9 @@ class StreamHandler(io.TextIOWrapper):
             fd.flush()
         self._var.get().flush()
 
+    def fileno(self) -> int:
+        return self._fileno
+
 
 @contextmanager
 def instrument_streams() -> Generator[None, None, None]:
@@ -124,9 +131,9 @@ def instrument_streams() -> Generator[None, None, None]:
     STDERR.set(sys.stderr)
     LOG_FILE.set(NoOpWriter())
 
-    with redirect_stdout(StreamHandler(STDOUT, LOG_FILE)), redirect_stderr(
-        StreamHandler(STDERR, LOG_FILE)
-    ):
+    with redirect_stdout(
+        StreamHandler(STDOUT, LOG_FILE, sys.stdout.fileno())
+    ), redirect_stderr(StreamHandler(STDERR, LOG_FILE, sys.stderr.fileno())):
         yield
 
 
