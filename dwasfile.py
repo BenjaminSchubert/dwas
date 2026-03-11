@@ -48,7 +48,9 @@ dwas.register_managed_step(
     dwas.predefined.docformatter(files=PYTHON_FILES),
     dependencies=["docformatter[tomli]"],
 )
-dwas.register_managed_step(dwas.predefined.black())
+dwas.register_managed_step(
+    dwas.predefined.black(), python=OLDEST_SUPPORTED_PYTHON
+)
 dwas.register_step_group(
     "format-check", ["black", "docformatter", "isort", "unimport"]
 )
@@ -84,6 +86,7 @@ dwas.register_managed_step(
 dwas.register_managed_step(
     dwas.predefined.black(additional_arguments=[]),
     name="black:fix",
+    python=OLDEST_SUPPORTED_PYTHON,
     requires=["isort:fix", "docformatter:fix"],
     run_by_default=False,
 )

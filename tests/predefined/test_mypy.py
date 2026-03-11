@@ -1,6 +1,15 @@
+import platform
+
+import pytest
+
 from .mixins import BaseLinterTest
 
 
+@pytest.mark.xfail(
+    platform.python_implementation() == "PyPy",
+    reason="Mypy doesn't run on PyPy, see https://github.com/python/mypy/issues/20329",
+    strict=True,
+)
 class TestMypy(BaseLinterTest):
     dwasfile = """\
 from dwas import register_managed_step

@@ -1,4 +1,5 @@
 types-colorama
 types-docutils
 types-Pygments
+types-setuptools
 types-tabulate

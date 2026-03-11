@@ -3,7 +3,6 @@
 import copy
 import shutil
 from pathlib import Path
-from typing import Callable
 
 import pytest
 
@@ -120,10 +119,8 @@ def project(request, tmp_path, monkeypatch):
 
     for path in project.iterdir():
         if path.is_dir():
-            copy_func: Callable[[Path, Path], None] = shutil.copytree
+            shutil.copytree(path, tmp_path / path.name)
         else:
-            copy_func = shutil.copy
-
-        copy_func(path, tmp_path / path.name)
+            shutil.copy(path, tmp_path / path.name)
 
     monkeypatch.chdir(tmp_path)

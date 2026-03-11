@@ -480,7 +480,7 @@ class Pipeline:
     ) -> None:
         try:
             result.result()
-        except Exception as exc:  # noqa:BLE001
+        except Exception as exc:
             if (
                 isinstance(exc, UnavailableInterpreterException)
                 and self.config.skip_missing_interpreters
