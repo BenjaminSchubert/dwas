@@ -22,6 +22,9 @@ import os
     valid_file = '"""This is a token file"""\n'
     autofix_step = "ruff:fix"
 
+    expected_valid_output = "All checks passed!"
+    expected_invalid_output = "Remove unused import: `pathlib.Path`"
+
 
 class TestRuffFormat(BaseLinterWithAutofixTest):
     dwasfile = """\
@@ -38,6 +41,10 @@ register_managed_step(
     autofix_step = "ruff:fix"
     invalid_file = "x =  1"
     valid_file = "x = 1\n"
+
+    expected_stream = "stderr"
+    expected_valid_output = "2 files already formatted"
+    expected_invalid_output = "1 file would be reformatted"
 
     @pytest.mark.skip("ruff format does not support colored output")
     def test_respects_color_settings(self):

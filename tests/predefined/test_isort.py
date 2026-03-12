@@ -22,3 +22,6 @@ import os
 import os
 from pathlib import Path
 """
+
+    expected_valid_output = ""
+    expected_invalid_output = "+import os"

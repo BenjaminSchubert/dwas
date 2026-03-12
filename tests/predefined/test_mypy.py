@@ -22,3 +22,6 @@ def test() -> str:
     return 2
 """
     valid_file = '"""This is a token file"""\n'
+
+    expected_valid_output = "Success: no issues found in 1 source file"
+    expected_invalid_output = "Incompatible return value type"
