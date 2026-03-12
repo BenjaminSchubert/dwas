@@ -16,3 +16,7 @@ register_managed_step(
     autofix_step = "black:fix"
     invalid_file = "x =  1"
     valid_file = "x = 1\n"
+
+    expected_stream = "stderr"
+    expected_valid_output = "2 files would be left unchanged"
+    expected_invalid_output = "1 file would be reformatted"

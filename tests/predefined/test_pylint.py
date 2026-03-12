@@ -13,3 +13,6 @@ from pathlib import Path
 import os
 """
     valid_file = '"""This is a token file"""\n'
+
+    expected_valid_output = ""
+    expected_invalid_output = "Unused Path imported"

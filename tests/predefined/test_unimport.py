@@ -17,3 +17,8 @@ register_managed_step(
     autofix_step = "unimport:fix"
     invalid_file = "import os"
     valid_file = ""
+
+    expected_valid_output = (
+        "Congratulations there is no unused import in your project"
+    )
+    expected_invalid_output = "-import os"

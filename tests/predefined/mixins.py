@@ -1,6 +1,7 @@
 import re
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
@@ -63,6 +64,22 @@ class BaseLinterTest(ABC):
         The content of a file that should pass the linter tests.
         """
 
+    @property
+    @abstractmethod
+    def expected_valid_output(self) -> str:
+        """
+        A part of the expected output when the run is successful to validate.
+        """
+
+    @property
+    @abstractmethod
+    def expected_invalid_output(self) -> str:
+        """
+        A part of the expected output when the run is failed to validate.
+        """
+
+    expected_stream: Literal["stdout", "stderr"] = "stdout"
+
     @pytest.fixture(scope="module")
     def cache_path(self, tmp_path_factory):
         return tmp_path_factory.mktemp("cache")
@@ -82,7 +99,19 @@ class BaseLinterTest(ABC):
     )
     def test_simple_behavior(self, cache_path, tmp_path, valid):
         self._make_project(tmp_path, valid=valid)
-        cli(cache_path=cache_path, expected_status=0 if valid else 1)
+        res = cli(cache_path=cache_path, expected_status=0 if valid else 1)
+        if valid:
+            if self.expected_valid_output == "":
+                assert getattr(res, self.expected_stream) == ""
+            else:
+                assert self.expected_valid_output in getattr(
+                    res, self.expected_stream
+                )
+        else:
+            assert self.expected_invalid_output != ""
+            assert self.expected_invalid_output in getattr(
+                res, self.expected_stream
+            )
 
     @pytest.mark.parametrize(
         "enable_colors", (True, False), ids=["colors", "no-colors"]
@@ -94,6 +123,11 @@ class BaseLinterTest(ABC):
 
         result = cli(
             cache_path=cache_path, colors=enable_colors, expected_status=1
+        )
+
+        assert self.expected_invalid_output != ""
+        assert self.expected_invalid_output in getattr(
+            result, self.expected_stream
         )
 
         if enable_colors:
@@ -119,7 +153,12 @@ class BaseLinterWithAutofixTest(BaseLinterTest):
         token_file.parent.mkdir()
         token_file.write_text(self.invalid_file)
 
-        cli(cache_path=cache_path, expected_status=1)
+        res = cli(cache_path=cache_path, expected_status=1)
+        assert self.expected_invalid_output != ""
+        assert self.expected_invalid_output in getattr(
+            res, self.expected_stream
+        )
+
         assert token_file.read_text() == self.invalid_file
 
     def test_can_apply_fixes(self, cache_path, tmp_path):
