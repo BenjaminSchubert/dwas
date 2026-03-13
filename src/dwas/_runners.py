@@ -114,11 +114,21 @@ class VenvRunner:
             silent_on_success=self._config.verbosity < 2,
         )
 
-    def install(self, *packages: str) -> None:
-        self.run(
-            [self.python, "-m", "pip", "install", *packages],
-            silent_on_success=self._config.verbosity < 2,
-        )
+    def install(
+        self,
+        *packages: str,
+        no_deps: bool = False,
+        force_reinstall: bool = False,
+    ) -> None:
+        command = [self.python, "-m", "pip", "install"]
+        if no_deps:
+            command.append("--no-deps")
+        if force_reinstall:
+            command.append("--force-reinstall")
+
+        command += packages
+
+        self.run(command, silent_on_success=self._config.verbosity < 2)
 
     def run(
         self,
