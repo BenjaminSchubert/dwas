@@ -33,7 +33,7 @@ def _get_all_steps_from_pipeline(pipeline: Pipeline) -> dict[str, Any]:
 
         return {
             # pylint: disable=protected-access
-            "python": step._venv_runner._installer._python_spec,
+            "python": step._venv_runner._python_spec,
             "run_by_default": step.run_by_default,
             "requires": step.requires,
             "parameters": parameters,

@@ -22,3 +22,15 @@ class TestPackage(BaseStepTest):
             Path(artifacts["wheels"][0]).name
             == "test_package-0.0.0-py3-none-any.whl"
         )
+
+    def test_updates_package_on_rerun(self, tmp_path, cache_path):
+        res = cli(cache_path=cache_path, steps=["check_install"])
+        assert res.stdout.strip().splitlines()[-1] == "it worked!"
+
+        tmp_path.joinpath("src/test_project/__main__.py").write_text("""\
+if __name__ == "__main__":
+    print("it changed!")
+""")
+
+        res = cli(cache_path=cache_path, steps=["check_install"])
+        assert res.stdout.strip().splitlines()[-1] == "it changed!"
