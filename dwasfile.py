@@ -21,7 +21,6 @@ SUPPORTED_PYTHONS = [
     "3.14",
     "pypy3.11",
 ]
-OLDEST_SUPPORTED_PYTHON = SUPPORTED_PYTHONS[0]
 PYTHON_FILES = [
     "docs/conf.py",
     "docs/_extensions",
@@ -48,9 +47,7 @@ dwas.register_managed_step(
     dwas.predefined.docformatter(files=PYTHON_FILES),
     dependencies=["docformatter[tomli]"],
 )
-dwas.register_managed_step(
-    dwas.predefined.black(), python=OLDEST_SUPPORTED_PYTHON
-)
+dwas.register_managed_step(dwas.predefined.black())
 dwas.register_step_group(
     "format-check", ["black", "docformatter", "isort", "unimport"]
 )
@@ -86,7 +83,6 @@ dwas.register_managed_step(
 dwas.register_managed_step(
     dwas.predefined.black(additional_arguments=[]),
     name="black:fix",
-    python=OLDEST_SUPPORTED_PYTHON,
     requires=["isort:fix", "docformatter:fix"],
     run_by_default=False,
 )
@@ -125,7 +121,7 @@ dwas.register_managed_step(
         TEST_REQUIREMENTS,
         TYPES_REQUIREMENTS,
     ],
-    python=OLDEST_SUPPORTED_PYTHON,
+    python=SUPPORTED_PYTHONS[0],
 )
 dwas.register_managed_step(
     dwas.predefined.pylint(files=PYTHON_FILES),
@@ -136,12 +132,10 @@ dwas.register_managed_step(
         "pylint",
         "tabulate",
     ],
-    python=OLDEST_SUPPORTED_PYTHON,
 )
 dwas.register_managed_step(
     dwas.predefined.ruff(files=PYTHON_FILES),
     dependencies=["ruff"],
-    python=OLDEST_SUPPORTED_PYTHON,
 )
 dwas.register_step_group("lint", ["mypy", "pylint", "ruff"])
 
