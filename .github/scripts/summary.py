@@ -22,7 +22,7 @@ class TestCase:
 
     @classmethod
     def from_junit(cls, tree: ET.Element) -> TestCase:
-        children = tree.getchildren()
+        children = list(tree)
         assert len(children) <= 1
 
         state: Literal["success", "failure", "error", "skipped"] = "success"
@@ -171,8 +171,7 @@ def main() -> None:
 
     errors = get_failures_and_errors(testsuites)
 
-    print(  # noqa: T201
-        f"""\
+    print(f"""\
 ## Test suites
 
 {summary}
@@ -182,8 +181,7 @@ def main() -> None:
 {slowest_tests}
 
 {errors}
-"""
-    )
+""")  # noqa: T201
 
 
 if __name__ == "__main__":

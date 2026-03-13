@@ -65,6 +65,7 @@ optional-dependencies.docs.file = "requirements/requirements-docs.txt"
 # Black
 [tool.black]
 line-length = 79
+target-version = ["py38"]
 
 ##
 # Docformatter
@@ -106,6 +107,7 @@ ignore_missing_imports = true
 ##
 # Pylint
 [tool.pylint.main]
+py-version = "3.8"
 load-plugins = "pylint.extensions.docparams"
 
 [tool.pylint.format]

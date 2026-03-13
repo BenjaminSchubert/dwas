@@ -2,7 +2,7 @@
 name: Checks
 
 env:
-  DEFAULT_PYTHON: 3.8
+  DEFAULT_PYTHON: 3.13
   PACKAGES_PATH: .dwas/cache/package/
   COVERAGE_FILES_PATH: .dwas/cache/pytest-*/reports/coverage
   JUNIT_REPORT_PATH: _artifacts/junit/
@@ -44,7 +44,7 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v6
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          python-version: ${{ matrix.session == 'mypy' && '3.8' || env.DEFAULT_PYTHON }}
           cache: pip
 
       # FIXME: we should take dwas from pypi once it's published
