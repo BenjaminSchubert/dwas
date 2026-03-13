@@ -42,25 +42,13 @@ class Package(StepWithDependentSetup):
         assert len(wheels) == 1
 
         LOGGER.debug("Installing wheel with its dependencies")
-        current_step.run(
-            [current_step.python, "-m", "pip", "install", str(wheels[0])],
-            silent_on_success=current_step.config.verbosity < 2,
-        )
+        current_step.install(str(wheels[0]))
 
         LOGGER.debug(
             "Forcing reinstallation of the wheel in case it had code changes"
         )
-        current_step.run(
-            [
-                current_step.python,
-                "-m",
-                "pip",
-                "install",
-                "--force-reinstall",
-                "--no-deps",
-                str(wheels[0]),
-            ],
-            silent_on_success=current_step.config.verbosity < 2,
+        current_step.install(
+            str(wheels[0]), no_deps=True, force_reinstall=True
         )
 
     def __call__(self, step: StepRunner, *, isolate: bool) -> None:

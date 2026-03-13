@@ -127,7 +127,7 @@ class StepWithSetup(Step, Protocol):
                     step.run(["pytest"])
 
                 def install_dependencies(step: StepRunner) -> None:
-                    step.run(["pip", "install", "pytest"])
+                    step.install("pytest")
 
                 pytest.setup = install_dependencies
 
@@ -137,7 +137,7 @@ class StepWithSetup(Step, Protocol):
 
                 class Pytest:
                     def setup(self, step: StepRunner) -> None:
-                        step.run(["pip", "install", "pytest"])
+                        step.install("pytest")
 
                     def __call__(self, step: StepRunner) -> None:
                         step.run(["pytest"])
@@ -207,10 +207,7 @@ class StepWithDependentSetup(Step, Protocol):
                     # Assuming this is a universal wheel
                     assert len(wheels) == 1
 
-                    current_step.run(
-                        [current_step.python, "-m", "pip", "install", str(wheels[0])],
-                        silent_on_success=step.config.verbosity < 1,
-                    )
+                    current_step.install(str(wheels[0]))
 
                 package.setup_dependent = install
 
@@ -236,10 +233,7 @@ class StepWithDependentSetup(Step, Protocol):
                         # Assuming this is a universal wheel
                         assert len(wheels) == 1
 
-                        current_step.run(
-                            [current_step.python, "-m", "pip", "install", str(wheels[0])],
-                            silent_on_success=step.config.verbosity < 1,
-                        )
+                        current_step.install(str(wheels[0]))
 
                 register_managed_step(Package(), name="package", dependencies=["build"])
 
@@ -491,7 +485,12 @@ class StepRunner:
         """
         return self._handler.get_artifacts(key)
 
-    def install(self, *packages: str) -> None:
+    def install(
+        self,
+        *packages: str,
+        no_deps: bool = False,
+        force_reinstall: bool = False,
+    ) -> None:
         """
         Install the provided packages in the current environment.
 
@@ -501,10 +500,15 @@ class StepRunner:
         if you wanted to move to conda.).
 
         :param packages: which packages to install
+        :param no_deps: ignore the package's dependencies when installing
+        :param force_reinstall: force the re-installation of the package and its
+                                dependencies even if already installed
         :raise KeyboardInterrupt: If the user has tried aborting the program and
                                   is waiting for it to finish.
         """
-        return self._handler.install(*packages)
+        return self._handler.install(
+            *packages, no_deps=no_deps, force_reinstall=force_reinstall
+        )
 
     def run(
         self,
