@@ -46,7 +46,7 @@ class FailedPipelineException(BaseDwasException):
 
 
 class UnknownStepsException(BaseDwasException):
-    def __init__(self, steps: list[str]) -> None:
+    def __init__(self, steps: set[str]) -> None:
         message = f"Unknown steps: {', '.join(steps)}"
         super().__init__(message)
 

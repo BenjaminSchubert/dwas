@@ -106,7 +106,7 @@ class Scheduler:
                     self.ready.append(dependent)
 
     def _mark_dependents_blocked(self, step: str) -> None:
-        for dependent in self._dependents_graph[step]:
+        for dependent in sorted(self._dependents_graph[step]):
             try:
                 self.waiting.remove(dependent)
             except KeyError:
@@ -120,7 +120,7 @@ class Scheduler:
 
             # Remove this dependent from all it's dependencies, we will never
             # be able to start it anyways
-            for dependency in dependencies:
+            for dependency in sorted(dependencies):
                 self._dependents_graph[dependency].remove(dependent)
 
             # And finally recurse
