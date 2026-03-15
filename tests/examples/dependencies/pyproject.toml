@@ -1,0 +1,9 @@
+[project]
+name = "test-dependencies"
+version = "0.0.1"
+requires-python = ">=3.8"
+dependencies = ["colorama"]
+
+[dependency-groups]
+dev = ["pip"]
+other = ["setuptools"]

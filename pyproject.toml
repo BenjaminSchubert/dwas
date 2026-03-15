@@ -201,6 +201,8 @@ isort.known-first-party = ["dwas"]
     "D102",
     "D103",
     "D104",
+    "D105",
+    "D107",
     # too many arguments, acceptable for tests
     "PLR0913",
     # Allow prints in tests
