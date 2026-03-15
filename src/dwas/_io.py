@@ -68,7 +68,8 @@ class PipePlexer:
         return len(data)
 
     def flush(
-        self, force_write: bool = False  # noqa:FBT001,FBT002
+        self,
+        force_write: bool = False,  # noqa:FBT001,FBT002
     ) -> int | None:
         line = None
 

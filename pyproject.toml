@@ -62,10 +62,6 @@ optional-dependencies.docs.file = "requirements/requirements-docs.txt"
 ##
 
 ##
-# Black
-[tool.black]
-line-length = 79
-target-version = ["py38"]
 
 ##
 # Docformatter
@@ -76,13 +72,6 @@ make-summary-multi-line = true
 pre-summary-newline = true
 wrap-summaries = 89
 wrap-descriptions = 72
-
-##
-# Isort
-[tool.isort]
-profile = "black"
-line_length = 79
-skip_gitignore = true
 
 ##
 # Mypy
@@ -141,6 +130,7 @@ disable = [
 # Ruff
 [tool.ruff]
 target-version = "py38"
+line-length = 79
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -151,7 +141,6 @@ ignore = [
     ##
     # Format
     "COM812",  # Don't put trailing commas everywhere
-    "E501",  # line length is handled by black
     ##
     # Docs
     "D200",
@@ -189,6 +178,7 @@ flake8-pytest-style.parametrize-values-type = "tuple"
 flake8-pytest-style.parametrize-values-row-type = "tuple"
 flake8-pytest-style.fixture-parentheses = false
 isort.known-first-party = ["dwas"]
+pycodestyle.max-line-length = 119
 
 [tool.ruff.lint.per-file-ignores]
 "docs/*" = ["D"]

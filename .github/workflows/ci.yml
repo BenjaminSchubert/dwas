@@ -29,13 +29,11 @@ jobs:
       fail-fast: false
       matrix:
         session:
-          - black
           - docformatter
-          - isort
+          - format
           - mypy
           - pylint
           - ruff
-          - unimport
 
     steps:
       - name: Check out repository

@@ -39,36 +39,16 @@ ARTIFACTS_PATH = ROOT_PATH / "_artifacts"
 # Formatting
 ##
 dwas.register_managed_step(
-    dwas.predefined.unimport(files=PYTHON_FILES),
-    description="Show which imports are unnecessary",
-)
-dwas.register_managed_step(dwas.predefined.isort(files=PYTHON_FILES))
-dwas.register_managed_step(
     dwas.predefined.docformatter(files=PYTHON_FILES),
     dependencies=["docformatter[tomli]"],
 )
-dwas.register_managed_step(dwas.predefined.black())
-dwas.register_step_group(
-    "format-check", ["black", "docformatter", "isort", "unimport"]
+dwas.register_managed_step(
+    dwas.predefined.ruff(additional_arguments=["format", "--diff"]),
+    name="format",
 )
+dwas.register_step_group("format-check", ["format", "docformatter"])
 
 # With auto fix
-dwas.register_managed_step(
-    dwas.predefined.unimport(
-        files=PYTHON_FILES,
-        additional_arguments=["--diff", "--remove", "--check", "--gitignore"],
-    ),
-    name="unimport:fix",
-    run_by_default=False,
-)
-dwas.register_managed_step(
-    dwas.predefined.isort(
-        additional_arguments=["--atomic"], files=PYTHON_FILES
-    ),
-    name="isort:fix",
-    run_by_default=False,
-    requires=["unimport:fix"],
-)
 dwas.register_managed_step(
     dwas.predefined.docformatter(
         additional_arguments=["--recursive", "--diff", "--in-place"],
@@ -78,12 +58,12 @@ dwas.register_managed_step(
     name="docformatter:fix",
     run_by_default=False,
     dependencies=["docformatter[tomli]"],
-    requires=["isort:fix"],
+    requires=[],
 )
 dwas.register_managed_step(
-    dwas.predefined.black(additional_arguments=[]),
-    name="black:fix",
-    requires=["isort:fix", "docformatter:fix"],
+    dwas.predefined.ruff(additional_arguments=["format"]),
+    name="format:fix",
+    requires=["docformatter:fix"],
     run_by_default=False,
 )
 dwas.register_managed_step(
@@ -93,17 +73,15 @@ dwas.register_managed_step(
     ),
     dependencies=["ruff"],
     name="ruff:fix",
-    requires=["black:fix"],
+    requires=["format:fix"],
     run_by_default=False,
 )
 dwas.register_step_group(
     name="fix",
     description="Fix all auto-fixable issues on the project",
     requires=[
-        "unimport:fix",
-        "isort:fix",
         "docformatter:fix",
-        "black:fix",
+        "format:fix",
         "ruff:fix",
     ],
     run_by_default=False,

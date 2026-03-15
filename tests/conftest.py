@@ -103,17 +103,17 @@ def ensure_defaults_are_untouched(tmp_path_factory):
     yield
 
     # And validate
-    assert (
-        extract_defaults() == original_values
-    ), "BUG: Defaults arguments were mutated during the tests."
+    assert extract_defaults() == original_values, (
+        "BUG: Defaults arguments were mutated during the tests."
+    )
 
 
 @pytest.fixture
 def project(request, tmp_path, monkeypatch):
     markers = list(request.node.iter_markers("project"))
-    assert (
-        len(markers) == 1
-    ), f"Didn't get the expected number of markers for 'project': {markers}"
+    assert len(markers) == 1, (
+        f"Didn't get the expected number of markers for 'project': {markers}"
+    )
 
     project = markers[0].args[0]
 
