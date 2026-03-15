@@ -1,0 +1,53 @@
+version = 1
+revision = 3
+requires-python = ">=3.8"
+
+[[package]]
+name = "colorama"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/55/d5/c35bd3e63757ac767105f8695b055581d8b8dd8c22fef020ebefa2a3725d/colorama-0.4.0.zip", hash = "sha256:c9b54bebe91a6a803e0772c8561d53f2926bfeb17cd141fbabcb08424086595c", size = 37521, upload-time = "2018-10-10T14:47:13.19Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0a/93/6e8289231675d561d476d656c2ee3a868c1cca207e16c118d4503b25e2bf/colorama-0.4.0-py2.py3-none-any.whl", hash = "sha256:a3d89af5db9e9806a779a50296b5fdb466e281147c2c235e8225ecc6dbf7bbf3", size = 21204, upload-time = "2018-10-10T14:47:29.452Z" },
+]
+
+[[package]]
+name = "pip"
+version = "25.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/47/3e/68beeeeb306ea20ffd30b3ed993f531d16cd884ec4f60c9b1e238f69f2af/pip-25.0.tar.gz", hash = "sha256:8e0a97f7b4c47ae4a494560da84775e9e2f671d415d8d828e052efefb206b30b", size = 1950328, upload-time = "2025-01-26T12:40:41.474Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/85/8a/1ddf40be20103bcc605db840e9ade09c8e8c9f920a03e9cfe88eae97a058/pip-25.0-py3-none-any.whl", hash = "sha256:b6eb97a803356a52b2dd4bb73ba9e65b2ba16caa6bcb25a7497350a4e5859b65", size = 1841506, upload-time = "2025-01-26T12:40:39.243Z" },
+]
+
+[[package]]
+name = "setuptools"
+version = "70.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/aa/60/5db2249526c9b453c5bb8b9f6965fcab0ddb7f40ad734420b3b421f7da44/setuptools-70.0.0.tar.gz", hash = "sha256:f211a66637b8fa059bb28183da127d4e86396c991a942b028c6650d4319c3fd0", size = 2265182, upload-time = "2024-05-21T10:28:18.891Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/de/88/70c5767a0e43eb4451c2200f07d042a4bcd7639276003a9c54a68cfcc1f8/setuptools-70.0.0-py3-none-any.whl", hash = "sha256:54faa7f2e8d2d11bcd2c07bed282eef1046b5c080d1c32add737d7b5817b1ad4", size = 863432, upload-time = "2024-05-21T10:28:12.781Z" },
+]
+
+[[package]]
+name = "test-dependencies"
+version = "0.0.1"
+source = { virtual = "." }
+dependencies = [
+    { name = "colorama" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pip" },
+]
+other = [
+    { name = "setuptools" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "colorama", specifier = "==0.4.0" }]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pip", specifier = "==25.0" }]
+other = [{ name = "setuptools", specifier = "==70.0.0" }]
