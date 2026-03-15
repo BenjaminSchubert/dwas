@@ -206,7 +206,7 @@ class Pipeline:
 
         graph = {}
         steps_to_process = deque(steps)
-        unknown_steps = []
+        unknown_steps = set()
 
         while steps_to_process:
             step = steps_to_process.pop()
@@ -214,7 +214,7 @@ class Pipeline:
             try:
                 step_info = self.steps[step]
             except KeyError:
-                unknown_steps.append(step)
+                unknown_steps.add(step)
                 continue
 
             graph[step] = step_info.requires

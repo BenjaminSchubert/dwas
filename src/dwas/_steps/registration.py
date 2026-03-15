@@ -299,7 +299,7 @@ def step(
 
 
 def managed_step(
-    dependencies: Sequence[str],
+    dependencies: Sequence[str] | None,
     *,
     name: str | None = None,
     description: str | None = None,
