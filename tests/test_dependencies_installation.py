@@ -66,15 +66,18 @@ def cache_path(tmp_path_factory):
 @pytest.mark.parametrize(
     "package", (True, False), ids=["package", "no-package"]
 )
+@pytest.mark.parametrize("sync", (True, False), ids=["sync", "no-sync"])
 @using_project("examples/dependencies")
 def test_only_selected_dependencies_are_installed(
     cache_path: Path,
     tmp_path: Path,
     dependencies_name: str,
     package: bool,  # noqa: FBT001
+    sync: bool,  # noqa: FBT001
     expected_packages: dict[str, str],
 ) -> None:
-    step_name = f"dependencies[{'no-' if not package else ''}package,{dependencies_name}]"
+    # pylint: disable=line-too-long
+    step_name = f"dependencies[{'' if package else 'no-'}package,{'' if sync else 'no-'}sync,{dependencies_name}]"
     original_lock = tmp_path.joinpath("uv.lock").read_text()
 
     result = cli(cache_path=cache_path, steps=[step_name])
@@ -82,13 +85,20 @@ def test_only_selected_dependencies_are_installed(
     final_lock = tmp_path.joinpath("uv.lock").read_text()
 
     expected_installs = [
-        {"name": pkg, "version": GreaterThan(version)}
+        {"name": pkg, "version": version if sync else GreaterThan(version)}
         for pkg, version in expected_packages.items()
     ]
     if package:
         if expected_installs[0]["name"] != "colorama":
             expected_installs = [
-                {"name": "colorama", "version": GreaterThan("0.4.0")},
+                {
+                    "name": "colorama",
+                    "version": (
+                        "0.4.0"
+                        if sync and not package
+                        else GreaterThan("0.4.0")
+                    ),
+                },
                 *expected_installs,
             ]
         expected_installs.append(

@@ -161,6 +161,7 @@ def register_managed_step(
     func: Step,
     dependencies: Sequence[str] | None = None,
     *,
+    dependencies_sync: bool | None = None,
     name: str | None = None,
     description: str | None = None,
     python: str | None = None,
@@ -185,6 +186,10 @@ def register_managed_step(
     :param dependencies: A list of dependencies to install as a setup phase.
                          If :python:`None`, will expect a :python:`dependencies`
                          parameter to be passed via :py:func:`parametrize`.
+    :param dependencies_sync: Use `uv sync` when dealing with dependencies
+                              instead of `pip install`.
+                              See :py:func:`StepRunner.install` for examples
+                              and details.
     :param name: The name to give to the step.
                  Defaults to :python:`func.__name__`
     :param description: An optional description of what the current step does
@@ -207,12 +212,19 @@ def register_managed_step(
         )
 
     # pylint: disable=redefined-outer-name
-    def install(step: StepRunner, dependencies: str) -> None:
-        step.install(*dependencies)
+    def install(
+        step: StepRunner,
+        dependencies: list[str],
+        *,
+        dependencies_sync: bool = False,
+    ) -> None:
+        step.install(*dependencies, sync=dependencies_sync)
 
     func.setup = install  # type: ignore[attr-defined]
     if dependencies is not None:
         func = parametrize("dependencies", [dependencies])(func)
+    if dependencies_sync is not None:
+        func = parametrize("dependencies_sync", [dependencies_sync])(func)
 
     return register_step(
         func,
@@ -301,6 +313,7 @@ def step(
 def managed_step(
     dependencies: Sequence[str] | None,
     *,
+    dependencies_sync: bool | None = None,
     name: str | None = None,
     description: str | None = None,
     python: str | None = None,
@@ -316,6 +329,12 @@ def managed_step(
     the decorated object.
 
     :param dependencies: A list of dependencies to install as a setup phase.
+                         If :python:`None`, will expect a :python:`dependencies`
+                         parameter to be passed via :py:func:`parametrize`.
+    :param dependencies_sync: Use `uv sync` when dealing with dependencies
+                              instead of `pip install`.
+                              See :py:func:`StepRunner.install` for examples
+                              and details.
     :param name: The name used to refer to this step
     :param description: An optional description of what the current step does
     :param python: The python version to use in this step
@@ -330,6 +349,7 @@ def managed_step(
         register_managed_step(
             func,
             dependencies,
+            dependencies_sync=dependencies_sync,
             name=name,
             description=description,
             python=python,

@@ -71,10 +71,22 @@ class VenvRunner:
     def install(
         self,
         *packages: str,
+        sync: bool = False,
         no_deps: bool = False,
         force_reinstall: bool = False,
     ) -> None:
-        command = [self._uv, "pip", "install"]
+        if sync:
+            command = [
+                self._uv,
+                "sync",
+                "--frozen",
+                "--no-install-project",
+                "--no-default-groups",
+                "--active",
+            ]
+        else:
+            command = [self._uv, "pip", "install"]
+
         if no_deps:
             command.append("--no-deps")
         if force_reinstall:
