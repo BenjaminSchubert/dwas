@@ -2,6 +2,7 @@
 *.pyc
 *.egg-info
 build/
+uv.lock
 
 # DWAS
 .dwas/*

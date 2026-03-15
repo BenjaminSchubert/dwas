@@ -3,19 +3,15 @@ version: 2
 build:
    os: ubuntu-22.04
    jobs:
+      post_install:
+         - pip install uv
+         - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH uv pip install --group=docs .
       pre_build:
          - python -m sphinx -W -b spelling docs/ _build/spelling
          - python -m sphinx -W -b linkcheck docs/ _build/linkcheck
    tools:
-      python: "3.10"
+      python: "3.13"
 
 sphinx:
    configuration: docs/conf.py
    fail_on_warning: true
-
-python:
-   install:
-     - method: pip
-       path: .
-       extra_requirements:
-         - docs
