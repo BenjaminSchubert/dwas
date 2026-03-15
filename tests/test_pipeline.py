@@ -218,7 +218,10 @@ def test_only_keeps_dependency_information(pipeline):
     # pylint: disable=protected-access
     assert pipeline._build_graph(
         ["1", "4"], None, only_selected_steps=True
-    ) == {"1": ["4"], "4": []}
+    ) == {
+        "1": ["4"],
+        "4": [],
+    }
 
 
 def test_exclude_keeps_dependency_information(pipeline):
@@ -230,7 +233,10 @@ def test_exclude_keeps_dependency_information(pipeline):
     # pylint: disable=protected-access
     assert pipeline._build_graph(
         None, ["2", "3"], only_selected_steps=False
-    ) == {"1": ["4"], "4": []}
+    ) == {
+        "1": ["4"],
+        "4": [],
+    }
 
 
 @pytest.mark.parametrize("step_type", ("normal", "group"))
