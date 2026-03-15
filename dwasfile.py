@@ -7,10 +7,10 @@ from pathlib import Path
 import dwas
 import dwas.predefined
 
-REQUIREMENTS = "-rrequirements/requirements.txt"
-DOCS_REQUIREMENTS = "-rrequirements/requirements-docs.txt"
-TEST_REQUIREMENTS = "-rrequirements/requirements-test.txt"
-TYPES_REQUIREMENTS = "-rrequirements/requirements-types.txt"
+REQUIREMENTS = "--requirements=pyproject.toml"
+DOCS_REQUIREMENTS = "--group=docs"
+TEST_REQUIREMENTS = "--group=tests"
+TYPES_REQUIREMENTS = "--group=types"
 SUPPORTED_PYTHONS = [
     "3.8",
     "3.9",
@@ -71,7 +71,6 @@ dwas.register_managed_step(
         files=PYTHON_FILES,
         additional_arguments=["check", "--fix", "--show-fixes", "--fix-only"],
     ),
-    dependencies=["ruff"],
     name="ruff:fix",
     requires=["format:fix"],
     run_by_default=False,
@@ -111,10 +110,7 @@ dwas.register_managed_step(
         "tabulate",
     ],
 )
-dwas.register_managed_step(
-    dwas.predefined.ruff(files=PYTHON_FILES),
-    dependencies=["ruff"],
-)
+dwas.register_managed_step(dwas.predefined.ruff(files=PYTHON_FILES))
 dwas.register_step_group("lint", ["mypy", "pylint", "ruff"])
 
 ##
