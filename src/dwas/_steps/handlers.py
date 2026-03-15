@@ -158,11 +158,15 @@ class StepHandler(BaseStepHandler):
     def install(
         self,
         *packages: str,
+        sync: bool = False,
         no_deps: bool = False,
         force_reinstall: bool = False,
     ) -> None:
         self._venv_runner.install(
-            *packages, no_deps=no_deps, force_reinstall=force_reinstall
+            *packages,
+            sync=sync,
+            no_deps=no_deps,
+            force_reinstall=force_reinstall,
         )
 
     def run(

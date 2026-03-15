@@ -488,6 +488,7 @@ class StepRunner:
     def install(
         self,
         *packages: str,
+        sync: bool = False,
         no_deps: bool = False,
         force_reinstall: bool = False,
     ) -> None:
@@ -499,7 +500,50 @@ class StepRunner:
         handle the details when changing the type of virtual environment (e.g.
         if you wanted to move to conda.).
 
+        :Examples:
+
+        Here's a few ways of installing packages depending on what you want.
+
+        .. code-block::
+
+            ##
+            # Without syncing files
+            ##
+
+            # Install a single package
+            step.install(["mypy"])
+
+            # Install dependencies from a requirements.txt file
+            step.install(["--requirements=requirements.txt"])
+
+            # Install only the package's dependencies but not the package
+            step.install(["--requirements=pyproject.toml"])
+
+            # Install the current package (See dwas.predefined.Package for a better way)
+            step.install(["."])
+
+            # Install a dependency group
+            step.install(["--group=dev"])
+
+            ##
+            # Syncing files from a lockfile
+            ##
+
+            # Install only the package's dependencies but not the package
+            step.install([], sync=True)
+
+            # Install a group of the package
+            step.install(["--only-group=dev"], sync=True)
+
+            # Install the dependencies and a group
+            step.install(["--group=dev"])
+
         :param packages: which packages to install
+        :param sync: Use `uv sync` instead of `pip install` to install the
+                     dependencies. This ensures is resolves dependencies
+                     according to the lock file, and not installing the latest
+                     versions. Note that semantics change a bit, so it is not
+                     fully interchangeable with `sync=False`.
         :param no_deps: ignore the package's dependencies when installing
         :param force_reinstall: force the re-installation of the package and its
                                 dependencies even if already installed
@@ -507,7 +551,10 @@ class StepRunner:
                                   is waiting for it to finish.
         """
         return self._handler.install(
-            *packages, no_deps=no_deps, force_reinstall=force_reinstall
+            *packages,
+            sync=sync,
+            no_deps=no_deps,
+            force_reinstall=force_reinstall,
         )
 
     def run(

@@ -46,8 +46,8 @@ other = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "colorama", specifier = "==0.4.0" }]
+requires-dist = [{ name = "colorama" }]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pip", specifier = "==25.0" }]
-other = [{ name = "setuptools", specifier = "==70.0.0" }]
+dev = [{ name = "pip" }]
+other = [{ name = "setuptools" }]
