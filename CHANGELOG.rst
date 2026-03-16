@@ -2,8 +2,46 @@ Changelog
 =========
 
 
+0.0.6
+-----
+
+The project is now marked as alpha instead of pre-alpha, it's been used for a
+while and is relatively stable.
+
+Breaking Changes
+^^^^^^^^^^^^^^^^
+
+- Use ``uv build`` instead of ``python -m build`` in the
+  `package <https://dwas.readthedocs.io/en/latest/api/dwas.predefined.html#dwas.predefined.package>`_
+  step, for faster runs.
+  This will require registering the step as ``dwas.step()`` instead of
+  ``dwas.managed_step()`` if you don't need custom dependencies.
+
+Features
+^^^^^^^^
+
+- Add support for python3.14
+- Allow installing dependencies from a lock file using
+  `uv sync <https://dwas.readthedocs.io/en/latest/api/dwas.html#dwas.StepRunner.install>`_
+
+Bug fixes
+^^^^^^^^^
+
+- Fix the scheduler to not fail in some cases where multiple steps depended on
+  the same one that failed
+
+Miscellaneous
+^^^^^^^^^^^^^
+
+- Use uv instead of pip and virtualenv to setup the environments. This provides
+  faster setup for each step.
+
+
 0.0.5
 -----
+
+Features
+^^^^^^^^
 
 - Official support for python 3.13
 - Automatically detect and enable colors on GitLab CI
@@ -16,8 +54,8 @@ Features
 ^^^^^^^^
 
 - Official support python3.12
-- Provide a `ruff` predefined step
-
+- Provide a `ruff <https://dwas.readthedocs.io/en/latest/api/dwas.predefined.html#dwas.predefined.ruff>`_
+  predefined step
 
 Bug fixes
 ^^^^^^^^^

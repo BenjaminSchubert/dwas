@@ -23,6 +23,7 @@ parametrized
 parametrization
 parametrizing
 pipx
+pre
 pylint
 pypi
 pypy
@@ -33,5 +34,6 @@ sdist
 tox
 unimport
 venvs
+virtualenv
 workflow
 workflows
