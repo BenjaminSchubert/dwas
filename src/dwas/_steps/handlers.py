@@ -217,6 +217,9 @@ class StepHandler(BaseStepHandler):
         with suppress(FileNotFoundError):
             shutil.rmtree(self._step_runner.cache_path)
 
+    def set_env(self, variable: str, value: str) -> None:
+        self._venv_runner.set_env(variable, value)
+
     def _execute_dependent_setup(self, current_step: BaseStepHandler) -> None:
         assert isinstance(current_step, StepHandler)
 
