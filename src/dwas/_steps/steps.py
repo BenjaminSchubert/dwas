@@ -603,3 +603,15 @@ class StepRunner:
             external_command=external_command,
             silent_on_success=silent_on_success,
         )
+
+    def set_env(self, variable: str, value: str) -> None:
+        """
+        Set a specific environment variable for this runner.
+
+        This can be useful for example to set environment variables
+        inside another step when setting up a dependent.
+
+        :param variable: The name of the environment variable to set.
+        :param value: The value to set the variable to.
+        """
+        self._handler.set_env(variable, value)

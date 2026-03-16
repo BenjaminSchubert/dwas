@@ -121,6 +121,9 @@ class VenvRunner:
             silent_on_success=silent_on_success,
         )
 
+    def set_env(self, variable: str, value: str) -> None:
+        self._environ[variable] = value
+
     def _merge_env(
         self, config: Config, additional_env: dict[str, str] | None = None
     ) -> dict[str, str]:
