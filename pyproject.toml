@@ -10,7 +10,7 @@ name = "dwas"
 version = "0.0.8"
 description = "dwas is a command line tool to define and run your development workflows"
 readme = "README.rst"
-requires-python = ">= 3.8"
+requires-python = ">= 3.9"
 authors = [
     { name = "Benjamin Schubert", email = "contact@benschubert.me" }
 ]
@@ -20,7 +20,6 @@ license-files = ["LICENSE"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -119,7 +118,7 @@ ignore_missing_imports = true
 ##
 # Pylint
 [tool.pylint.main]
-py-version = "3.8"
+py-version = "3.9"
 load-plugins = "pylint.extensions.docparams"
 
 [tool.pylint.format]

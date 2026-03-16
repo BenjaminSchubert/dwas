@@ -42,7 +42,7 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
         with:
-          python-version: ${{ matrix.session == 'mypy' && '3.8' || env.DEFAULT_PYTHON }}
+          python-version: ${{ matrix.session == 'mypy' && '3.9' || env.DEFAULT_PYTHON }}
           cache: pip
 
       # FIXME: we should take dwas from pypi once it's published
@@ -88,7 +88,6 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python:
-          - "3.8"
           - "3.9"
           - "3.10"
           - "3.11"
@@ -98,7 +97,7 @@ jobs:
           - "pypy3.11"
         include:
         - os: macos-latest
-          python: "3.8"
+          python: "3.9"
     steps:
       - name: Check out repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2

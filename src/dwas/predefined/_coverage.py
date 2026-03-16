@@ -61,7 +61,7 @@ def coverage(*, reports: list[list[str]] | None = None) -> Step:
 
             # One step to run pytest across multiple python versions
             dwas.register_managed_step(
-                dwas.parametrize("python", ["3.8", "3.9", "3.10"])(
+                dwas.parametrize("python", ["3.9", "3.10", "3.11"])(
                     dwas.predefined.pytest()
                 ),
                 dependencies=["pytest', "pytest-cov"],
