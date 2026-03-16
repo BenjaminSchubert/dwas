@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import logging
 import shutil
-import sys
 from contextlib import suppress
-from pathlib import Path
 from typing import Any
 
 # XXX: All imports here should be done from the top level. If we need it,
@@ -57,11 +55,7 @@ class Package(StepWithDependentSetup):
         with suppress(FileNotFoundError):
             shutil.rmtree(step.cache_path)
 
-        command = [
-            str(Path(sys.executable).parent.joinpath("uv")),
-            "build",
-            f"--out-dir={step.cache_path}",
-        ]
+        command = ["uv", "build", f"--out-dir={step.cache_path}"]
         if not isolate:
             command.append("--no-build-isolation")
 

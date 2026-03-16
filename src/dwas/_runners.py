@@ -4,7 +4,6 @@ import logging
 import shutil
 import sys
 from contextlib import suppress
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ._exceptions import CommandNotFoundException, CommandNotInEnvironment
@@ -35,7 +34,9 @@ class VenvRunner:
         self._environ = environ
         self._proc_manager = proc_manager
         self._python_spec = python_spec
-        self._uv = str(Path(sys.executable).parent.joinpath("uv"))
+        uv = shutil.which("uv")
+        assert uv is not None
+        self._uv = uv
 
     @property
     def python(self) -> str:
