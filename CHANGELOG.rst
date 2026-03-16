@@ -2,6 +2,16 @@ Changelog
 =========
 
 
+0.0.7
+-----
+
+Bug fixes
+^^^^^^^^^
+
+- Fix the calling of ``uv`` when it is not installed next to the python interpreter.
+  For user-site installation, it was failing to find it.
+
+
 0.0.6
 -----
 
