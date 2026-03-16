@@ -5,7 +5,7 @@ import dwas
 from dwas import StepRunner
 from dwas.predefined import package
 
-dwas.register_managed_step(package())
+dwas.register_step(package())
 
 
 @dwas.step(requires=["package"])

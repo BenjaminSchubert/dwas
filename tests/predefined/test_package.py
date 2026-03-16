@@ -34,3 +34,7 @@ if __name__ == "__main__":
 
         res = cli(cache_path=cache_path, steps=["check_install"])
         assert res.stdout.strip().splitlines()[-1] == "it changed!"
+
+    @pytest.mark.skip(reason="uv only outputs data on stderr")
+    def test_respects_color_settings(self, cache_path, enable_colors):
+        pass
