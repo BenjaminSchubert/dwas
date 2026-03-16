@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import logging
 import shutil
+import sys
 from contextlib import suppress
+from pathlib import Path
 from typing import Any
 
 # XXX: All imports here should be done from the top level. If we need it,
@@ -18,7 +20,7 @@ from .. import (
 LOGGER = logging.getLogger(__name__)
 
 
-@set_defaults({"dependencies": ["build"], "isolate": True})
+@set_defaults({"isolate": True})
 class Package(StepWithDependentSetup):
     def __init__(self) -> None:
         self.__name__ = "package"
@@ -55,11 +57,19 @@ class Package(StepWithDependentSetup):
         with suppress(FileNotFoundError):
             shutil.rmtree(step.cache_path)
 
-        command = [step.python, "-m", "build", f"--outdir={step.cache_path}"]
+        command = [
+            str(Path(sys.executable).parent.joinpath("uv")),
+            "build",
+            f"--out-dir={step.cache_path}",
+        ]
         if not isolate:
-            command.append("--no-isolation")
+            command.append("--no-build-isolation")
 
-        step.run(command, silent_on_success=step.config.verbosity < 1)
+        step.run(
+            command,
+            silent_on_success=step.config.verbosity < 1,
+            external_command=True,
+        )
 
 
 def package(*, isolate: bool = True) -> Step:
@@ -72,8 +82,7 @@ def package(*, isolate: bool = True) -> Step:
         have such requirements, please see `the manylinux project`_, or other
         similar initiatives.
 
-    By default, it will depend on :python:`["build"]`, when registered with
-    :py:func:`dwas.register_managed_step`.
+    This step does not require dependencies by default.
 
     :param isolate: Whether to create a new virtual environment for building the
                     package, or run it in the one created for the step.
@@ -82,7 +91,7 @@ def package(*, isolate: bool = True) -> Step:
                     Defaults to :python:`True`.
     :return: The step so that you can add additional parameters to it if needed.
 
-    This leverages ``python -m build`` in order to build a source distribution
+    This leverages ``uv build`` in order to build a source distribution
     and a universal wheel (assuming there are no c-extensions).
 
     When this step is used as a requirement for another step, it will also
@@ -105,18 +114,20 @@ def package(*, isolate: bool = True) -> Step:
 
         .. code-block::
 
-            dwas.register_managed_step(dwas.predefined.package())
+            # NOTE: we use just register_step as there is no need for dependencies
+            dwas.register_step(dwas.predefined.package())
 
         Or, if you want your step to run faster:
 
         .. code-block::
 
+            # NOTE: we use register_managed_step as we now need dependencies
             dwas.register_managed_step(
                 dwas.predefined.package(isolate=False),
                 # We could read those from pyproject.toml directly, but we'd need
                 # to install a toml reading library, so let's live with duplication
                 # for now.
-                dependencies=["build", "setuptools>=61.0.0", "wheel"],
+                dependencies=["setuptools>=61.0.0", "wheel"],
             )
     """
     return parametrize("isolate", [isolate])(Package())

@@ -1,7 +1,7 @@
 import dwas
 import dwas.predefined
 
-dwas.register_managed_step(dwas.predefined.package())
+dwas.register_step(dwas.predefined.package())
 
 
 @dwas.managed_step(None)
