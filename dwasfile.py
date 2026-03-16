@@ -12,7 +12,6 @@ DOCS_REQUIREMENTS = "--group=docs"
 TEST_REQUIREMENTS = "--group=tests"
 TYPES_REQUIREMENTS = "--group=types"
 SUPPORTED_PYTHONS = [
-    "3.8",
     "3.9",
     "3.10",
     "3.11",

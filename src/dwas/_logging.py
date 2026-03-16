@@ -51,7 +51,7 @@ class NoColorFormatter(logging.Formatter):
 class ContextStreamHandler(logging.StreamHandler):  # type: ignore[type-arg]
     _stream: ContextVar[TextIO]
 
-    @property  # type: ignore[override]
+    @property
     def stream(self) -> TextIO:
         return self._stream.get()
 

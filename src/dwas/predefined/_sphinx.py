@@ -96,7 +96,7 @@ def sphinx(
 
             dwas.register_managed_step(
                 dwas.predefined.sphinx(sourcedir="docs", output="_build/docs"),
-                python="3.8"
+                python="3.9"
             )
 
         Or, to run doctests, linkchecks and build the output to ``_build/docs``,

@@ -69,7 +69,7 @@ multiple versions of python, to ensure our programs is compatible.
 We will show here how to do it, leveraging another construct of ``dwas``,
 namely parametrization of steps.
 
-In this example, we will run against python 3.8 to 3.11:
+In this example, we will run against python 3.9 to 3.12:
 
 .. code-block:: python
     :linenos:
@@ -81,7 +81,7 @@ In this example, we will run against python 3.8 to 3.11:
     # We now leverage a second decorator, to parametrize the step such that
     # it runs against
     # Note that the order of both decorators does not matter.
-    @dwas.parametrize("python", ["3.8", "3.9", "3.10", "3.11"])
+    @dwas.parametrize("python", ["3.9", "3.10", "3.11", "3.12"])
     # And as before, our method calling pytest
     def pytest(step: dwas.StepRunner) -> None:
         step.run(["pytest"])
@@ -129,7 +129,7 @@ Here, we will see how to use the ``pytest`` step provided by ``dwas`` itself:
     # here. It is functionally the same, but slightly nicer on reading.
     dwas.register_managed_step(
         # Here, we parametrize again the pytest step to run against all versions
-        dwas.parametrize("python", ["3.8", "3.9", "3.10", "3.11"])(
+        dwas.parametrize("python", ["3.9", "3.10", "3.11", "3.12"])(
             # And here, we add the predefined step for pytest
             dwas.predefined.pytest(),
         ),
@@ -176,7 +176,7 @@ looking at ``dwas``' `own dwasfile.py`_.
     # Our well known pytest step, note the new `requires` config!
     dwas.register_managed_step(
         # Here, we parametrize again the pytest step to run against all versions
-        dwas.parametrize("python", ["3.8", "3.9", "3.10", "3.11"])(
+        dwas.parametrize("python", ["3.9", "3.10", "3.11", "3.12"])(
             # And here, we add the predefined step for pytest
             dwas.predefined.pytest(),
         ),

@@ -79,7 +79,7 @@ def pytest(*, args: Sequence[str] | None = None) -> Step:
             dwas.register_managed_step(dwas.predefined.package())
 
             dwas.register_managed_step(
-                dwas.parametrize("python", ["3.8", "3.9", "3.10"])(
+                dwas.parametrize("python", ["3.9", "3.10", "3.11"])(
                     dwas.predefined.pytest()
                 ),
                 dependencies=["pytest", "pytest-cov"],
@@ -88,7 +88,7 @@ def pytest(*, args: Sequence[str] | None = None) -> Step:
 
         Leveraging :py:func:`dwas.parametrize`, this generates 4 different
         steps: ``pytest``, which is a :term:`step group` which depends on the
-        other ``pytest[3.8]``, ``pytest[3.9]`` and ``pytest[3.10]`` which each
+        other ``pytest[3.9]``, ``pytest[3.10]`` and ``pytest[3.11]`` which each
         run pytest with the given version of python.
 
         Similarly, if you wanted to test multiple multiple versions of a python
@@ -97,7 +97,7 @@ def pytest(*, args: Sequence[str] | None = None) -> Step:
         .. code-block::
 
             dwas.register_managed_step(
-                dwas.parametrize("python", ["3.8", "3.9", "3.10"])(
+                dwas.parametrize("python", ["3.9", "3.10", "3.11"])(
                     dwas.parametrize(
                         "dependencies",
                         [["pytest", "django==3.0"], ["pytest", "django==4.0"]],
