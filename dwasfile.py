@@ -116,10 +116,7 @@ dwas.register_step_group("lint", ["mypy", "pylint", "ruff"])
 ##
 # Packaging
 ##
-dwas.register_managed_step(
-    dwas.predefined.package(isolate=False),
-    dependencies=["build", "setuptools>=61.0.0", "wheel"],
-)
+dwas.register_step(dwas.predefined.package())
 
 ##
 # Testing
