@@ -2,6 +2,16 @@ Changelog
 =========
 
 
+0.0.8
+-----
+
+Features
+^^^^^^^^
+
+- Add support to set environment variables on a runner. This can be useful for
+  steps with dependents to inject some information into their dependents.
+
+
 0.0.7
 -----
 
