@@ -2,6 +2,20 @@ Changelog
 =========
 
 
+0.1.0
+-----
+
+Breaking Changes
+^^^^^^^^^^^^^^^^
+
+- Drop support for python3.8, this has been end of life for a while
+
+Features
+^^^^^^^^
+
+- Pass-through ``UV_INDEX`` and ``UV_DEFAULT_INDEX`` by default when invoking ``dwas``
+
+
 0.0.8
 -----
 
