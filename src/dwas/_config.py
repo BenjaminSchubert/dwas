@@ -69,6 +69,7 @@ class Config:
         - pip: ``PIP_INDEX_URL``, ``PIP_EXTRA_INDEX_URL``
         - python: ``PYTHONHASHSEED``
         - system: ``PATH``, ``LD_LIBRARY_PATH``, ``TMPDIR``
+        - uv: ``UV_DEFAULT_INDEX``, ``UV_INDEX``
 
     If will also forcefully set ``PY_COLORS`` and ``NO_COLOR`` based on the
     configuration. See :py:attr:`Config.colors`.
@@ -181,6 +182,8 @@ class Config:
                 "https_proxy",
                 "no_proxy",
                 "TMPDIR",
+                "UV_INDEX",
+                "UV_DEFAULT_INDEX",
             ]
             if key in os.environ
         }
