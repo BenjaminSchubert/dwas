@@ -40,6 +40,8 @@ class BaseStepTest(ABC):
 
 
 class BaseLinterTest(ABC):
+    expected_stream: Literal["stdout", "stderr"] = "stdout"
+
     @property
     @abstractmethod
     def dwasfile(self) -> str:
@@ -77,8 +79,6 @@ class BaseLinterTest(ABC):
         """
         A part of the expected output when the run is failed to validate.
         """
-
-    expected_stream: Literal["stdout", "stderr"] = "stdout"
 
     @pytest.fixture(scope="module")
     def cache_path(self, tmp_path_factory):

@@ -248,18 +248,20 @@ def register_step_group(
     """
     Register a :term:`step group`.
 
-    A step group is a step that has no action and only depends on other steps.
+    A step group is a step that has no action and only depends on other
+    steps.
 
-    It allows calling multiple steps in a row or together more easily, and, when
-    used together with :py:func:`parametrize`, allows calling all the steps
-    generated as a single step.
+    It allows calling multiple steps in a row or together more easily,
+    and, when used together with :py:func:`parametrize`, allows calling
+    all the steps generated as a single step.
 
-    It will pass every artifacts and information from required steps to the
-    caller when asked.
+    It will pass every artifacts and information from required steps to
+    the caller when asked.
 
     :param name: The name to give to the group of step
     :param requires: The list of steps that are part of the group
-    :param description: An optional description of what the current step does
+    :param description: An optional description of what the current step
+        does
     :param run_by_default: Whether to run this step by default or not
     """
     pipeline = get_pipeline()
@@ -285,13 +287,16 @@ def step(
     the decorated object.
 
     :param name: The name used to refer to this step
-    :param description: An optional description of what the current step does
+    :param description: An optional description of what the current step
+        does
     :param python: The python version to use in this step
     :param requires: The list of steps that this step depends on
-    :param run_by_default: Whether this step should run by default or not
-    :param passenv: A list of environment variables to pass through to the step.
-    :param setenv: A list of environment variables to set in the context of the
-                   step.
+    :param run_by_default: Whether this step should run by default or
+        not
+    :param passenv: A list of environment variables to pass through to
+        the step.
+    :param setenv: A list of environment variables to set in the context
+        of the step.
     """
 
     def wrapper(func: Step) -> Step:
@@ -325,24 +330,26 @@ def managed_step(
     """
     Register the decorated :term:`step`, and handle installing its dependencies.
 
-    This is a convenience wrapper calling :py:func:`register_managed_step` on
-    the decorated object.
+    This is a convenience wrapper calling
+    :py:func:`register_managed_step` on the decorated object.
 
-    :param dependencies: A list of dependencies to install as a setup phase.
-                         If :python:`None`, will expect a :python:`dependencies`
-                         parameter to be passed via :py:func:`parametrize`.
-    :param dependencies_sync: Use `uv sync` when dealing with dependencies
-                              instead of `pip install`.
-                              See :py:func:`StepRunner.install` for examples
-                              and details.
+    :param dependencies: A list of dependencies to install as a setup
+        phase. If :python:`None`, will expect a :python:`dependencies`
+        parameter to be passed via :py:func:`parametrize`.
+    :param dependencies_sync: Use `uv sync` when dealing with
+        dependencies instead of `pip install`. See
+        :py:func:`StepRunner.install` for examples and details.
     :param name: The name used to refer to this step
-    :param description: An optional description of what the current step does
+    :param description: An optional description of what the current step
+        does
     :param python: The python version to use in this step
     :param requires: The list of steps that this step depends on
-    :param run_by_default: Whether this step should run by default or not
-    :param passenv: A list of environment variables to pass through to the step.
-    :param setenv: A list of environment variables to set in the context of the
-                   step.
+    :param run_by_default: Whether this step should run by default or
+        not
+    :param passenv: A list of environment variables to pass through to
+        the step.
+    :param setenv: A list of environment variables to set in the context
+        of the step.
     """
 
     def wrapper(func: Step) -> Step:

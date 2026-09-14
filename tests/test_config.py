@@ -47,7 +47,8 @@ def test_can_control_colors_explicitly(enable, kwargs):
 
 
 @pytest.mark.parametrize(
-    ("stdout_is_tty", "stderr_is_tty"), itertools.permutations([True, False])
+    ("stdout_is_tty", "stderr_is_tty"),
+    tuple(itertools.permutations([True, False])),
 )
 def test_enables_colors_if_tty(
     monkeypatch, stdout_is_tty, stderr_is_tty, kwargs
