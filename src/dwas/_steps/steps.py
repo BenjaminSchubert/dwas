@@ -409,10 +409,11 @@ class StepRunner:
     """
     Defines the runner for a :term:`step`, and provides utilities for the step to run.
 
-    This is passed as an argument to every step that executes as ``step``.
+    This is passed as an argument to every step that executes as
+    ``step``.
 
-    It provides various utilities to allow the step to run in an isolated,
-    standardized environment.
+    It provides various utilities to allow the step to run in an
+    isolated, standardized environment.
     """
 
     def __init__(self, handler: StepHandler) -> None:
@@ -569,32 +570,33 @@ class StepRunner:
         """
         Run the provided command in the current environment.
 
-        This method makes it's best to ensure the process' environment is
-        as isolated as possible. It should be used whenever possible, instead
-        of calling :py:mod:`subprocess` directly.
+        This method makes it's best to ensure the process' environment
+        is as isolated as possible. It should be used whenever possible,
+        instead of calling :py:mod:`subprocess` directly.
 
-        It will enforce that the first argument of the command is part of the
-        python virtual environment that is specially created for the current
-        step (in the case when there is isolation).
+        It will enforce that the first argument of the command is part
+        of the python virtual environment that is specially created for
+        the current step (in the case when there is isolation).
 
-        It will also ensure that the environment in which it is run is clean,
-        and will only get environment entries from :py:attr:`Config.environ`.
-        To add more values, use `env`.
+        It will also ensure that the environment in which it is run is
+        clean, and will only get environment entries from
+        :py:attr:`Config.environ`. To add more values, use `env`.
 
         :param command: The command to run, as a list of arguments.
         :param cwd: The working directory in which to run the command.
-        :param env: Additional environment variables to pass to the process.
-                    Those will be merged on top of the :py:attr:`Config.environ`
-                    values and can override them, but not remove them.
-        :param external_command: Set to true if you want to run a command that
-                                 lives outside the current virtual environment.
-                                 Otherwise, this will fail the command.
-        :param silent_on_success: Whether to silence the command's output if it
-                                  succeeds, or show it every time.
-        :return: a :py:class:`subprocess.CompletedProcess` with `stderr` and
-                 `stdout` set to ``None``.
-        :raise KeyboardInterrupt: If the user has tried aborting the program and
-                                  is waiting for it to finish.
+        :param env: Additional environment variables to pass to the
+            process. Those will be merged on top of the
+            :py:attr:`Config.environ` values and can override them, but
+            not remove them.
+        :param external_command: Set to true if you want to run a
+            command that lives outside the current virtual environment.
+            Otherwise, this will fail the command.
+        :param silent_on_success: Whether to silence the command's
+            output if it succeeds, or show it every time.
+        :return: a :py:class:`subprocess.CompletedProcess` with `stderr`
+            and `stdout` set to ``None``.
+        :raise KeyboardInterrupt: If the user has tried aborting the
+            program and is waiting for it to finish.
         """
         return self._handler.run(
             command,

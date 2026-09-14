@@ -50,10 +50,10 @@ class _SplitAppendAction(_AppendAction):
 def _parse_args(args: list[str] | None = None) -> Namespace:
     parser = ArgumentParser(
         formatter_class=RawDescriptionHelpFormatter,
-        epilog="""\
-Environment variables:
-  DWAS_ADDOPTS\t\tExtra command line arguments, prepended to other arguments
-""",
+        epilog="\
+Environment variables:\
+  DWAS_ADDOPTS\t\tExtra command line arguments, prepended to other arguments\
+",
     )
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {version('dwas')}"

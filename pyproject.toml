@@ -163,6 +163,7 @@ ignore = [
     ##
     # Format
     "COM812",  # Don't put trailing commas everywhere
+    "CPY001",  # We don't want a copyright header per file
     ##
     # Docs
     "D200",
@@ -175,6 +176,7 @@ ignore = [
     "PLR0912",  # pylint too many branches
     "PLR0913",  # pylint too many arguments
     "PLR0915",  # pylint too many statements
+    "PLR0917",  # pylint too many positional arguments
     "N818",  # we name exception as Exception not Error
     "FIX",  # We want to put fixmes longterm
     "TD",  # We want to be able to add todos without issu links

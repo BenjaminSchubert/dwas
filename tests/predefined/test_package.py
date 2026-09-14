@@ -27,10 +27,9 @@ class TestPackage(BaseStepTest):
         res = cli(cache_path=cache_path, steps=["check_install"])
         assert res.stdout.strip().splitlines()[-1] == "it worked!"
 
-        tmp_path.joinpath("src/test_project/__main__.py").write_text("""\
-if __name__ == "__main__":
-    print("it changed!")
-""")
+        tmp_path.joinpath("src/test_project/__main__.py").write_text(
+            'if __name__ == "__main__":\n    print("it changed!")'
+        )
 
         res = cli(cache_path=cache_path, steps=["check_install"])
         assert res.stdout.strip().splitlines()[-1] == "it changed!"
