@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import codecs
 import logging
 import os
 import signal
@@ -17,9 +18,10 @@ LOGGER = logging.getLogger(__name__)
 
 
 def _stream(source: int, dest: TextIO) -> None:
+    decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
     with suppress(IOError):
         while data := os.read(source, 4096):
-            dest.write(data.decode())
+            dest.write(decoder.decode(data))
 
 
 class ProcessManager:
