@@ -2,6 +2,15 @@ Changelog
 =========
 
 
+0.1.1
+-----
+
+Bug fixes
+^^^^^^^^^
+
+- Properly handle invalid UTF-8 and multi-byte UTF-8 from sub-processes
+
+
 0.1.0
 -----
 

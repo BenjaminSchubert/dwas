@@ -33,6 +33,7 @@ reusability
 sdist
 tox
 unimport
+UTF
 venvs
 virtualenv
 workflow
